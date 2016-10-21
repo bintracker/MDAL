@@ -50,7 +50,7 @@ mdModule::mdModule(string &infile, string &outfile, bool &verbose) {
 		delete[] mdBlock;
 		mdBlock = nullptr;
 		
-		cout << seq << endl;
+		if (verbose) cout << seq << endl;
 		MUSICASM << seq << endl;
 	
 	
@@ -82,9 +82,11 @@ mdModule::mdModule(string &infile, string &outfile, bool &verbose) {
 			delete[] mdBlock;
 			mdBlock = nullptr;
 			
+			if (verbose) {
 			
-			cout << seq.uniquePtnList[i] << endl;
-			cout << modulePatterns[i];
+				cout << seq.uniquePtnList[i] << endl;
+				cout << modulePatterns[i];
+			}
 			
 			MUSICASM << seq.uniquePtnList[i] << endl;
 			MUSICASM << modulePatterns[i];

@@ -46,7 +46,7 @@ CONFIG=BetaPhase
 	
 
 :ptn0
-	A=a1, MIXA=xor, PHA=$800, PSCA1=down, C=c4, PSCC=down, SLIDESPD=$30, SPD=6
+	A=a1, MIXA=xor, PHA=$800, PSCA1=down, C=c4, PSCC=down, SLIDESPD=$30, SPD=6	//test
 	A=a2, C=rest, SLIDESPD=0
 	A=a3, C=a1
 	A=a2

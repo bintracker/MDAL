@@ -143,7 +143,8 @@ void mdPattern::read(const string *ptnBlock, const int patternNumber, const int 
 		for (int cmd = 0; cmd < config.mdCmdCount; cmd++) {
 	
 			//cout << "Reset row " << row << " cmd " << cmd << endl;		//DEBUG
-			if (row == 0) config.mdCmdList[cmd].resetToDefault();
+			
+			if (row == 0 && config.initPtnDefaults) config.mdCmdList[cmd].resetToDefault();
 			else config.mdCmdList[cmd].reset();			//TODO reset all LastVals to default at beginning of pattern
 			
 			if (lineCommands[row][cmd]) {

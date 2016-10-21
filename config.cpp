@@ -25,6 +25,7 @@ mdConfig::mdConfig(string &configname, bool &verbose) {
 	string tempstr;
 	
 	for (linecount = 0; getline(CFGFILE,tempstr); linecount++);
+	int configEnd = linecount - 1;
 	
 	CFGFILE.clear();						//reset file pointer
 	CFGFILE.seekg(0, ios::beg);
@@ -33,35 +34,35 @@ mdConfig::mdConfig(string &configname, bool &verbose) {
 	
 	for (int i = 0; i < linecount; i++) getline(CFGFILE,cfgLines[i]);
 	
-	if (locateToken(string("MDAL_VERSION"), 0, linecount-1) >= linecount) throw ("MDAL_VERSION not specified in " + configname);
+	if (locateToken(string("MDAL_VERSION"), 0, configEnd) == configEnd) throw ("MDAL_VERSION not specified in " + configname);
 	string mdVersion = trimChars(getArgumentString(string("MDAL_VERSION"), 0, linecount-1), "()");
 	if (getType(mdVersion) != DEC) throw ("Invalid MDAL_VERSION specification in " + configname);
 	if (stoi(mdVersion, nullptr, 10) > MDALVERSION) throw ("MDAL VERSION used in " + configname + ".cfg not supported in this version of mdalc");
 	if (verbose) cout << "MDAL version: \t\t" << stoi(mdVersion, nullptr, 10) << endl;
 	
 	
-	wordDirective = trimChars(getArgumentString(string("WORD_DIRECTIVE"), 0, linecount-1), "()\"");
+	wordDirective = trimChars(getArgumentString(string("WORD_DIRECTIVE"), 0, configEnd), "()\"");
 	if (wordDirective == "") wordDirective = "dw";
 	if (verbose) cout << "word directive:\t\t" << wordDirective << endl;
 	
-	byteDirective = trimChars(getArgumentString(string("BYTE_DIRECTIVE"), 0, linecount-1), "()\"");
+	byteDirective = trimChars(getArgumentString(string("BYTE_DIRECTIVE"), 0, configEnd), "()\"");
 	if (byteDirective == "") byteDirective = "db";
 	if (verbose) cout << "byte directive:\t\t" << byteDirective << endl;
 	
-	hexPrefix = trimChars(getArgumentString(string("HEX_PREFIX"), 0, linecount-1), "()\"");
+	hexPrefix = trimChars(getArgumentString(string("HEX_PREFIX"), 0, configEnd), "()\"");
 	if (hexPrefix == "") hexPrefix = "$";
 	if (verbose) cout << "hex prefix:\t\t" << hexPrefix << endl;
 	
 	useSequence = false;
-	if (locateToken(string("USE_SEQUENCE"), 0, linecount-1) < linecount) {
+	if (locateToken(string("USE_SEQUENCE"), 0, configEnd) != configEnd) {
 	//TODO: provide support for multi-track sequences
 	
 		useSequence = true;
 		if (verbose) cout << "using SEQUENCE" << endl;
 		
-		int blockStart = locateToken(string("CFG_SEQUENCE"), 0, linecount-1);
+		int blockStart = locateToken(string("CFG_SEQUENCE"), 0, configEnd);
 		
-		if (blockStart == linecount) throw ("No CFG_SEQUENCE block found in " + configname + ".cfg");
+		if (blockStart == configEnd) throw ("No CFG_SEQUENCE block found in " + configname + ".cfg");
 		
 		else {
 			
@@ -107,14 +108,15 @@ mdConfig::mdConfig(string &configname, bool &verbose) {
 	}
 	
 	usePatterns = false;
-	if (locateToken(string("USE_PATTERNS"), 0, linecount-1) < linecount) {
+	
+	if (locateToken(string("USE_PATTERNS"), 0, configEnd) != configEnd) {
 	
 		useSequence = true;
 		if (verbose) cout << "using PATTERNS" << endl;
 		
-		int blockStart = locateToken(string("CFG_PATTERNS"), 0, linecount-1);
+		int blockStart = locateToken(string("CFG_PATTERNS"), 0, configEnd);
 		
-		if (blockStart == linecount) throw ("No CFG_PATTERNS block found in " + configname + ".cfg");
+		if (blockStart == configEnd) throw ("No CFG_PATTERNS block found in " + configname + ".cfg");
 		
 		else {
 			
@@ -130,18 +132,29 @@ mdConfig::mdConfig(string &configname, bool &verbose) {
 				if (ptnEndString == "") throw ("Pattern end string not specified in " + configname + ".cfg");
  				if (verbose) cout << "Pattern end:\t\t" << ptnEndString << endl;
 			}
+			
+			
+			initPtnDefaults = false;
+			
+			tokenpos = locateToken(string("INIT_DEFAULTS"), blockStart, blockEnd);
+			
+			if (tokenpos != blockEnd) {
+			
+				initPtnDefaults = true;
+ 				if (verbose) cout << "Initialize commands with default values at each pattern start" << endl;
+			}
 		}
 	}
 	
 	useTables = false;
-	if (locateToken(string("USE_TABLES"), 0, linecount-1) < linecount) {
+	if (locateToken(string("USE_TABLES"), 0, configEnd) != configEnd) {
 	
 		useTables = true;
 		if (verbose) cout << "using TABLES" << endl;
 	}
 	
 	useSamples = false;
-	if (locateToken(string("USE_SAMPLES"), 0, linecount-1) < linecount) {
+	if (locateToken(string("USE_SAMPLES"), 0, configEnd) != configEnd) {
 	
 		useSamples = true;
 		if (verbose) cout << "using SAMPLES - this feature is not supported yet." << endl;
@@ -149,9 +162,9 @@ mdConfig::mdConfig(string &configname, bool &verbose) {
 	
 	
 	
-	int blockStart = locateToken(string("CFG_COMMANDS"), 0, linecount-1);
+	int blockStart = locateToken(string("CFG_COMMANDS"), 0, configEnd);
 		
-	if (blockStart == linecount) throw ("No CFG_COMMANDS block found in " + configname + ".cfg");
+	if (blockStart == linecount - 1) throw ("No CFG_COMMANDS block found in " + configname + ".cfg");
 		
 	int blockEnd = getBlockEnd(blockStart);
 	blockStart++;					//TODO: modify locateToken/getBlockEnd so we don't have to do this shit every time
@@ -177,9 +190,9 @@ mdConfig::mdConfig(string &configname, bool &verbose) {
 	
 	
 	
-	blockStart = locateToken(string("CFG_FIELDS"), 0, linecount-1);
+	blockStart = locateToken(string("CFG_FIELDS"), 0, configEnd);
 	
-	if (blockStart == linecount) throw ("No CFG_FIELDS block found in " + configname + ".cfg");
+	if (blockStart == configEnd) throw ("No CFG_FIELDS block found in " + configname + ".cfg");
 	
 	blockEnd = getBlockEnd(blockStart);
 	blockStart++;					//TODO: modify locateToken/getBlockEnd so we don't have to do this shit every time
@@ -329,6 +342,7 @@ int mdConfig::locateToken(string token, int blockStart, int blockEnd) {
 	}
 
 	if (pos == 0) line--;			//TODO: this seems somewhat fishy, investigate more
+	else line = blockEnd;
 	return line;
 }
 

@@ -178,6 +178,7 @@ public:
 	
 	//pattern config parameters
 	bool usePtnEnd;
+	bool initPtnDefaults;
 	string ptnEndString;
 	
 	//MDAL commands config parameters

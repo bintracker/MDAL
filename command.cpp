@@ -181,7 +181,17 @@ void mdCommand::resetToDefault() {		//TODO: keep an eye on this to see if it rea
 		mdCmdCurrentVal = -1;
 		mdCmdCurrentValString = "";
 		mdCmdLastVal = mdCmdDefaultVal;
-		mdCmdLastValString = mdCmdDefaultValString;	
+		mdCmdLastValString = mdCmdDefaultValString;
+		
+		if (mdCmdForceRepeat) {
+		
+			mdCmdIsSetNow = true;
+			
+			mdCmdCurrentVal = mdCmdLastVal;
+			mdCmdCurrentValString = mdCmdLastValString;
+			
+			//cout << "triggered\n";	//DEBUG
+		}	
 	}
 }
 
@@ -190,7 +200,7 @@ void mdCommand::reset() {
 
 	if (!mdCmdGlobalConst) {
 	
-		if (mdCmdUseLastSet) {
+		if (mdCmdUseLastSet || mdCmdForceRepeat) {
 	
 			if (mdCmdCurrentVal != -1 && mdCmdIsSetNow) {
 				mdCmdLastVal = mdCmdCurrentVal;
@@ -207,11 +217,15 @@ void mdCommand::reset() {
 		
 			mdCmdIsSetNow = true;
 			
+			//cout << "reset to: " << mdCmdCurrentVal << endl;	//DEBUG: ok
+			
 			if (mdCmdLastVal == -1) mdCmdLastVal = mdCmdDefaultVal;
 			if (mdCmdLastValString == "") mdCmdLastValString = mdCmdDefaultValString;
 			
 			mdCmdCurrentVal = mdCmdLastVal;
 			mdCmdCurrentValString = mdCmdLastValString;
+			
+			
 		}
 		else {
 		
