@@ -1,0 +1,128 @@
+<p>This reference is for those interested in using MDAL to compose music for low-level sound routines. If you are a sound routine coder wishing to create MDAL configurations for your tools, be sure to check out the Programmer's Reference.</p>
+<h3 id="table-of-contents">Table of Contents</h3>
+<p><a href="#getting-started">Getting Started</a></p>
+<ul>
+<li><a href="#basic-concepts">Basic Concepts</a>
+<ul>
+<li><a href="#terminology">Terminology</a></li>
+</ul></li>
+<li><a href="#setting-up-the-mdal-compiler">Setting up the MDAL Compiler</a>
+<ul>
+<li><a href="#building-the-compiler-from-source">Building the Compiler from Source</a></li>
+</ul></li>
+<li><a href="#compiling-mdal-modules">Compiling MDAL Modules</a></li>
+</ul>
+<p><a href="#writing-mdal-modules">Writing MDAL Modules</a></p>
+<ul>
+<li><a href="#general-syntax-rules">General Syntax Rules</a></li>
+<li><a href="#creating-blocks">Creating Blocks</a></li>
+<li><a href="#header-block">Header Block</a>
+<ul>
+<li><a href="#config"><code>CONFIG</code></a></li>
+<li><a href="#global-constants">Global Constants</a></li>
+</ul></li>
+<li><a href="#sequence-block">Sequence Block</a>
+<ul>
+<li><a href="#the-loop-command">The <code>[loop]</code> command</a></li>
+</ul></li>
+<li><a href="#pattern-blocks">Pattern Blocks</a></li>
+<li><a href="#table-blocks">Table Blocks</a></li>
+<li><a href="#sample-blocks">Sample Blocks</a></li>
+</ul>
+<p><br><br />
+<br></p>
+<h1 id="getting-started">Getting Started</h1>
+<h2 id="basic-concepts">Basic Concepts</h2>
+<h3 id="terminology">Terminology</h3>
+<p>MDAL draws a significant portion of it's terminology from tracker music. If you've never used a tracker before, you might want to familiarize yourself with the <a href="https://en.wikipedia.org/wiki/Music_tracker#Terminology">tracker lingo</a> first.</p>
+<p>Any statement in an MDAL file is a <strong>command</strong>. Commands are grouped into <strong>blocks</strong>, which in turn form a <strong>module</strong>:</p>
+<p>Only a few fixed commands exist in MDAL. Most of the commands that will be available are specific to the music driver/player you are composing for. These custom commands are defined in a <strong>configuration</strong> file. To learn about custom commands, refer to the config's documentation (usually found in the /docs folder).</p>
+<p>Blocks come in five different flavours - headers, sequences, patterns, tables, and samples. Some of these may be unavailable depending on the configuration you use.</p>
+<p>The <strong>header</strong> block contains one or more global commands, which are used to set various general parameters affecting the entire module, for example the configuration that should be used.</p>
+<p>The header block is usually followed by the <strong>sequence</strong> block, which contains the order of the module. The order is the main script of your song, the master plan, if you will.</p>
+<p>The header block is followed by one or more user-defined blocks. These can be <strong>pattern</strong> blocks containing the actual music data, <strong>table</strong> blocks containing instrument-specific aspects such as volume envelopes or effect chains, and <strong>sample</strong> blocks containing raw sample data or references to external resources.</p>
+<p><br></p>
+<h2 id="setting-up-the-mdal-compiler">Setting up the MDAL Compiler</h2>
+<p>The MDAL compiler does not require any installation. Simply unzip it to a directory of your choice. If you plan on using third-party configurations, copy those to the /config folder.</p>
+<h3 id="building-the-compiler-from-source">Building the Compiler from Source</h3>
+<p>The compiler is written in pure C++ and has no further dependencies. Building the MDAL compiler from source is a matter of simply running <code>make</code> on a Linux/Unix system with GCC installed. On non-Linux/Unix systems, you can build the MDAL compiler using minGW. You'll need to adjust the makefile accordingly.</p>
+<p><br></p>
+<h2 id="compiling-mdal-modules">Compiling MDAL Modules</h2>
+<p>The MDAL compiler is a command line tool. In order to compile your MDAL module, open a shell (cmd or powershell on Windows), navigate to the MDAL folder, and run</p>
+<pre>mdalc -i <i>filename.mdal</i></pre>
+<p>where <em>filename.mdal</em> is the name of the MDAL module you want to compile. This will output a file named &quot;music.asm&quot; which you can then use as input for your target music driver.</p>
+<p>You can specify another name for the output file with<br />
+<pre>-o <i>outfile</i></pre><br />
+and print some extra information with <code>-v</code>.</p>
+<p><br><br />
+<br></p>
+<h1 id="writing-mdal-modules">Writing MDAL Modules</h1>
+<p><br></p>
+<h2 id="general-syntax-rules">General Syntax Rules</h2>
+<ol>
+<li><strong>One command per line, one line per command.</strong> Each command must be on a seperate line, and commands may not contain a line break. Exception: Pattern and table rows can contain more than one command on a given line.</li>
+<li><strong>Whitespace is ignored.</strong> That means that with the above exception, you can format your module as you wish - the compiler does not care about spaces, tabs, and ignores empty lines.</li>
+<li><strong>Command keywords are UPPERCASE</strong>.</li>
+<li><strong>User strings are lowercase</strong>. Any string you provide as an argument to a command must be lowercase.</li>
+<li><strong>Numbers can be decimal or hexadecimal</strong>. Hex numbers are prefixed with <code>$</code>.</li>
+</ol>
+<p><br></p>
+<h2 id="creating-blocks">Creating Blocks</h2>
+<p>MDAL module data is organized in blocks. The start of a block is denoted by the <strong>block delimiter</strong> <code>:</code>, followed by the block name. Block names can normally be chosen by the user. Names must begin with a letter, and may contain only <em>lowercase</em> letters and numbers.</p>
+<p>There are two exceptions - the Sequence block, which is denoted with <code>:SEQUENCE</code>, and the Header block, which does not use a name or a block delimiter.</p>
+<p><br></p>
+<h2 id="header-block">Header Block</h2>
+<p>The header block is written before the first block delimiter (ie. at the top of the file). It is the only block that does not use a block name.<br />
+The header block must necessarily set the built-in <code>CONFIG</code> command. In addition, it may contain one or more global constants, depending on the configuration used.</p>
+<h3 id="config"><code>CONFIG</code></h3>
+<p>The <code>CONFIG</code> command specifies which configuration the MDAL compiler should use to process your module. Each MDAL module must have exactly one CONFIG command.</p>
+<table>
+<tbody>
+<tr class="odd">
+<td>Syntax</td>
+<td><code>CONFIG=configuration_name</code></td>
+</tr>
+<tr class="even">
+<td>Example</td>
+<td><code>CONFIG=BetaPhase</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="global-constants">Global Constants</h3>
+<p>The MDAL configuration you use may provide for additional global parameters (called global constants), for example a global song speed setting. Global constants may only be set once in a given module.</p>
+<p>For information on available global constants, refer to the relevant configuration documentation.</p>
+<p><br></p>
+<h2 id="sequence-block">Sequence Block</h2>
+<p>The sequence block is initiated with <code>:SEQUENCE</code>. It contains a list of patterns, in the order in which they are to be played.</p>
+<h3 id="the-loop-command">The [loop] command</h3>
+<p>Many configurations offer a possibility to set a loop point in the sequence. The target player will continue playback at this point once it has completed the sequence. Refer to your target configuration's documentation to verify that the loop command is available.</p>
+<p>Loop points are denoted by the command <code>[loop]</code>, which is placed on the line before the point in the sequence you wish to jump to.</p>
+<p><strong>Example Sequence Block:</strong></p>
+<pre><code>:SEQUENCE
+   intro
+   [loop]
+   theme1
+   theme1
+   interlude
+   theme2
+   theme2</code></pre>
+<p>This will create a sequence with four unique patterns named &quot;intro&quot;, &quot;theme1&quot;, &quot;interlude&quot;, and &quot;theme2&quot;. &quot;theme1&quot; and &quot;theme2&quot; will each be repeated twice. After the player has completed the sequence, it will loop to the first &quot;theme1&quot; pattern.</p>
+<p><br></p>
+<h2 id="pattern-blocks">Pattern Blocks</h2>
+<p>Pattern blocks contain the actual music data (note triggers, effect commands, etc.). The data is organized into rows. Each row may contain one or more commands. Pattern commands take the form</p>
+<pre><code>COMMAND_NAME=value</code></pre>
+<p>There are no pre-defined pattern commands in MDAL (with one exception, see below). Instead, pattern commands are defined by the configuration. Refer to your target configuration's documentation to see which pattern commands are available.</p>
+<p>Rows on which you do not wish to issue any command must still be written. The <code>.</code> (dot) command denotes such &quot;empty&quot; lines.</p>
+<p><strong>Example Pattern Block</strong></p>
+<pre><code>:theme1
+   A=c2, B=c1, SPD=8
+   .
+   A=c3
+   A=c4, B=rest</code></pre>
+<p>In row 2, the <code>.</code> command is used to denote that no change will happen in this row.</p>
+<p><br></p>
+<h2 id="table-blocks">Table Blocks</h2>
+<p>This feature is not implemented yet.</p>
+<p><br></p>
+<h2 id="sample-blocks">Sample Blocks</h2>
+<p>This feature is not implemented yet.</p>
