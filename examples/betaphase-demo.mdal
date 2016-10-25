@@ -118,8 +118,16 @@ CONFIG=BetaPhase
 	.
 
 :ptn2
-	A=a1, MIXA=xor, PHA=$800, PSCA1=down, C=c4, PSCC=down, SLIDESPD=$30, SPD=3, B=e4, MIXB=xor, PHB=$200
+	A=a1, MIXA=xor, PHA=$800, PSCA1=down, C=c4, PSCC=down, SLIDESPD=$30, SPD=3, B=e4, MIXB=or, PHB=$00, DMOD2=$10, PSCB1=up
 	B=e3
+	A=a2, C=rest, SLIDESPD=0, B=e4
+	B=e3
+	A=a3, C=a1, B=e4
+	B=e3
+	A=a2, B=e4
+	B=e3
+	PSCA1=0, PSCA2=0, NOISE=on, A=$235, C=c4, SLIDESPD=$30, B=e4
+	PSCA1=down, PSCA2=none, NOISE=off, PHA=$800, A=a1, B=e3
 	A=a2, C=rest, SLIDESPD=0, B=e4
 	B=e3
 	A=a3, C=a1, B=e4
@@ -134,16 +142,8 @@ CONFIG=BetaPhase
 	B=e3
 	A=a2, B=e4
 	B=e3
-	A=a1, C=c4, SLIDESPD=$30, B=e4
-	B=e3
-	A=a2, C=rest, SLIDESPD=0, B=e4
-	B=e3
-	A=a3, C=a1, B=e4
-	B=e3
-	A=a2, B=e4
-	B=e3
-	A=c2, C=c4, SLIDESPD=$30, B=e4
-	B=e3
+	PSCA1=0, PSCA2=0, NOISE=on, A=$235, C=c4, SLIDESPD=$30, B=e4
+	PSCA1=down, PSCA2=none, NOISE=off, PHA=$800, A=c2, B=e3
 	A=c3, C=rest, SLIDESPD=0, B=e4
 	B=e3
 	A=c4, C=c2, B=e4
@@ -152,8 +152,16 @@ CONFIG=BetaPhase
 	B=e3
 	
 :ptn3
-	A=a1, MIXA=xor, PHA=$800, PSCA1=down, C=c4, PSCC=down, SLIDESPD=$30, SPD=3, B=dis4
+	A=a1, MIXA=xor, PHA=$800, PSCA1=down, C=c4, PSCC=down, SLIDESPD=$30, SPD=3, B=dis4, MIXB=or, PSCB1=up
 	B=dis3
+	A=a2, C=rest, SLIDESPD=0, B=dis4
+	B=dis3
+	A=a3, C=a1, B=dis4
+	B=dis3
+	A=a2, B=dis4
+	B=dis3
+	PSCA1=0, PSCA2=0, NOISE=on, A=$235, C=c4, SLIDESPD=$30, B=dis4
+	PSCA1=down, PSCA2=none, NOISE=off, PHA=$800, A=a1, B=dis3
 	A=a2, C=rest, SLIDESPD=0, B=dis4
 	B=dis3
 	A=a3, C=a1, B=dis4
@@ -168,16 +176,8 @@ CONFIG=BetaPhase
 	B=dis3
 	A=a2, B=dis4
 	B=dis3
-	A=a1, C=c4, SLIDESPD=$30, B=dis4
-	B=dis3
-	A=a2, C=rest, SLIDESPD=0, B=dis4
-	B=dis3
-	A=a3, C=a1, B=dis4
-	B=dis3
-	A=a2, B=dis4
-	B=dis3
-	A=gis1, C=c4, SLIDESPD=$30, B=dis4
-	B=dis3
+	PSCA1=0, PSCA2=0, NOISE=on, A=$235, C=c4, SLIDESPD=$30, B=dis4
+	PSCA1=down, PSCA2=none, NOISE=off, PHA=$800, A=gis1, B=dis3
 	A=gis2, C=rest, SLIDESPD=0, B=dis4
 	B=d3
 	A=gis3, C=gis1, B=cis4
@@ -186,8 +186,16 @@ CONFIG=BetaPhase
 	B=ais2
 	
 :ptn4
-	A=a1, MIXA=xor, PHA=$800, PSCA1=down, C=c4, PSCC=down, SLIDESPD=$30, SPD=3, B=a3
+	A=a1, MIXA=xor, PHA=$800, PSCA1=down, C=c4, PSCC=down, SLIDESPD=$30, SPD=3, B=a3, MIXB=or, PSCB1=up
 	B=a2
+	A=a2, C=rest, SLIDESPD=0, B=a3
+	B=a2
+	A=a3, C=a1, B=a3
+	B=a2
+	A=a2, B=a3
+	B=a2
+	PSCA1=0, PSCA2=0, NOISE=on, A=$235, C=c4, SLIDESPD=$30, B=a3
+	PSCA1=down, PSCA2=none, NOISE=off, PHA=$800, A=a1, B=a2
 	A=a2, C=rest, SLIDESPD=0, B=a3
 	B=a2
 	A=a3, C=a1, B=a3
@@ -202,16 +210,8 @@ CONFIG=BetaPhase
 	B=a2
 	A=a2, B=a3
 	B=a2
-	A=a1, C=c4, SLIDESPD=$30, B=a3
-	B=a2
-	A=a2, C=rest, SLIDESPD=0, B=a3
-	B=a2
-	A=a3, C=a1, B=a3
-	B=a2
-	A=a2, B=a3
-	B=a2
-	A=c2, C=c4, SLIDESPD=$30, B=a3
-	B=a2
+	PSCA1=0, PSCA2=0, NOISE=on, A=$235, C=c4, SLIDESPD=$30, B=a3
+	PSCA1=down, PSCA2=none, NOISE=off, PHA=$800, A=c2, B=a2
 	A=c3, C=rest, SLIDESPD=0, B=a3
 	B=a2
 	A=c4, C=c2, B=a3
@@ -220,8 +220,16 @@ CONFIG=BetaPhase
 	B=b2
 	
 :ptn4a
-	A=a1, MIXA=xor, PHA=$800, PSCA1=down, C=c4, PSCC=down, SLIDESPD=$30, SPD=3, B=a3
+	A=a1, MIXA=xor, PHA=$800, PSCA1=down, C=c4, PSCC=down, SLIDESPD=$30, SPD=3, B=a3, MIXB=or, PSCB1=up
 	B=a2
+	A=a2, C=rest, SLIDESPD=0, B=a3
+	B=a2
+	A=a3, C=a1, B=a3
+	B=a2
+	A=a2, B=a3
+	B=a2
+	PSCA1=0, PSCA2=0, NOISE=on, A=$235, C=c4, SLIDESPD=$30, B=a3
+	PSCA1=down, PSCA2=none, NOISE=off, PHA=$800, A=a1, B=a2
 	A=a2, C=rest, SLIDESPD=0, B=a3
 	B=a2
 	A=a3, C=a1, B=a3
@@ -236,16 +244,8 @@ CONFIG=BetaPhase
 	B=a2
 	A=a2, B=a3
 	B=a2
-	A=a1, C=c4, SLIDESPD=$30, B=a3
-	B=a2
-	A=a2, C=rest, SLIDESPD=0, B=a3
-	B=a2
-	A=a3, C=a1, B=a3
-	B=a2
-	A=a2, B=a3
-	B=a2
-	A=c2, C=c4, SLIDESPD=$30, B=a3
-	B=a2
+	PSCA1=0, PSCA2=0, NOISE=on, A=$235, C=c4, SLIDESPD=$30, B=a3
+	PSCA1=down, PSCA2=none, NOISE=off, PHA=$800, A=c2, B=a2
 	A=c3, C=rest, SLIDESPD=0, B=a3
 	B=a2
 	A=c4, C=c2, B=a3
@@ -254,7 +254,7 @@ CONFIG=BetaPhase
 	B=a2
 	
 :ptn5
-	A=a1, MIXA=xor, PHA=$800, PSCA1=down, C=c4, PSCC=down, SLIDESPD=$30, SPD=3, B=c4
+	A=a1, MIXA=xor, PHA=$800, PSCA1=down, C=c4, PSCC=down, SLIDESPD=$30, SPD=3, B=c4, MIXB=or, PSCB1=up
 	B=c3
 	A=a2, C=rest, SLIDESPD=0, B=c4
 	B=c3
@@ -262,8 +262,8 @@ CONFIG=BetaPhase
 	B=c3
 	A=a2, B=c4
 	B=c3
-	A=a1, C=c4, SLIDESPD=$30, B=c4
-	B=c3
+	PSCA1=0, PSCA2=0, NOISE=on, A=$235, C=c4, SLIDESPD=$30, B=c4
+	PSCA1=down, PSCA2=none, NOISE=off, PHA=$800, A=a1, B=c3
 	A=a2, C=rest, SLIDESPD=0, B=c4
 	B=c3
 	A=a3, C=a1, B=c4
@@ -278,17 +278,17 @@ CONFIG=BetaPhase
 	B=c3
 	A=gis2, B=c4
 	B=c3
-	A=gis1, C=c4, SLIDESPD=$30, B=c4
-	B=c3
+	PSCA1=0, PSCA2=0, NOISE=on, A=$235, C=c4, SLIDESPD=$30, B=c4
+	PSCA1=down, PSCA2=none, NOISE=off, PHA=$800, A=gis1, B=c3
 	A=gis2, C=c4, SLIDESPD=$30, B=c4
 	B=c3
-	A=gis3, C=c4, SLIDESPD=$30, B=c4
-	B=c3
+	PSCA1=0, PSCA2=0, NOISE=on, A=$235, C=c4, SLIDESPD=$30, B=c4
+	PSCA1=down, PSCA2=none, NOISE=off, PHA=$800, A=gis3, B=c3
 	A=gis2, C=c4, SLIDESPD=$30, B=c4
 	B=c3
 	
 :ptn5a
-	A=a1, MIXA=xor, PHA=$800, PSCA1=down, C=c4, PSCC=down, SLIDESPD=$30, SPD=3, B=a3
+	A=a1, MIXA=xor, PHA=$800, PSCA1=down, C=c4, PSCC=down, SLIDESPD=$30, SPD=3, B=a3, MIXB=or, PSCB1=up
 	B=a2
 	A=a2, C=rest, SLIDESPD=0, B=a3
 	B=a2
@@ -296,8 +296,8 @@ CONFIG=BetaPhase
 	B=a2
 	A=a2, B=a3
 	B=a2
-	A=a1, C=c4, SLIDESPD=$30, B=a3
-	B=a2
+	PSCA1=0, PSCA2=0, NOISE=on, A=$235, C=c4, SLIDESPD=$30, B=a3
+	PSCA1=down, PSCA2=none, NOISE=off, PHA=$800, A=a1, B=a2
 	A=a2, C=rest, SLIDESPD=0, B=a3
 	B=a2
 	A=a3, C=a1, B=a3
@@ -312,11 +312,11 @@ CONFIG=BetaPhase
 	B=a2
 	A=gis2, B=a3
 	B=a2
-	A=gis1, C=c4, SLIDESPD=$30, B=a3
-	B=ais2
+	PSCA1=0, PSCA2=0, NOISE=on, A=$235, C=c4, SLIDESPD=$30, B=a3
+	PSCA1=down, PSCA2=none, NOISE=off, PHA=$800, A=gis1, B=ais2
 	A=gis2, C=c4, SLIDESPD=$30, B=b3
 	B=b2
-	A=gis3, C=c4, SLIDESPD=$30, B=c4
-	B=cis3
+	PSCA1=0, PSCA2=0, NOISE=on, A=$235, C=c4, SLIDESPD=$30, B=c4
+	PSCA1=down, PSCA2=none, NOISE=off, PHA=$800, A=gis3, B=cis3
 	A=gis2, C=c4, SLIDESPD=$30, B=d4
 	B=dis3
