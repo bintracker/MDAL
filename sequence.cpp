@@ -44,6 +44,12 @@ mdSequence::mdSequence(string *sequenceBlock, int sequenceBlockLength, mdConfig 
 		if (inputString == "[LOOP]") mdSequenceLoopPosition = element;
 	}
 	
+	if (mdSequenceLoopPosition >= mdSequenceLength) {
+	
+		cout << "Warning: [LOOP] position is invalid, falling back to default." << endl;
+		mdSequenceLoopPosition = 0;
+	}
+	
 	
 	for (int i = 0; i < mdSequenceLength; i++) {
 	
