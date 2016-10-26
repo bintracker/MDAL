@@ -21,8 +21,7 @@ mdSequence::mdSequence(string *sequenceBlock, int sequenceBlockLength, mdConfig 
 		inputString.erase(0, inputString.find_first_not_of(" \t"));
 		inputString.erase(inputString.find_last_not_of(" \t")+1); 
 		
-		if (inputString != "" && inputString != "[loop]") mdSequenceLength++;
-		//if (inputString == "(loop)") foundLoop = true;
+		if (inputString != "" && inputString != "[LOOP]") mdSequenceLength++;
 	}
 	
 	if (!mdSequenceLength) throw (string("Sequence contains no patterns"));
@@ -36,13 +35,13 @@ mdSequence::mdSequence(string *sequenceBlock, int sequenceBlockLength, mdConfig 
 		inputString.erase(0, inputString.find_first_not_of(" \t"));
 		inputString.erase(inputString.find_last_not_of(" \t")+1); 
 		
-		if (inputString != "" && inputString != "[loop]") {
+		if (inputString != "" && inputString != "[LOOP]") {
 			
 			mdSequenceArray[element] = inputString;
 			element++;
 		}
 		
-		if (inputString == "[loop]") mdSequenceLoopPosition = element;
+		if (inputString == "[LOOP]") mdSequenceLoopPosition = element;
 	}
 	
 	

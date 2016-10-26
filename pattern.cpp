@@ -44,9 +44,8 @@ void mdPattern::read(const string *ptnBlock, const int patternNumber, const int 
 	for (int i = 0; i < blockLength; i++) {
 	
 		string temp = trimChars(ptnBlock[i], " ()\t");
-		if (temp.find_first_of('/') != string::npos) temp.erase(temp.find_first_of('/'));
+
 		if (temp != "") ptnLength++;
-//		if (temp != "") cout << temp << endl;		//DEBUG
 	}
 	
 	lineCommands = new bool*[ptnLength];
@@ -74,10 +73,7 @@ void mdPattern::read(const string *ptnBlock, const int patternNumber, const int 
 	for (int i = 0; i < blockLength; i++) {
 	
 		string rowStr = trimChars(ptnBlock[i], " ()\t");
-		if (rowStr.find_first_of('/') != string::npos) rowStr.erase(rowStr.find_first_of('/'));
-		
-		//cout << "enter with rowStr " << rowStr << endl;
-		
+
 		bool validData = false;
 		
 		while (rowStr != "") {

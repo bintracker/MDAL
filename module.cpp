@@ -23,12 +23,18 @@ mdModule::mdModule(string &infile, string &outfile, bool &verbose) {
 	
 	for (linecount = 0; getline(MDFILE,tempstr); linecount++);
 	
-	MDFILE.clear();						//reset file pointer
+	MDFILE.clear();									//reset file pointer
 	MDFILE.seekg(0, ios::beg);
 	
 	moduleLines = new string[linecount];
 	
-	for (int i = 0; i < linecount; i++) getline(MDFILE,moduleLines[i]);
+	for (int i = 0; i < linecount; i++) {
+	
+		getline(MDFILE, moduleLines[i]);
+		
+		size_t commentPos = moduleLines[i].find("//", 0, 2);			//strip comments
+		if (commentPos != string::npos) moduleLines[i].erase(commentPos);
+	}
 
 	string configname = getArgument(string("CONFIG"));
 	

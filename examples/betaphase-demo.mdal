@@ -10,7 +10,7 @@ CONFIG=BetaPhase
 	ptn1
 	ptn0
 	ptn1b
-	[loop]
+	[LOOP]
 	ptn2
 	ptn3
 	ptn4

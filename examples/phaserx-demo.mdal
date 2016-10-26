@@ -14,7 +14,7 @@ CONFIG=PhaserX
 	ptn3
 	ptn3
 	ptn3a
-	[loop]
+	[LOOP]
 	ptn4
 	ptn4
 	ptn4

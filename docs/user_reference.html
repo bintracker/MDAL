@@ -23,7 +23,7 @@
 </ul></li>
 <li><a href="#sequence-block">Sequence Block</a>
 <ul>
-<li><a href="#the-loop-command">The <code>[loop]</code> command</a></li>
+<li><a href="#the-loop-command">The <code>[LOOP]</code> command</a></li>
 </ul></li>
 <li><a href="#pattern-blocks">Pattern Blocks</a></li>
 <li><a href="#table-blocks">Table Blocks</a></li>
@@ -94,13 +94,13 @@ The header block must necessarily set the built-in <code>CONFIG</code> command. 
 <p><br></p>
 <h2 id="sequence-block">Sequence Block</h2>
 <p>The sequence block is initiated with <code>:SEQUENCE</code>. It contains a list of patterns, in the order in which they are to be played.</p>
-<h3 id="the-loop-command">The [loop] command</h3>
+<h3 id="the-loop-command">The [LOOP] command</h3>
 <p>Many configurations offer a possibility to set a loop point in the sequence. The target player will continue playback at this point once it has completed the sequence. Refer to your target configuration's documentation to verify that the loop command is available.</p>
-<p>Loop points are denoted by the command <code>[loop]</code>, which is placed on the line before the point in the sequence you wish to jump to.</p>
+<p>Loop points are denoted by the command <code>[LOOP]</code>, which is placed on the line before the point in the sequence you wish to jump to.</p>
 <p><strong>Example Sequence Block:</strong></p>
 <pre><code>:SEQUENCE
    intro
-   [loop]
+   [LOOP]
    theme1
    theme1
    interlude

@@ -17,7 +17,7 @@ General Parameters
 ==================
 
 Minimum MDAL version:           0
-Set [loop] point in sequence:   allowed
+Set [LOOP] point in sequence:   allowed
 Use tables:                     no
 Use samples:                    no
 
