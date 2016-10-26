@@ -29,10 +29,12 @@ mdField::mdField() {
 	setIfWhenSet = nullptr;
 	setIfByAny = nullptr;
 	setIfMask = nullptr;
+	setIfClear = nullptr;
 	
 	setBitsCount = 0;
 	setBitsBy = nullptr;
 	setBitsMask = nullptr;
+	setBitsClear = nullptr;
 	
 	setBy = -1;
 	setHiBy = -1;	
@@ -51,6 +53,7 @@ mdField::~mdField() {
 	
 	delete[] setBitsBy;
 	delete[] setBitsMask;
+	delete[] setBitsClear;
 
 	delete[] requiredBy;
 	delete[] requiredWhenSet;
@@ -58,6 +61,7 @@ mdField::~mdField() {
 	delete[] setIfWhenSet;
 	delete[] setIfByAny;
 	delete[] setIfMask;
+	delete[] setIfClear;
 	delete[] setIfAlways;
 }
 
@@ -250,7 +254,9 @@ void mdField::init(mdCommand *mdCmdList, int &mdCmdCount, string &fieldString, b
 		setBitsBy = new bool[mdCmdCount];
 		fill_n(setBitsBy, mdCmdCount, false);
 		setBitsMask = new int[mdCmdCount];
-		fill_n(setBitsMask, setBitsCount, 0);
+		fill_n(setBitsMask, mdCmdCount, 0);
+		setBitsClear = new int[mdCmdCount];
+		fill_n(setBitsClear, mdCmdCount, 0);
 	}
 	
 	
@@ -262,10 +268,13 @@ void mdField::init(mdCommand *mdCmdList, int &mdCmdCount, string &fieldString, b
 		tmp1.erase(tmp1.find_first_of(','));
 	
 		string tmp2 = temp.substr(begin + 9 + tmp1.size() + 1, temp.size() - (begin + 9 + tmp1.size() + 1));
-		tmp2.erase(tmp2.find_first_of(')'));
+		tmp2.erase(tmp2.find_first_of(",)"));
 		if (tmp2 == "") throw ("No bit mask specified in SET_BITS expression in " + fieldString);	//TODO does not reliably detect missing bitmask
+		
+		string tmp3 = temp.substr(begin + 9 + tmp1.size() + tmp2.size() + 2, temp.size() - (begin + 9 + tmp1.size() + tmp2.size() + 2));
+		tmp3.erase(tmp3.find_first_of(")"));
 	
-		size_t slen = tmp1.size() + 10 + tmp2.size() + 1;
+		size_t slen = tmp1.size() + 10 + tmp2.size() + 1 + tmp3.size() + 1;
 	
 		int argtype = getType(tmp2);
 		int cmdNr = getCmdNr(mdCmdList, mdCmdCount, tmp1);
@@ -282,10 +291,15 @@ void mdField::init(mdCommand *mdCmdList, int &mdCmdCount, string &fieldString, b
 		requiredBy[cmdNr] = true;
 		//cout << "setBits by " << getCmdNr(mdCmdList, mdCmdCount, tmp1) << endl;	//DEBUG, ok
 		setBitsBy[cmdNr] = true;
+		
+		if (tmp3 == "CLEAR") setBitsClear[cmdNr] = CLEAR_ALL;
+		else if (tmp3 == "CLEAR_HI") setBitsClear[cmdNr] = CLEAR_HI;
+		else if (tmp3 == "CLEAR_LO") setBitsClear[cmdNr] = CLEAR_LO;
+		else if (tmp3 != "") throw ("Unknown flag \"" + tmp3 + "\" in SET_BITS expression in " + fieldString);
 
 		temp.erase(begin, slen);
 	
-		//cout << "SET_BITS by " << tmp1 << " with " << setBitsMask[i] << endl;
+		cout << "SET_BITS by " << tmp1 << " with " << setBitsMask[cmdNr] << ", clear " << setBitsClear[cmdNr] << ", temp: " << temp << ", tmp3: " << tmp3 << endl;		//DEBUG
 	}
 	
 
@@ -296,18 +310,20 @@ void mdField::init(mdCommand *mdCmdList, int &mdCmdCount, string &fieldString, b
 	
 		setIfBy = new bool*[setIfCount];
 		setIfWhenSet = new bool*[setIfCount];
-		setIfByAny = new bool[setIfCount];	// {true};
+		setIfByAny = new bool[setIfCount];
 		fill_n(setIfByAny, setIfCount, true);
-		setIfMask = new int[setIfCount];	// {0};
+		setIfMask = new int[setIfCount];
 		fill_n(setIfMask, setIfCount, 0);
-		setIfAlways = new bool[setIfCount];	// {false};
+		setIfClear = new int[setIfCount];
+		fill_n(setIfClear, setIfCount, 0);
+		setIfAlways = new bool[setIfCount];
 		fill_n(setIfAlways, setIfCount, false);
 		
 		for (int i = 0; i < setIfCount; i++) {
 	
-			setIfBy[i] = new bool[mdCmdCount];	// {false};
+			setIfBy[i] = new bool[mdCmdCount];
 			fill_n(setIfBy[i], mdCmdCount, false);
-			setIfWhenSet[i] = new bool[mdCmdCount];	// {true};
+			setIfWhenSet[i] = new bool[mdCmdCount];
 			fill_n(setIfWhenSet[i], mdCmdCount, true);
 		}
 	}
@@ -322,16 +338,24 @@ void mdField::init(mdCommand *mdCmdList, int &mdCmdCount, string &fieldString, b
 		tmp1.erase(tmp1.find_first_of(','));
 		
 		string tmp2 = temp.substr(begin + 7 + tmp1.size() + 1, temp.size() - (begin + 7 + tmp1.size() + 1));
-		tmp2.erase(tmp2.find_first_of(')'));
+		tmp2.erase(tmp2.find_first_of(",)"));
 		if (tmp2 == "") throw ("No bit mask specified in SET_IF expression in " + fieldString);	//TODO does not reliably detect missing bitmask
 		
-		size_t slen = tmp1.size() + 8 + tmp2.size() + 1;
+		string tmp3 = temp.substr(begin + 7 + tmp1.size() + tmp2.size() + 2, temp.size() - (begin + 7 + tmp1.size() + tmp2.size() + 2));
+		tmp3.erase(tmp3.find_first_of(",)"));
+	
+		size_t slen = tmp1.size() + 8 + tmp2.size() + 1 + tmp3.size() + 1;
 		
 		int argtype = getType(tmp2);
 		
 		if (argtype == DEC) setIfMask[i] = stoi(tmp2, nullptr, 10);
 		else if (argtype == HEX) setIfMask[i] = stoi(trimChars(tmp2, "$"), nullptr, 16);
 		else throw ("\"" + tmp2 + "\" is not a valid bit mask in " + fieldString);
+		
+		if (tmp3 == "CLEAR") setIfClear[i] = CLEAR_ALL;
+		else if (tmp3 == "CLEAR_HI") setIfClear[i] = CLEAR_HI;
+		else if (tmp3 == "CLEAR_LO") setIfClear[i] = CLEAR_LO;
+		else if (tmp3 != "") throw ("Unknown flag \"" + tmp3 + "\" in SET_IF expression in " + fieldString);
 		
  		if (tmp1.find_first_not_of("()ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!&|$") != string::npos) 
  			throw ("Invalid argument found in SET_IF expression in " + fieldString);
@@ -526,7 +550,9 @@ string mdField::getFieldString(bool *requestList, const mdConfig &config) {
 	
 		if (setBitsBy[i]) {
 	
-			if (currentValue == -1) currentValue = 0;
+			if (currentValue == -1 || setBitsClear[i] == CLEAR_ALL) currentValue = 0;
+			else if (setBitsClear[i] == CLEAR_HI) currentValue &= 0xff;
+			else if (setBitsClear[i] == CLEAR_LO) currentValue &= 0xff00;
 		
 // 			cout << "Requesting " << i << ": " << config.mdCmdList[i].mdCmdName << endl;
 // 			cout << "NC returns " << config.mdCmdList[i].getValue() << endl;		//DEBUG -> Dafuq? Returns A instead of NC
@@ -553,7 +579,10 @@ string mdField::getFieldString(bool *requestList, const mdConfig &config) {
 		
 //			cout << hex << "Set_If " << i << " check requested, condition true, " << setIfMask[i] << " masked in." << dec << endl;	//DEBUG
 		
-			if (currentValue == -1) currentValue = 0;
+			if (currentValue == -1 || setIfClear[i] == CLEAR_ALL) currentValue = 0;
+			else if (setIfClear[i] == CLEAR_HI) currentValue &= 0xff;
+			else if (setIfClear[i] == CLEAR_LO) currentValue &= 0xff00;
+			
 			currentValue |= setIfMask[i];
 		}
 	}	
