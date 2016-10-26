@@ -32,6 +32,10 @@ mdCommand::mdCommand() {
 	
 	mdCmdSubstitutionNames = nullptr;
 	mdCmdSubstitutionValues = nullptr;
+	
+	limitRange = false;
+	lowerRangeLimit = 0;
+	upperRangeLimit = 0;
 
 }
 
@@ -131,8 +135,37 @@ void mdCommand::init(string commandString, bool &verbose) {
 			else throw ("Substitution parameter is not a number in " + commandString);
 			
 			temp.erase(0, temp.find_first_of(",)") + 1);
-		}
+		}	
+	}
+	
+	
+	size_t pos = cmdStrCopy.find("RANGE");
+	if (pos != string::npos) {
+	
+		limitRange = true;
+		temp = cmdStrCopy;
+		temp.erase(0, pos+5);
+		if (temp.find_first_of('(') != 0) throw ("RANGE enabled, but no limits specified in " + commandString);
+		temp.erase(0, 1);
+		string arg1 = temp.erase(temp.find_first_of(')'));
+		string arg2 = arg1;
 		
+		if (arg1.find_first_of(',') != string::npos) arg1.erase(arg1.find_first_of(','));
+		else throw ("Insufficient arguments for RANGE in " + commandString);
+		arg2.erase(0, arg2.find_first_of(',') + 1);
+		
+		if (arg1 == "" || arg2 == "") throw ("Insufficient arguments for RANGE in " + commandString);
+		
+		if (getType(arg1) == DEC) lowerRangeLimit = stoi(arg1, nullptr, 10);
+		else if (getType(arg1) == HEX) lowerRangeLimit = stoi(trimChars(arg1, "$"), nullptr, 16);
+		else throw ("Lower RANGE limit is not a number in " + commandString);
+		
+		if (getType(arg2) == DEC) upperRangeLimit = stoi(arg2, nullptr, 10);
+		else if (getType(arg2) == HEX) upperRangeLimit = stoi(trimChars(arg2, "$"), nullptr, 16);
+		else throw ("Upper RANGE limit is not a number in " + commandString);
+		
+		//cout << "Range: " << lowerRangeLimit << ".." << upperRangeLimit << endl;
+	
 	}
 	
 	if (cmdStrCopy.find("FORCE_STRING") != string::npos) mdCmdForceString = true;
@@ -158,6 +191,7 @@ void mdCommand::init(string commandString, bool &verbose) {
 		if (mdCmdForceRepeat) cout << ", FORCE_REPEAT";
 		if (mdCmdUseLastSet) cout << ", USE_LAST_SET";
 		if (mdCmdGlobalConst) cout << ", CONST";
+		if (limitRange) cout << ", RANGE: " << lowerRangeLimit << ".." << upperRangeLimit;
 		if (mdCmdForceSubstitution) {
 		
 			cout << ", FORCE_SUBSTITUTION: ";
@@ -282,6 +316,12 @@ void mdCommand::set(int &currentVal, string &currentValString) {
 		
 		mdCmdLastValString = mdCmdCurrentValString;
 		mdCmdLastVal = mdCmdCurrentVal;
+	}
+	
+	if (limitRange && mdCmdCurrentVal != -1) {
+	
+		if (mdCmdCurrentVal < lowerRangeLimit || mdCmdCurrentVal > upperRangeLimit) throw (string("Argument out of range for command "));
+	
 	}
 	//cout << "command set to " << mdCmdCurrentVal << " | " << mdCmdCurrentValString << endl;
 }

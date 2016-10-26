@@ -15,6 +15,7 @@ int getType(const string& parameter);
 
 enum Type {BOOL, BYTE, WORD, DEC, HEX, STRING, INVALID};
 enum ConditionType {REQUIRED, SET_IF};
+enum ClearFlags {CLEAR_HI = 1, CLEAR_LO, CLEAR_ALL};
 
 class mdConfig;
 
@@ -74,6 +75,10 @@ public:
 	int mdCmdCurrentVal;
 	string mdCmdCurrentValString;
 	
+	bool limitRange;
+	int lowerRangeLimit;
+	int upperRangeLimit;
+	
 	
 	mdCommand();
 	~mdCommand();
@@ -131,11 +136,13 @@ public:
 	bool** setIfWhenSet;
 	bool* setIfByAny;
 	int* setIfMask;
+	int* setIfClear;
 	bool* setIfAlways;
 	
 	int setBitsCount;
 	bool* setBitsBy;
 	int* setBitsMask;
+	int* setBitsClear;
 	
 	int setBy;
 	int setHiBy;	
