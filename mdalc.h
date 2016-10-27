@@ -187,6 +187,7 @@ public:
 	bool usePtnEnd;
 	bool initPtnDefaults;
 	string ptnEndString;
+	string ptnLabelPrefix;
 	
 	//MDAL commands config parameters
 	mdCommand* mdCmdList;

@@ -115,7 +115,7 @@ string mdSequence::getSequenceString(const mdConfig &config) {
 	for (int i = 0; i < mdSequenceLength; i++) {
 	
 		if (i == mdSequenceLoopPosition && config.useSeqLoop) seqString = seqString + "\n" + config.seqLoopLabel;
-		seqString = seqString + "\n\t" + config.wordDirective + " " + mdSequenceArray[i];
+		seqString = seqString + "\n\t" + config.wordDirective + " " + config.ptnLabelPrefix + mdSequenceArray[i];
 	}
 	
 	seqString = seqString + "\n\t" + config.seqEndString;

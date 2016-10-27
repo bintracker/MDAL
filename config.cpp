@@ -14,6 +14,7 @@ mdConfig::mdConfig(string &configname, bool &verbose) {
 	cfgLines = nullptr;
 	mdCmdList = nullptr;
 	mdFieldList = nullptr;
+	ptnLabelPrefix = "mdp_";
 	
 	string filename = "config/" + configname + ".cfg";
 
@@ -133,6 +134,15 @@ mdConfig::mdConfig(string &configname, bool &verbose) {
  				if (verbose) cout << "Pattern end:\t\t" << ptnEndString << endl;
 			}
 			
+			tokenpos = locateToken(string("LABEL_PREFIX"), blockStart, blockEnd);
+			
+			if (tokenpos != blockEnd) {
+	
+				ptnLabelPrefix = trimChars(getArgument(cfgLines[tokenpos], 1), "\"");
+				if (ptnLabelPrefix == "") throw ("LABEL_PREFIX set but not specified in " + configname + ".cfg");
+			}
+			
+			if (verbose) cout << "Pattern label prefix:\t" << ptnLabelPrefix << endl;
 			
 			initPtnDefaults = false;
 			

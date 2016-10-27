@@ -109,11 +109,11 @@ mdModule::mdModule(string &infile, string &outfile, bool &verbose) {
 			
 			if (verbose) {
 			
-				cout << seq.uniquePtnList[i] << endl;
+				cout << config.ptnLabelPrefix + seq.uniquePtnList[i] << endl;
 				cout << modulePatterns[i];
 			}
 			
-			MUSICASM << seq.uniquePtnList[i] << endl;
+			MUSICASM << config.ptnLabelPrefix + seq.uniquePtnList[i] << endl;
 			MUSICASM << modulePatterns[i];
 			
 		}
