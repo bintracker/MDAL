@@ -189,14 +189,16 @@ public:
 	bool initPtnDefaults;
 	string ptnEndString;
 	string ptnLabelPrefix;
+	mdField* ptnFieldList;
+	int ptnFieldCount;
 	
 	//MDAL commands config parameters
 	mdCommand* mdCmdList;
 	int mdCmdCount;
 	
-	//MDAL fields config parameters
-	mdField* mdFieldList;
-	int mdFieldCount;
+	//MDAL table config parameters
+	mdField* tblFieldList;
+	int tblFieldCound;
 
 	mdConfig(string &configname, bool &verbose);
 	~mdConfig();
@@ -212,6 +214,7 @@ private:
 	int getBlockEnd(int blockStart);
 	int countBlockLines(int &blockStart, int &blockEnd);
 	int countFieldBlockLines(int &blockStart, int &blockEnd);
+	int countFields(int &blockStart, int &blockEnd);
 };
 
 

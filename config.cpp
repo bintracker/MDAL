@@ -13,7 +13,8 @@ mdConfig::mdConfig(string &configname, bool &verbose) {
 
 	cfgLines = nullptr;
 	mdCmdList = nullptr;
-	mdFieldList = nullptr;
+	ptnFieldList = nullptr;
+	tblFieldList = nullptr;
 	ptnLabelPrefix = "mdp_";
 	seqLabel = ";sequence";
 	
@@ -54,6 +55,8 @@ mdConfig::mdConfig(string &configname, bool &verbose) {
 	hexPrefix = trimChars(getArgumentString(string("HEX_PREFIX"), 0, configEnd), "()\"");
 	if (hexPrefix == "") hexPrefix = "$";
 	if (verbose) cout << "hex prefix:\t\t" << hexPrefix << endl;
+	
+	if (verbose) cout << endl;
 	
 	useSequence = false;
 	if (locateToken(string("USE_SEQUENCE"), 0, configEnd) != configEnd) {
@@ -119,54 +122,154 @@ mdConfig::mdConfig(string &configname, bool &verbose) {
 				if (verbose) cout << "Loop type:\t\t" << arg << "\nLoop label:\t\t" << seqLoopLabel << endl;
 			}
 		}
+		
+		if (verbose) cout << endl;
 	}
+	
+	
+	int blockStart = locateToken(string("CFG_COMMANDS"), 0, configEnd);
+		
+	if (blockStart == linecount - 1) throw ("No CFG_COMMANDS block found in " + configname + ".cfg");
+		
+	int blockEnd = getBlockEnd(blockStart);
+	blockStart++;					//TODO: modify locateToken/getBlockEnd so we don't have to do this shit every time
+	blockEnd--;
+	mdCmdCount = countBlockLines(blockStart, blockEnd);
+	if (!mdCmdCount) throw ("No commands specified in CFG_COMMAND block in " + configname + ".cfg");
+	
+	mdCmdList = new mdCommand[mdCmdCount];
+	int cmdNr = 0;
+	
+	if (verbose) cout << "User Commands:" << endl;
+	
+	for (int i = blockStart; i < blockEnd; i++) {
+	
+		string cmdStr = cfgLines[i];
+		cmdStr = trimChars(cmdStr, " \t");	//TODO: this trims all whitespace, don't trim whitespace within cmd string params!
+		size_t pos = cmdStr.find_first_of('/');
+		if (pos != string::npos) cmdStr.erase(pos);
+		if (cmdStr != "") {
+			mdCmdList[cmdNr].init(cmdStr, verbose);
+			cmdNr++;
+			//cout << cmdStr << ".\n";
+		}
+	}
+	
+	if (verbose) cout << endl;
+	
 	
 	usePatterns = false;
 	
 	if (locateToken(string("USE_PATTERNS"), 0, configEnd) != configEnd) {
 	
-		useSequence = true;
+		usePatterns = true;
 		if (verbose) cout << "using PATTERNS" << endl;
 		
-		int blockStart = locateToken(string("CFG_PATTERNS"), 0, configEnd);
+		blockStart = locateToken(string("CFG_PATTERNS"), 0, configEnd);
 		
 		if (blockStart == configEnd) throw ("No CFG_PATTERNS block found in " + configname + ".cfg");
 		
-		else {
-			
-			int blockEnd = getBlockEnd(blockStart);
-			usePtnEnd = false;
 		
-			int tokenpos = locateToken(string("USE_END"), blockStart, blockEnd);
-			
-			if (tokenpos != blockEnd) {
-			
-				usePtnEnd = true;
-				ptnEndString = trimChars(getArgument(cfgLines[tokenpos], 1), "\"");
-				if (ptnEndString == "") throw ("Pattern end string not specified in " + configname + ".cfg");
- 				if (verbose) cout << "Pattern end:\t\t" << ptnEndString << endl;
-			}
-			
-			tokenpos = locateToken(string("LABEL_PREFIX"), blockStart, blockEnd);
-			
-			if (tokenpos != blockEnd) {
+		int blockEnd = getBlockEnd(blockStart);
+		usePtnEnd = false;
 	
-				ptnLabelPrefix = trimChars(getArgument(cfgLines[tokenpos], 1), "\"");
-				if (ptnLabelPrefix == "") throw ("LABEL_PREFIX set but not specified in " + configname + ".cfg");
-			}
-			
-			if (verbose) cout << "Pattern label prefix:\t" << ptnLabelPrefix << endl;
-			
-			initPtnDefaults = false;
-			
-			tokenpos = locateToken(string("INIT_DEFAULTS"), blockStart, blockEnd);
-			
-			if (tokenpos != blockEnd) {
-			
-				initPtnDefaults = true;
- 				if (verbose) cout << "Initialize commands with default values at each pattern start" << endl;
-			}
+		int tokenpos = locateToken(string("USE_END"), blockStart, blockEnd);
+		
+		if (tokenpos != blockEnd) {
+		
+			usePtnEnd = true;
+			ptnEndString = trimChars(getArgument(cfgLines[tokenpos], 1), "\"");
+			if (ptnEndString == "") throw ("Pattern end string not specified in " + configname + ".cfg");
+ 			if (verbose) cout << "Pattern end:\t\t" << ptnEndString << endl;
 		}
+		
+		tokenpos = locateToken(string("LABEL_PREFIX"), blockStart, blockEnd);
+		
+		if (tokenpos != blockEnd) {
+
+			ptnLabelPrefix = trimChars(getArgument(cfgLines[tokenpos], 1), "\"");
+			if (ptnLabelPrefix == "") throw ("LABEL_PREFIX set but not specified in " + configname + ".cfg");
+		}
+		
+		if (verbose) cout << "Pattern label prefix:\t" << ptnLabelPrefix << endl;
+		
+		initPtnDefaults = false;
+		
+		tokenpos = locateToken(string("INIT_DEFAULTS"), blockStart, blockEnd);
+		
+		if (tokenpos != blockEnd) {
+		
+			initPtnDefaults = true;
+ 			if (verbose) cout << "Initialize commands with default values at each pattern start" << endl;
+		}
+
+		
+		ptnFieldCount = countFields(blockStart, blockEnd);
+		if (!ptnFieldCount) throw ("No fields specified in CFG_PATTERNS block in " + configname + ".cfg");
+		
+		cout << ptnFieldCount << " fields found.\n";
+		
+		ptnFieldList = new mdField[ptnFieldCount];
+		
+		int fieldNr = 0;
+		string requirePtnBeginStr = "";
+		string requireSeqBeginStr = "";
+		
+		for (int i = blockStart; i < blockEnd; i++) {
+	
+			string fieldStr = cfgLines[i];
+			fieldStr = trimChars(fieldStr, " \t");	//TODO: this trims all whitespace, don't trim whitespace within cmd string params!
+			size_t pos = fieldStr.find_first_of('/');
+			if (pos != string::npos) fieldStr.erase(pos);
+			if (fieldStr != "" && (fieldStr.find("WORD") != string::npos || fieldStr.find("BYTE") != string::npos)) {
+		
+				ptnFieldList[fieldNr].init(mdCmdList, mdCmdCount, fieldStr, verbose);
+			
+				if (verbose) {
+			
+					cout << "Field " << fieldNr;
+					if (ptnFieldList[fieldNr].requiredAlways) cout << " always required";
+					else {
+						cout << " required if ";
+						for (int j = 0; j < mdCmdCount; j++) {
+				
+							if (ptnFieldList[fieldNr].requiredBy[j]) {
+					
+								cout << mdCmdList[j].mdCmdName;
+								if (ptnFieldList[fieldNr].requiredWhenSet[j]) cout << " is set ";
+								else cout << " is not set ";
+						
+								if (ptnFieldList[fieldNr].requiredByAny && j + 1 < mdCmdCount) cout << "or ";
+								else if (ptnFieldList[fieldNr].requiredByAny && j + 1 < mdCmdCount) cout << "and ";
+								//else cout << endl;
+							}
+						}
+					}
+				
+					cout << endl;
+				}
+			
+				fieldNr++;
+			}
+		
+			if (fieldStr.find("REQUIRE_SEQ_BEGIN") != string::npos) requireSeqBeginStr = fieldStr;
+			if (fieldStr.find("REQUIRE_PTN_BEGIN") != string::npos) requirePtnBeginStr = fieldStr;
+		}
+		
+		
+		//TODO: currently only checks presence of token, expr is not evaluated
+	
+		if (requireSeqBeginStr != "") {
+	
+			for (int i = 0; i < ptnFieldCount; i++) ptnFieldList[i].requiredSeqBegin = true;
+		}
+	
+		if (requirePtnBeginStr != "") {
+	
+			for (int i = 0; i < ptnFieldCount; i++) ptnFieldList[i].requiredPatBegin = true;		//TODO: PatBegin is inconsistently named
+	
+		}
+		
 	}
 	
 	useTables = false;
@@ -184,118 +287,34 @@ mdConfig::mdConfig(string &configname, bool &verbose) {
 	}
 	
 	
-	
-	int blockStart = locateToken(string("CFG_COMMANDS"), 0, configEnd);
-		
-	if (blockStart == linecount - 1) throw ("No CFG_COMMANDS block found in " + configname + ".cfg");
-		
-	int blockEnd = getBlockEnd(blockStart);
-	blockStart++;					//TODO: modify locateToken/getBlockEnd so we don't have to do this shit every time
-	blockEnd--;
-	mdCmdCount = countBlockLines(blockStart, blockEnd);
-	if (!mdCmdCount) throw ("No commands specified in CFG_COMMAND block in " + configname + ".cfg");
-	
-	mdCmdList = new mdCommand[mdCmdCount];
-	int cmdNr = 0;
-	
-	for (int i = blockStart; i < blockEnd; i++) {
-	
-		string cmdStr = cfgLines[i];
-		cmdStr = trimChars(cmdStr, " \t");	//TODO: this trims all whitespace, don't trim whitespace within cmd string params!
-		size_t pos = cmdStr.find_first_of('/');
-		if (pos != string::npos) cmdStr.erase(pos);
-		if (cmdStr != "") {
-			mdCmdList[cmdNr].init(cmdStr, verbose);
-			cmdNr++;
-			//cout << cmdStr << ".\n";
-		}
-	}
-	
-	
-	
-	blockStart = locateToken(string("CFG_FIELDS"), 0, configEnd);
-	
-	if (blockStart == configEnd) throw ("No CFG_FIELDS block found in " + configname + ".cfg");
-	
-	blockEnd = getBlockEnd(blockStart);
-	blockStart++;					//TODO: modify locateToken/getBlockEnd so we don't have to do this shit every time
-	blockEnd--;
-	mdFieldCount = countFieldBlockLines(blockStart, blockEnd);
-	if (!mdFieldCount) throw ("No commands specified in CFG_FIELDS block in " + configname + ".cfg");
-	
-	
-	mdFieldList = new mdField[mdFieldCount];
-	int fieldNr = 0;
-	string requirePtnBeginStr = "";
-	string requireSeqBeginStr = "";
-	
-	for (int i = blockStart; i < blockEnd; i++) {
-	
-		string fieldStr = cfgLines[i];
-		fieldStr = trimChars(fieldStr, " \t");	//TODO: this trims all whitespace, don't trim whitespace within cmd string params!
-		size_t pos = fieldStr.find_first_of('/');
-		if (pos != string::npos) fieldStr.erase(pos);
-		if (fieldStr != "" && (fieldStr.find("WORD") != string::npos || fieldStr.find("BYTE") != string::npos)) {
-		
-			mdFieldList[fieldNr].init(mdCmdList, mdCmdCount, fieldStr, verbose);
-			
-			if (verbose) {
-			
-				cout << "Field " << fieldNr;
-				if (mdFieldList[fieldNr].requiredAlways) cout << " always required";
-				else {
-					cout << " required if ";
-					for (int j = 0; j < mdCmdCount; j++) {
-				
-						if (mdFieldList[fieldNr].requiredBy[j]) {
-					
-							cout << mdCmdList[j].mdCmdName;
-							if (mdFieldList[fieldNr].requiredWhenSet[j]) cout << " is set ";
-							else cout << " is not set ";
-						
-							if (mdFieldList[fieldNr].requiredByAny && j + 1 < mdCmdCount) cout << "or ";
-							else if (mdFieldList[fieldNr].requiredByAny && j + 1 < mdCmdCount) cout << "and ";
-							//else cout << endl;
-						}
-					}
-				}
-				
-				cout << endl;
-			}
-			
-			fieldNr++;
-		}
-		
-		if (fieldStr.find("REQUIRE_SEQ_BEGIN") != string::npos) requireSeqBeginStr = fieldStr;
-		if (fieldStr.find("REQUIRE_PTN_BEGIN") != string::npos) requirePtnBeginStr = fieldStr;
-	}
-	
-	
-	//TODO: currently only checks presence of token, expr is not evaluated
-	
-	if (requireSeqBeginStr != "") {
-	
-		for (int i = 0; i < mdFieldCount; i++) mdFieldList[i].requiredSeqBegin = true;
-	}
-	
-	if (requirePtnBeginStr != "") {
-	
-		for (int i = 0; i < mdFieldCount; i++) mdFieldList[i].requiredPatBegin = true;		//TODO: PatBegin is inconsistently named
-	
-	}
-
-	
 	return;
 }
 
 mdConfig::~mdConfig() {
 
-	delete[] mdFieldList;
+	delete[] ptnFieldList;
+	delete[] tblFieldList;
 	delete[] mdCmdList;
 	delete[] cfgLines;
 
 }
 
+
+
+int mdConfig::countFields(int &blockStart, int &blockEnd) {
+
+	int fieldCount = 0;
+	
+	for (int line = blockStart; line < blockEnd; line++) {
+	
+		string temp = cfgLines[line];
+		if (temp.find("WORD") != string::npos || temp.find("BYTE") != string::npos) fieldCount++;
+	
+	}
+	
+	
+	return fieldCount;
+}
 
 
 //count lines in the field definition block, omitting comments, empty lines, and global commands

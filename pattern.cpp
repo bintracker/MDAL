@@ -150,7 +150,7 @@ void mdPattern::read(const string *ptnBlock, const int patternNumber, const int 
 		}
 		
 		
-		bool lastFieldIsWord = config.mdFieldList[0].isWord;
+		bool lastFieldIsWord = config.ptnFieldList[0].isWord;
 		bool firstSet = false;
 		
 		requestList = new bool[config.mdCmdCount];
@@ -158,10 +158,10 @@ void mdPattern::read(const string *ptnBlock, const int patternNumber, const int 
 		
 		
 		
-		for (int field = 0; field < config.mdFieldCount; field++) {
+		for (int field = 0; field < config.ptnFieldCount; field++) {
 		
 			bool seqBegin = (patternNumber == 0) ? true : false;
-			config.mdFieldList[field].getRequests(requestList, config, row, seqBegin);
+			config.ptnFieldList[field].getRequests(requestList, config, row, seqBegin);
 			
 		}
 		
@@ -170,21 +170,21 @@ void mdPattern::read(const string *ptnBlock, const int patternNumber, const int 
 		
 		
 		
-		for (int field = 0; field < config.mdFieldCount; field++) {
+		for (int field = 0; field < config.ptnFieldCount; field++) {
 		
 			//cout << "row " << row << " field " << field << endl;	//DEBUG
 			
 			//bool seqBegin = (patternNumber == 0) ? true : false;
 			
-			string fieldString = config.mdFieldList[field].getFieldString(requestList, config);
+			string fieldString = config.ptnFieldList[field].getFieldString(requestList, config);
 			
 			
 			if (fieldString != "") {
 			
-				if (!firstSet || lastFieldIsWord != config.mdFieldList[field].isWord) {
+				if (!firstSet || lastFieldIsWord != config.ptnFieldList[field].isWord) {
 				
 					firstSet = true;
-					lastFieldIsWord = config.mdFieldList[field].isWord;
+					lastFieldIsWord = config.ptnFieldList[field].isWord;
 					
 					ptnString += "\n\t";
 					
