@@ -272,7 +272,9 @@ void mdField::init(mdCommand *mdCmdList, int &mdCmdCount, string &fieldString, b
 		if (tmp2 == "") throw ("No bit mask specified in SET_BITS expression in " + fieldString);	//TODO does not reliably detect missing bitmask
 		
 		string tmp3 = temp.substr(begin + 9 + tmp1.size() + tmp2.size() + 2, temp.size() - (begin + 9 + tmp1.size() + tmp2.size() + 2));
-		tmp3.erase(tmp3.find_first_of(")"));
+		tmp3.erase(tmp3.find_first_of(",)"));
+		
+		//cout << "tmp1: " << tmp1 << ", tmp2: " << tmp2 << ", tmp3: " << tmp3 << endl;		//DEBUG ok
 	
 		size_t slen = tmp1.size() + 10 + tmp2.size() + 1 + tmp3.size() + 1;
 	
@@ -299,7 +301,7 @@ void mdField::init(mdCommand *mdCmdList, int &mdCmdCount, string &fieldString, b
 
 		temp.erase(begin, slen);
 	
-		cout << "SET_BITS by " << tmp1 << " with " << setBitsMask[cmdNr] << ", clear " << setBitsClear[cmdNr] << ", temp: " << temp << ", tmp3: " << tmp3 << endl;		//DEBUG
+		//cout << "SET_BITS by " << tmp1 << " with " << setBitsMask[cmdNr] << ", clear " << setBitsClear[cmdNr] << ", temp: " << temp << ", tmp3: " << tmp3 << endl;		//DEBUG
 	}
 	
 
