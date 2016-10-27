@@ -110,7 +110,7 @@ mdSequence::~mdSequence() {
 
 string mdSequence::getSequenceString(const mdConfig &config) {
 
-	string seqString = "";
+	string seqString = config.seqLabel + "\n";
 	
 	for (int i = 0; i < mdSequenceLength; i++) {
 	

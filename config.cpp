@@ -15,6 +15,7 @@ mdConfig::mdConfig(string &configname, bool &verbose) {
 	mdCmdList = nullptr;
 	mdFieldList = nullptr;
 	ptnLabelPrefix = "mdp_";
+	seqLabel = ";sequence";
 	
 	string filename = "config/" + configname + ".cfg";
 
@@ -74,7 +75,19 @@ mdConfig::mdConfig(string &configname, bool &verbose) {
 			useSeqLoopPointer = false;
 			
 			
-			int tokenpos = locateToken(string("USE_END"), blockStart, blockEnd);
+			int tokenpos = locateToken(string("USE_LABEL"), blockStart, blockEnd);
+			
+			if (tokenpos != blockEnd) {
+			
+				seqLabel = trimChars(getArgument(cfgLines[tokenpos], 1), "\"");
+				if (seqLabel == "") throw ("Sequence label used, but not specified in " + configname + ".cfg");	
+			}
+			
+			if (verbose) cout << "Sequence label:\t\t" << seqLabel << endl;
+			
+			
+			
+			tokenpos = locateToken(string("USE_END"), blockStart, blockEnd);
 			
 			if (tokenpos != blockEnd) {
 			

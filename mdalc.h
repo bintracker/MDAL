@@ -182,6 +182,7 @@ public:
 	bool useSeqLoopPointer;
 	string seqEndString;
 	string seqLoopLabel;
+	string seqLabel;
 	
 	//pattern config parameters
 	bool usePtnEnd;
