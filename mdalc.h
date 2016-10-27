@@ -213,7 +213,6 @@ private:
 	string getArgument(string argString, int argNumber);
 	int getBlockEnd(int blockStart);
 	int countBlockLines(int &blockStart, int &blockEnd);
-	int countFieldBlockLines(int &blockStart, int &blockEnd);
 	int countFields(int &blockStart, int &blockEnd);
 };
 

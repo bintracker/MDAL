@@ -207,7 +207,7 @@ mdConfig::mdConfig(string &configname, bool &verbose) {
 		ptnFieldCount = countFields(blockStart, blockEnd);
 		if (!ptnFieldCount) throw ("No fields specified in CFG_PATTERNS block in " + configname + ".cfg");
 		
-		cout << ptnFieldCount << " fields found.\n";
+		//cout << ptnFieldCount << " fields found.\n";
 		
 		ptnFieldList = new mdField[ptnFieldCount];
 		
@@ -308,35 +308,13 @@ int mdConfig::countFields(int &blockStart, int &blockEnd) {
 	for (int line = blockStart; line < blockEnd; line++) {
 	
 		string temp = cfgLines[line];
+		if (temp.find_first_of('/') != string::npos) temp.erase(temp.find_first_of('/'));
 		if (temp.find("WORD") != string::npos || temp.find("BYTE") != string::npos) fieldCount++;
-	
 	}
-	
 	
 	return fieldCount;
 }
 
-
-//count lines in the field definition block, omitting comments, empty lines, and global commands
-int mdConfig::countFieldBlockLines(int &blockStart, int &blockEnd) {
-
-	int cmdlines = 0;
-	
-	for (int line = blockStart; line < blockEnd; line++) {
-	
-		string temp = cfgLines[line];
-		temp = trimChars(temp, " \t");
-		size_t pos = temp.find_first_of('/');
-		if (pos != string::npos) temp.erase(pos);
-		
-		if (temp != "" && (temp.find("WORD") != string::npos || temp.find("BYTE") != string::npos)) cmdlines++;
-		
-		//cout << "line: " << cmdlines << " = " << temp << endl;
-	}
-	
-	
-	return cmdlines;
-}
 
 //count lines in a definition block, omitting comments and empty lines
 int mdConfig::countBlockLines(int &blockStart, int &blockEnd) {

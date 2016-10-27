@@ -59,6 +59,8 @@ mdModule::mdModule(string &infile, string &outfile, bool &verbose) {
 	
 	mdConfig config(configname, verbose);
 	
+	if (verbose) cout << endl << "Module data:" << endl;
+	
 	if (config.useSequence) {
 		
 		int blockStart = locateToken(string(":SEQUENCE"));
