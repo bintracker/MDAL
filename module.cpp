@@ -12,6 +12,8 @@ mdModule::mdModule(string &infile, string &outfile, bool &verbose) {
 	moduleLines = nullptr;
 	mdBlock = nullptr;
 	modulePatterns = nullptr;
+	moduleTables = nullptr;
+	//uniqueTableCount = 0;
 
 	ifstream MDFILE(infile.data());	
 	if (!MDFILE.is_open()) throw (infile + " not found.");
@@ -80,9 +82,36 @@ mdModule::mdModule(string &infile, string &outfile, bool &verbose) {
 		if (verbose) cout << seq << endl;
 		MUSICASM << seq << endl;
 	
-	
+		
+		
+		if (config.useTables) {
+			
+			moduleTables = new vector<mdTable>;
+			
+			for (int i = 0; i < config.mdCmdCount; i++) {
+			
+				if (config.cmdIsTablePointer[i]) {
+				
+					bool isUsed = false;
+					
+					for (auto it : *moduleTables) {
+						
+						if (config.mdCmdList[i].mdCmdDefaultValString == it.tblName) isUsed = true;	
+					}
+					
+					if (!isUsed) moduleTables->push_back(config.mdCmdList[i].mdCmdDefaultValString);
+				}
+			}
+			
+// 			vector<mdTable>::iterator it;
+// 			it = moduleTables->begin();
+// 			cout << it->tblName << endl;	
+		}
+		
+		
 		//if USE_PATTERNS
-		modulePatterns = new mdPattern[seq.uniquePtnCount];
+		modulePatterns = new mdPattern[seq.uniquePtnCount];		//TODO should be conditional
+		
 		
 		for (int i = 0; i < seq.uniquePtnCount; i++) {
 		
@@ -104,7 +133,7 @@ mdModule::mdModule(string &infile, string &outfile, bool &verbose) {
 			
 			for (int j = blockStart + 1; j <= blockEnd; j++) mdBlock[j - blockStart - 1] = moduleLines[j];
 			
-			modulePatterns[i].read(mdBlock, i, blockEnd - blockStart, config, verbose);
+			modulePatterns[i].read(mdBlock, i, blockEnd - blockStart, config, moduleTables, verbose);
 			
 			delete[] mdBlock;
 			mdBlock = nullptr;
@@ -119,7 +148,47 @@ mdModule::mdModule(string &infile, string &outfile, bool &verbose) {
 			MUSICASM << modulePatterns[i];
 			
 		}
-	
+		
+		
+		if (config.useTables) {
+		
+			moduleTables->shrink_to_fit();
+		
+			if (verbose) {
+			
+				cout << "Unique tables: " << moduleTables->size();
+				
+				for (auto it : *moduleTables) cout << ", " << it.tblName;
+				
+				cout << endl;
+			}
+			
+			for (auto it : *moduleTables) {
+			
+				blockStart = locateToken(":" + it.tblName);
+				blockEnd = getBlockEnd(blockStart);
+			
+				if (blockStart >= linecount - 1) throw ("Table \"" + it.tblName + "\" is not defined.");
+				if (blockStart >= blockEnd) throw ("Table \"" + it.tblName + "\" contains no data");
+				
+
+				mdBlock = new string[blockEnd - blockStart];
+			
+				for (int j = blockStart + 1; j <= blockEnd; j++) mdBlock[j - blockStart - 1] = moduleLines[j];
+			
+				it.read(mdBlock, blockEnd - blockStart, config, verbose);
+			
+				delete[] mdBlock;
+				mdBlock = nullptr;
+				
+				
+				
+			
+				MUSICASM << it;
+				if (verbose) cout << it;
+			}
+		}
+		
 	}
 
 	return;
@@ -131,6 +200,7 @@ mdModule::~mdModule() {
 	delete[] mdBlock;
 	delete[] moduleLines;
 	delete[] modulePatterns;
+	delete moduleTables;
 	//delete seq;
 }
 

@@ -13,9 +13,11 @@ mdConfig::mdConfig(string &configname, bool &verbose) {
 
 	cfgLines = nullptr;
 	mdCmdList = nullptr;
+	cmdIsTablePointer = nullptr;
 	ptnFieldList = nullptr;
 	tblFieldList = nullptr;
 	ptnLabelPrefix = "mdp_";
+	tblLabelPrefix = "mdt_";
 	seqLabel = ";sequence";
 	
 	string filename = "config/" + configname + ".cfg";
@@ -138,6 +140,8 @@ mdConfig::mdConfig(string &configname, bool &verbose) {
 	if (!mdCmdCount) throw ("No commands specified in CFG_COMMAND block in " + configname + ".cfg");
 	
 	mdCmdList = new mdCommand[mdCmdCount];
+	cmdIsTablePointer = new bool[mdCmdCount];
+	fill_n(cmdIsTablePointer, mdCmdCount, false);
 	int cmdNr = 0;
 	
 	if (verbose) cout << "User Commands:" << endl;
@@ -149,7 +153,10 @@ mdConfig::mdConfig(string &configname, bool &verbose) {
 		size_t pos = cmdStr.find_first_of('/');
 		if (pos != string::npos) cmdStr.erase(pos);
 		if (cmdStr != "") {
+		
+			if (cmdStr.find("TBL_POINTER") != string::npos) cmdIsTablePointer[cmdNr] = true;
 			mdCmdList[cmdNr].init(cmdStr, verbose);
+			
 			cmdNr++;
 			//cout << cmdStr << ".\n";
 		}
@@ -272,12 +279,94 @@ mdConfig::mdConfig(string &configname, bool &verbose) {
 		
 	}
 	
+	
+	
 	useTables = false;
+	
 	if (locateToken(string("USE_TABLES"), 0, configEnd) != configEnd) {
 	
 		useTables = true;
-		if (verbose) cout << "using TABLES" << endl;
+		if (verbose) cout << endl << "using TABLES" << endl;
+		
+		blockStart = locateToken(string("CFG_TABLES"), 0, configEnd);
+		
+		if (blockStart == configEnd) throw ("No CFG_TABLES block found in " + configname + ".cfg");
+		
+		
+		int blockEnd = getBlockEnd(blockStart);
+		
+		useTblEnd = false;
+		tblEndString = "";
+	
+		int tokenpos = locateToken(string("USE_END"), blockStart, blockEnd);
+		
+		if (tokenpos != blockEnd) {
+		
+			useTblEnd = true;
+			tblEndString = trimChars(getArgument(cfgLines[tokenpos], 1), "\"");
+			if (tblEndString == "") throw ("Table end string not specified in " + configname + ".cfg");
+ 			if (verbose) cout << "Table end:\t\t" << tblEndString << endl;
+		}
+		
+		
+		tokenpos = locateToken(string("LABEL_PREFIX"), blockStart, blockEnd);
+		
+		if (tokenpos != blockEnd) {
+
+			tblLabelPrefix = trimChars(getArgument(cfgLines[tokenpos], 1), "\"");
+			if (tblLabelPrefix == "") throw ("LABEL_PREFIX set but not specified in " + configname + ".cfg");
+		}
+		
+		if (verbose) cout << "Table label prefix:\t" << tblLabelPrefix << endl;
+		
+		
+		tblFieldCount = countFields(blockStart, blockEnd);
+		if (!tblFieldCount) throw ("No fields specified in CFG_PATTERNS block in " + configname + ".cfg");
+		
+		tblFieldList = new mdField[tblFieldCount];
+		
+		int fieldNr = 0;
+		
+		for (int i = blockStart; i < blockEnd; i++) {
+	
+			string fieldStr = cfgLines[i];
+			fieldStr = trimChars(fieldStr, " \t");	//TODO: this trims all whitespace, don't trim whitespace within cmd string params!
+			size_t pos = fieldStr.find_first_of('/');
+			if (pos != string::npos) fieldStr.erase(pos);
+			if (fieldStr != "" && (fieldStr.find("WORD") != string::npos || fieldStr.find("BYTE") != string::npos)) {
+		
+				tblFieldList[fieldNr].init(mdCmdList, mdCmdCount, fieldStr, verbose);
+			
+				if (verbose) {
+			
+					cout << "Field " << fieldNr;
+					if (tblFieldList[fieldNr].requiredAlways) cout << " always required";
+					else {
+						cout << " required if ";
+						for (int j = 0; j < mdCmdCount; j++) {
+				
+							if (tblFieldList[fieldNr].requiredBy[j]) {
+					
+								cout << mdCmdList[j].mdCmdName;
+								if (tblFieldList[fieldNr].requiredWhenSet[j]) cout << " is set ";
+								else cout << " is not set ";
+						
+								if (tblFieldList[fieldNr].requiredByAny && j + 1 < mdCmdCount) cout << "or ";
+								else if (tblFieldList[fieldNr].requiredByAny && j + 1 < mdCmdCount) cout << "and ";
+								//else cout << endl;
+							}
+						}
+					}
+				
+					cout << endl;
+				}
+			
+				fieldNr++;
+			}
+		}		
 	}
+
+
 	
 	useSamples = false;
 	if (locateToken(string("USE_SAMPLES"), 0, configEnd) != configEnd) {
@@ -295,6 +384,7 @@ mdConfig::~mdConfig() {
 	delete[] ptnFieldList;
 	delete[] tblFieldList;
 	delete[] mdCmdList;
+	delete[] cmdIsTablePointer;
 	delete[] cfgLines;
 
 }

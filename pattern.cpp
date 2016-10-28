@@ -37,7 +37,7 @@ mdPattern::~mdPattern() {
 
 }
 
-void mdPattern::read(const string *ptnBlock, const int patternNumber, const int blockLength, const mdConfig &config, const bool &verbose) {
+void mdPattern::read(const string *ptnBlock, const int patternNumber, const int blockLength, const mdConfig &config, vector<mdTable> *moduleTables, const bool &verbose) {
 
 	if (patternNumber == 0) firstInSequence = true;
 
@@ -145,7 +145,22 @@ void mdPattern::read(const string *ptnBlock, const int patternNumber, const int 
 			
 			if (lineCommands[row][cmd]) {
 				//cout << "Set row " << row << " cmd " << cmd << endl;	//DEBUG
+				
+				if (config.useTables && config.cmdIsTablePointer[cmd]) {
+				
+					bool isUsed = false;
+					
+					for (auto it : *moduleTables) {
+						
+						if (lineCmdStrVals[row][cmd] == it.tblName) isUsed = true;	
+					}
+					
+					if (!isUsed) moduleTables->push_back(lineCmdStrVals[row][cmd]);
+				
+				}
+				
 				config.mdCmdList[cmd].set(lineCmdVals[row][cmd], lineCmdStrVals[row][cmd]);
+				
 			}
 		}
 		

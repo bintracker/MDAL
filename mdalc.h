@@ -3,6 +3,7 @@
 
 #include <string>
 #include <fstream>
+#include <vector>
 
 #define MDALVERSION 0
 
@@ -18,6 +19,7 @@ enum ConditionType {REQUIRED, SET_IF};
 enum ClearFlags {CLEAR_HI = 1, CLEAR_LO, CLEAR_ALL};
 
 class mdConfig;
+class mdTable;
 
 
 class mdPattern {
@@ -33,7 +35,7 @@ public:
 	mdPattern();
 	~mdPattern();
 	
-	void read(const string *ptnBlock, const int patternNumber, const int blockLength, const mdConfig &config, const bool &verbose);
+	void read(const string *ptnBlock, const int patternNumber, const int blockLength, const mdConfig &config, vector<mdTable> *moduleTables, const bool &verbose);
 
 	friend ostream& operator<<(ostream& os, const mdPattern &ptn);
 private:
@@ -46,6 +48,7 @@ class mdModule {
 public:
 	string mdSequenceString;
 	mdPattern *modulePatterns;
+	vector<mdTable> *moduleTables;
 
 	mdModule(string &infile, string &outfile, bool &verbose);
 	~mdModule();
@@ -54,6 +57,8 @@ public:
 	
 protected:
 	string *mdBlock;
+	
+	//int uniqueTableCount;
 
 private:
 	int linecount;
@@ -79,6 +84,8 @@ public:
 	int lowerRangeLimit;
 	int upperRangeLimit;
 	
+	string mdCmdDefaultValString;
+	
 	
 	mdCommand();
 	~mdCommand();
@@ -94,7 +101,7 @@ protected:
 	
 	
 	int mdCmdDefaultVal;
-	string mdCmdDefaultValString;
+	
 	bool mdCmdForceString;
 	bool mdCmdForceSubstitution;
 	string* mdCmdSubstitutionNames;
@@ -176,6 +183,11 @@ public:
 	string byteDirective;
 	string hexPrefix;
 	
+	//MDAL commands config parameters
+	mdCommand* mdCmdList;
+	bool* cmdIsTablePointer;
+	int mdCmdCount;
+	
 	//sequence config parameters
 	bool useSeqEnd;
 	bool useSeqLoop;
@@ -192,13 +204,12 @@ public:
 	mdField* ptnFieldList;
 	int ptnFieldCount;
 	
-	//MDAL commands config parameters
-	mdCommand* mdCmdList;
-	int mdCmdCount;
-	
-	//MDAL table config parameters
+	//table config parameters
+	bool useTblEnd;
+	string tblEndString;
+	string tblLabelPrefix;
 	mdField* tblFieldList;
-	int tblFieldCound;
+	int tblFieldCount;
 
 	mdConfig(string &configname, bool &verbose);
 	~mdConfig();
@@ -245,13 +256,22 @@ private:
 class mdTable {
 
 public:
-	string tabEndLabel;
+	string tblName;
+	int tblLength;
+	bool *requestList;
+	bool **lineCommands;
+	int **lineCmdVals;
+	string **lineCmdStrVals;
 	
-	mdTable();
+	mdTable(string name);
 	~mdTable();
-	bool mdGetPattern();
-private:
+	
+	void read(const string *tblBlock, const int blockLength, const mdConfig &config, const bool &verbose);
 
+	friend ostream& operator<<(ostream& os, const mdTable &tbl);
+
+private:
+	string tblString;
 };
 
 
