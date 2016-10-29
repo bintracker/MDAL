@@ -514,6 +514,7 @@ string mdField::getFieldString(bool *requestList, const mdConfig &config) {
 	if (setBy != -1) {
 	
 		currentValueString = config.mdCmdList[setBy].getValueString();
+		if (config.cmdIsTablePointer[setBy] && currentValueString != "") currentValueString = config.tblLabelPrefix + currentValueString;
 		currentValue = config.mdCmdList[setBy].getValue();
 	
 	}

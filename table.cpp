@@ -228,7 +228,7 @@ void mdTable::read(const string *tblBlock, const int blockLength, const mdConfig
 
 ostream& operator<<(ostream& os, const mdTable &tbl) {
 
-	os << tbl.tblString << endl;
+	os << tbl.tblString << endl << endl;
 	
 	return os;
 }

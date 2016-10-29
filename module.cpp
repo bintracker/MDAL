@@ -105,7 +105,8 @@ mdModule::mdModule(string &infile, string &outfile, bool &verbose) {
 			
 // 			vector<mdTable>::iterator it;
 // 			it = moduleTables->begin();
-// 			cout << it->tblName << endl;	
+// 			cout << it->tblName << endl;
+//			cout << "Capacity: " << moduleTables->capacity() << endl;	
 		}
 		
 		
