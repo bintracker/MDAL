@@ -549,19 +549,34 @@ string mdField::getFieldString(bool *requestList, const mdConfig &config) {
 	}
 	
 	
+	bool clearedBySetBits = false;
+	bool clearedHiBySetBits = false;
+	bool clearedLoBySetBits = false;
+	
 	for (int i = 0; i < config.mdCmdCount && setBitsCount; i++) {
 	
 		if (setBitsBy[i]) {
 	
-			if (currentValue == -1 || setBitsClear[i] == CLEAR_ALL) currentValue = 0;
-			else if (setBitsClear[i] == CLEAR_HI) currentValue &= 0xff;
-			else if (setBitsClear[i] == CLEAR_LO) currentValue &= 0xff00;
-		
 // 			cout << "Requesting " << i << ": " << config.mdCmdList[i].mdCmdName << endl;
 // 			cout << "NC returns " << config.mdCmdList[i].getValue() << endl;		//DEBUG -> Dafuq? Returns A instead of NC
 // 			cout << hex << "currentValue: " << currentValue << endl;
 		
 			if (config.mdCmdList[i].getValue() > 0) {
+			
+				if (currentValue == -1 || setBitsClear[i] == CLEAR_ALL) {
+					currentValue = 0;
+					clearedBySetBits = true;
+//					cout << "Clear All by SET_BITS" << endl;
+				}
+				else if (setBitsClear[i] == CLEAR_HI) {
+					currentValue &= 0xff;
+					clearedHiBySetBits = true;
+				}
+				else if (setBitsClear[i] == CLEAR_LO) {
+					currentValue &= 0xff00;
+					clearedLoBySetBits = false;
+				}
+			
 				//TODO: support STRING cmds -> same with setIf
 				currentValue |= setBitsMask[i];
 			}
@@ -573,7 +588,7 @@ string mdField::getFieldString(bool *requestList, const mdConfig &config) {
 	
 	//TODO: still requires a solution for mixed string/int results
 	
-	for (int i = 0; i < setIfCount; i++) {
+	for (int i = 0; i < setIfCount && !clearedBySetBits; i++) {
 	
 		
 	
@@ -582,11 +597,16 @@ string mdField::getFieldString(bool *requestList, const mdConfig &config) {
 		
 //			cout << hex << "Set_If " << i << " check requested, condition true, " << setIfMask[i] << " masked in." << dec << endl;	//DEBUG
 		
-			if (currentValue == -1 || setIfClear[i] == CLEAR_ALL) currentValue = 0;
+			if (currentValue == -1 || setIfClear[i] == CLEAR_ALL) {
+				currentValue = 0;
+				//cout << "Clear All" << endl;
+			}
 			else if (setIfClear[i] == CLEAR_HI) currentValue &= 0xff;
 			else if (setIfClear[i] == CLEAR_LO) currentValue &= 0xff00;
 			
-			currentValue |= setIfMask[i];
+			if (clearedLoBySetBits) currentValue |= (setIfMask[i] & 0xff00);
+			else if (clearedHiBySetBits) currentValue |= (setIfMask[i] & 0xff);
+			else currentValue |= setIfMask[i];
 		}
 	}	
 	
