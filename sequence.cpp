@@ -24,7 +24,9 @@ mdSequence::mdSequence(string *sequenceBlock, int sequenceBlockLength, mdConfig 
 		if (inputString != "" && inputString != "[LOOP]") mdSequenceLength++;
 	}
 	
+	
 	if (!mdSequenceLength) throw (string("Sequence contains no patterns"));
+	if (config.seqMaxLength && mdSequenceLength > config.seqMaxLength) throw (string("Maximum sequence length exceeded."));
 	
 	mdSequenceArray = new string[mdSequenceLength];
 	int element = 0;

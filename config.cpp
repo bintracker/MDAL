@@ -19,6 +19,9 @@ mdConfig::mdConfig(string &configname, bool &verbose) {
 	ptnLabelPrefix = "mdp_";
 	tblLabelPrefix = "mdt_";
 	seqLabel = ";sequence";
+	seqMaxLength = 0;
+	ptnMaxLength = 0;
+	tblMaxLength = 0;
 	
 	string filename = "config/" + configname + ".cfg";
 
@@ -123,6 +126,19 @@ mdConfig::mdConfig(string &configname, bool &verbose) {
 				
 				if (verbose) cout << "Loop type:\t\t" << arg << "\nLoop label:\t\t" << seqLoopLabel << endl;
 			}
+			
+			
+			tokenpos = locateToken(string("MAX_LENGTH"), blockStart, blockEnd);
+		
+			if (tokenpos != blockEnd) {
+		
+				string maxLengthStr = trimChars(getArgument(cfgLines[tokenpos], 1), "\"");
+				if (maxLengthStr == "") throw ("MAX_LENGTH set but not specified in " + configname + ".cfg");
+				if (getType(maxLengthStr) == DEC) seqMaxLength = stoi(maxLengthStr, nullptr, 10);
+				else if (getType(maxLengthStr) == HEX) seqMaxLength = stoi(trimChars(maxLengthStr, "$"), nullptr, 16);
+				else throw ("Invalid MAX_LENGTH specified in pattern configuration in " + configname + ".cfg");
+				if (verbose) cout << "Max. sequence length:\t" << seqMaxLength << endl;
+			}
 		}
 		
 		if (verbose) cout << endl;
@@ -189,6 +205,20 @@ mdConfig::mdConfig(string &configname, bool &verbose) {
 			if (ptnEndString == "") throw ("Pattern end string not specified in " + configname + ".cfg");
  			if (verbose) cout << "Pattern end:\t\t" << ptnEndString << endl;
 		}
+		
+		
+		tokenpos = locateToken(string("MAX_LENGTH"), blockStart, blockEnd);
+		
+		if (tokenpos != blockEnd) {
+		
+			string maxLengthStr = trimChars(getArgument(cfgLines[tokenpos], 1), "\"");
+			if (maxLengthStr == "") throw ("MAX_LENGTH set but not specified in " + configname + ".cfg");
+			if (getType(maxLengthStr) == DEC) ptnMaxLength = stoi(maxLengthStr, nullptr, 10);
+			else if (getType(maxLengthStr) == HEX) ptnMaxLength = stoi(trimChars(maxLengthStr, "$"), nullptr, 16);
+			else throw ("Invalid MAX_LENGTH specified in pattern configuration in " + configname + ".cfg");
+			if (verbose) cout << "Max. pattern length:\t" << ptnMaxLength << endl;
+		}
+		
 		
 		tokenpos = locateToken(string("LABEL_PREFIX"), blockStart, blockEnd);
 		
@@ -306,6 +336,18 @@ mdConfig::mdConfig(string &configname, bool &verbose) {
 			tblEndString = trimChars(getArgument(cfgLines[tokenpos], 1), "\"");
 			if (tblEndString == "") throw ("Table end string not specified in " + configname + ".cfg");
  			if (verbose) cout << "Table end:\t\t" << tblEndString << endl;
+		}
+		
+		tokenpos = locateToken(string("MAX_LENGTH"), blockStart, blockEnd);
+		
+		if (tokenpos != blockEnd) {
+		
+			string maxLengthStr = trimChars(getArgument(cfgLines[tokenpos], 1), "\"");
+			if (maxLengthStr == "") throw ("MAX_LENGTH set but not specified in " + configname + ".cfg");
+			if (getType(maxLengthStr) == DEC) tblMaxLength = stoi(maxLengthStr, nullptr, 10);
+			else if (getType(maxLengthStr) == HEX) tblMaxLength = stoi(trimChars(maxLengthStr, "$"), nullptr, 16);
+			else throw ("Invalid MAX_LENGTH specified in pattern configuration in " + configname + ".cfg");
+			if (verbose) cout << "Max. table length:\t" << tblMaxLength << endl;
 		}
 		
 		

@@ -195,6 +195,7 @@ public:
 	string seqEndString;
 	string seqLoopLabel;
 	string seqLabel;
+	int seqMaxLength;
 	
 	//pattern config parameters
 	bool usePtnEnd;
@@ -203,6 +204,7 @@ public:
 	string ptnLabelPrefix;
 	mdField* ptnFieldList;
 	int ptnFieldCount;
+	int ptnMaxLength;
 	
 	//table config parameters
 	bool useTblEnd;
@@ -210,6 +212,7 @@ public:
 	string tblLabelPrefix;
 	mdField* tblFieldList;
 	int tblFieldCount;
+	int tblMaxLength;
 
 	mdConfig(string &configname, bool &verbose);
 	~mdConfig();

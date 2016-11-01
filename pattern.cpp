@@ -48,6 +48,12 @@ void mdPattern::read(const string *ptnBlock, const int patternNumber, const int 
 		if (temp != "") ptnLength++;
 	}
 	
+	if (config.ptnMaxLength && ptnLength > config.ptnMaxLength) {
+	
+		ptnLength = 0;
+		throw (string("Maximum pattern length exceeded."));
+	}
+	
 	lineCommands = new bool*[ptnLength];
 	lineCmdVals = new int*[ptnLength];
 	lineCmdStrVals = new string*[ptnLength];

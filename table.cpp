@@ -50,9 +50,17 @@ void mdTable::read(const string *tblBlock, const int blockLength, const mdConfig
 		if (temp != "") tblLength++;
 	}
 	
+	if (config.tblMaxLength && tblLength > config.tblMaxLength) {
+	
+		tblLength = 0;
+		throw (string("Maximum table length exceeded."));
+	}
+	
+	
 	lineCommands = new bool*[tblLength];
 	lineCmdVals = new int*[tblLength];
 	lineCmdStrVals = new string*[tblLength];
+	
 	
 	for (int row = 0; row < tblLength; row++) {
 	
