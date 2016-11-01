@@ -134,8 +134,8 @@ mdConfig::mdConfig(string &configname, bool &verbose) {
 	if (blockStart == linecount - 1) throw ("No CFG_COMMANDS block found in " + configname + ".cfg");
 		
 	int blockEnd = getBlockEnd(blockStart);
-	blockStart++;					//TODO: modify locateToken/getBlockEnd so we don't have to do this shit every time
-	blockEnd--;
+	blockStart++;
+
 	mdCmdCount = countBlockLines(blockStart, blockEnd);
 	if (!mdCmdCount) throw ("No commands specified in CFG_COMMAND block in " + configname + ".cfg");
 	
@@ -432,7 +432,7 @@ int mdConfig::getBlockEnd(int blockStart) {
 	
 	for (line = blockStart; line < linecount && pos == string::npos; line++) pos = cfgLines[line].find("}");
 	
-	return line;
+	return line - 1;
 }
 
 
