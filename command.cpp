@@ -15,6 +15,7 @@ mdCommand::mdCommand() {
 	mdCmdForceSubstitution = false;
 	mdCmdSubstitutionListLength = 0;
 	mdCmdForceString = false;
+	mdCmdForceInt = false;
 	mdCmdForceRepeat = false;
 	mdCmdUseLastSet = false;
 	
@@ -169,12 +170,14 @@ void mdCommand::init(string commandString, bool &verbose) {
 	}
 	
 	if (cmdStrCopy.find("FORCE_STRING") != string::npos) mdCmdForceString = true;
+	if (cmdStrCopy.find("FORCE_INT") != string::npos) mdCmdForceInt = true;
 	if (cmdStrCopy.find("FORCE_REPEAT") != string::npos) mdCmdForceRepeat = true;
 	if (cmdStrCopy.find("USE_LAST_SET") != string::npos) mdCmdUseLastSet = true;
 	if (cmdStrCopy.find("GLOBAL_CONST") != string::npos) mdCmdGlobalConst = true;
 	
 	if (mdCmdForceSubstitution && mdCmdForceString) throw ("FORCE_SUBSTITUTION and FORCE_STRING are mutually exclusive in " + commandString);
 	if (mdCmdGlobalConst && mdCmdForceString) throw ("CONST and FORCE_STRING are mutually exclusive in " + commandString);
+	if (mdCmdForceString && mdCmdForceInt) throw ("FORCE_INT and FORCE_STRING are mutually exclusive in " + commandString);
 
 	
 	if (verbose) {
@@ -188,6 +191,7 @@ void mdCommand::init(string commandString, bool &verbose) {
 		else if (mdCmdType != BOOL) cout << ", default is " << mdCmdDefaultVal;
 		
 		if (mdCmdForceString) cout << ", FORCE_STRING";
+		if (mdCmdForceInt) cout << ", FORCE_INT";
 		if (mdCmdForceRepeat) cout << ", FORCE_REPEAT";
 		if (mdCmdUseLastSet) cout << ", USE_LAST_SET";
 		if (mdCmdGlobalConst) cout << ", CONST";
@@ -279,6 +283,8 @@ void mdCommand::set(int &currentVal, string &currentValString) {
 	if (mdCmdGlobalConst) throw (string("Global constant redefined in pattern "));
 	
 	mdCmdIsSetNow = true;
+	
+	if (mdCmdForceInt && currentVal == -1) throw (string("String argument supplied for integer command "));
 	
 	if (mdCmdForceString) {
 		

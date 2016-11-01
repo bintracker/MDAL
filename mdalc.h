@@ -103,6 +103,7 @@ protected:
 	int mdCmdDefaultVal;
 	
 	bool mdCmdForceString;
+	bool mdCmdForceInt;
 	bool mdCmdForceSubstitution;
 	string* mdCmdSubstitutionNames;
 	int* mdCmdSubstitutionValues;
