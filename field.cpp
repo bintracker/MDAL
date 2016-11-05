@@ -16,7 +16,7 @@ mdField::mdField() {
 	currentValueString = "";		//TODO probably does not need to be a class member
 
 	requiredSeqBegin = false;
-	requiredPatBegin = false;
+	requiredBlkBegin = false;
 	requiredAlways = false;
 	requiredBy = nullptr;
 	requiredWhenSet = nullptr;
@@ -448,7 +448,7 @@ void mdField::getRequests(bool *requestList, const mdConfig &config, const int &
 
 	isRequiredNow = false;
 	
-	if ((requiredSeqBegin && seqBegin && row == 0) || (requiredPatBegin && row == 0) || requiredAlways
+	if ((requiredSeqBegin && seqBegin && row == 0) || (requiredBlkBegin && row == 0) || requiredAlways
  		|| checkCondition(requiredBy, requiredWhenSet, requiredByAny, config)) isRequiredNow = true;
 	if (setBy != -1 && (config.mdCmdList[setBy].mdCmdCurrentValString != "" || config.mdCmdList[setBy].mdCmdCurrentVal != -1))
 		isRequiredNow = true;
@@ -493,7 +493,7 @@ string mdField::getFieldString(bool *requestList, const mdConfig &config) {
 // 	isRequiredNow = false;
 // 	
 // 	
-// 	if ((requiredSeqBegin && seqBegin && row == 0) || (requiredPatBegin && row == 0) || requiredAlways
+// 	if ((requiredSeqBegin && seqBegin && row == 0) || (requiredBlkBegin && row == 0) || requiredAlways
 //  		|| checkCondition(requiredBy, requiredWhenSet, requiredByAny, config)) isRequiredNow = true;
 // 	if (setBy != -1 && (config.mdCmdList[setBy].mdCmdCurrentValString != "" || config.mdCmdList[setBy].mdCmdCurrentVal != -1))
 // 		isRequiredNow = true;

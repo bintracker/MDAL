@@ -290,7 +290,7 @@ mdConfig::mdConfig(string &configname, bool &verbose) {
 			}
 		
 			if (fieldStr.find("REQUIRE_SEQ_BEGIN") != string::npos) requireSeqBeginStr = fieldStr;
-			if (fieldStr.find("REQUIRE_PTN_BEGIN") != string::npos) requirePtnBeginStr = fieldStr;
+			if (fieldStr.find("REQUIRE_BLK_BEGIN") != string::npos) requirePtnBeginStr = fieldStr;
 		}
 		
 		
@@ -303,7 +303,7 @@ mdConfig::mdConfig(string &configname, bool &verbose) {
 	
 		if (requirePtnBeginStr != "") {
 	
-			for (int i = 0; i < ptnFieldCount; i++) ptnFieldList[i].requiredPatBegin = true;		//TODO: PatBegin is inconsistently named
+			for (int i = 0; i < ptnFieldCount; i++) ptnFieldList[i].requiredBlkBegin = true;		//TODO: PatBegin is inconsistently named
 	
 		}
 		

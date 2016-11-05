@@ -131,7 +131,7 @@ public:
 	string currentValueString;
 
 	bool requiredSeqBegin;
-	bool requiredPatBegin;
+	bool requiredBlkBegin;
 	
 	bool requiredAlways;
 	bool* requiredBy;	//list of commands that trigger setting this -> this can become a BOOL list
