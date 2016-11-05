@@ -228,8 +228,8 @@ void mdTable::read(const string *tblBlock, const int blockLength, const mdConfig
 		//tblString += "\n";
 	}
 	
-// 	if (config.usetblEnd) tblString += "\n\t" + config.tblEndString;
-// 	tblString += "\n";
+	if (config.useTblEnd) tblString += "\n\t" + config.tblEndString;
+	tblString += "\n";
 
 }
 
