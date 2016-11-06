@@ -24,407 +24,414 @@ mdConfig::mdConfig(string &configname, bool &verbose) {
 	tblMaxLength = 0;
 	
 	string filename = "config/" + configname + ".cfg";
-
+	
 	ifstream CFGFILE(filename.data());
 	if (!CFGFILE.is_open()) throw ("Unknown configuration \"" + configname + "\".");
 
-	if (verbose) cout << "configuration:\t\t" << configname << ".cfg" << endl;
+
+	try {
 	
-	string tempstr;
+		if (verbose) cout << "configuration:\t\t" << configname << ".cfg" << endl;
 	
-	for (linecount = 0; getline(CFGFILE,tempstr); linecount++);
-	int configEnd = linecount - 1;
+		string tempstr;
 	
-	CFGFILE.clear();						//reset file pointer
-	CFGFILE.seekg(0, ios::beg);
+		for (linecount = 0; getline(CFGFILE,tempstr); linecount++);
+		int configEnd = linecount - 1;
 	
-	cfgLines = new string[linecount];
+		CFGFILE.clear();						//reset file pointer
+		CFGFILE.seekg(0, ios::beg);
 	
-	for (int i = 0; i < linecount; i++) getline(CFGFILE,cfgLines[i]);
+		cfgLines = new string[linecount];
 	
-	if (locateToken(string("MDAL_VERSION"), 0, configEnd) == configEnd) throw ("MDAL_VERSION not specified in " + configname);
-	string mdVersion = trimChars(getArgumentString(string("MDAL_VERSION"), 0, linecount-1), "()");
-	if (getType(mdVersion) != DEC) throw ("Invalid MDAL_VERSION specification in " + configname);
-	if (stoi(mdVersion, nullptr, 10) > MDALVERSION) throw ("MDAL VERSION used in " + configname + ".cfg not supported in this version of mdalc");
-	if (verbose) cout << "MDAL version: \t\t" << stoi(mdVersion, nullptr, 10) << endl;
+		for (int i = 0; i < linecount; i++) getline(CFGFILE,cfgLines[i]);
+	
+		if (locateToken(string("MDAL_VERSION"), 0, configEnd) == configEnd) throw (string("MDAL_VERSION not specified."));
+		string mdVersion = trimChars(getArgumentString(string("MDAL_VERSION"), 0, linecount-1), "()");
+		if (getType(mdVersion) != DEC) throw (string("MDAL_VERSION argument is not a decimal number."));
+		if (stoi(mdVersion, nullptr, 10) > MDALVERSION) throw ("MDAL VERSION " + mdVersion + " not supported in this version of mdalc.");
+		if (verbose) cout << "MDAL version: \t\t" << stoi(mdVersion, nullptr, 10) << endl;
 	
 	
-	wordDirective = trimChars(getArgumentString(string("WORD_DIRECTIVE"), 0, configEnd), "()\"");
-	if (wordDirective == "") wordDirective = "dw";
-	if (verbose) cout << "word directive:\t\t" << wordDirective << endl;
+		wordDirective = trimChars(getArgumentString(string("WORD_DIRECTIVE"), 0, configEnd), "()\"");
+		if (wordDirective == "") wordDirective = "dw";
+		if (verbose) cout << "word directive:\t\t" << wordDirective << endl;
 	
-	byteDirective = trimChars(getArgumentString(string("BYTE_DIRECTIVE"), 0, configEnd), "()\"");
-	if (byteDirective == "") byteDirective = "db";
-	if (verbose) cout << "byte directive:\t\t" << byteDirective << endl;
+		byteDirective = trimChars(getArgumentString(string("BYTE_DIRECTIVE"), 0, configEnd), "()\"");
+		if (byteDirective == "") byteDirective = "db";
+		if (verbose) cout << "byte directive:\t\t" << byteDirective << endl;
 	
-	hexPrefix = trimChars(getArgumentString(string("HEX_PREFIX"), 0, configEnd), "()\"");
-	if (hexPrefix == "") hexPrefix = "$";
-	if (verbose) cout << "hex prefix:\t\t" << hexPrefix << endl;
+		hexPrefix = trimChars(getArgumentString(string("HEX_PREFIX"), 0, configEnd), "()\"");
+		if (hexPrefix == "") hexPrefix = "$";
+		if (verbose) cout << "hex prefix:\t\t" << hexPrefix << endl;
 	
-	if (verbose) cout << endl;
+		if (verbose) cout << endl;
 	
-	useSequence = false;
-	if (locateToken(string("USE_SEQUENCE"), 0, configEnd) != configEnd) {
-	//TODO: provide support for multi-track sequences
+		useSequence = false;
+		if (locateToken(string("USE_SEQUENCE"), 0, configEnd) != configEnd) {
+		//TODO: provide support for multi-track sequences
 	
-		useSequence = true;
-		if (verbose) cout << "using SEQUENCE" << endl;
+			useSequence = true;
+			if (verbose) cout << "using SEQUENCE" << endl;
 		
-		int blockStart = locateToken(string("CFG_SEQUENCE"), 0, configEnd);
+			int blockStart = locateToken(string("CFG_SEQUENCE"), 0, configEnd);
 		
-		if (blockStart == configEnd) throw ("No CFG_SEQUENCE block found in " + configname + ".cfg");
+			if (blockStart == configEnd) throw (string("No CFG_SEQUENCE block found."));
 		
-		else {
+			else {
 			
+				int blockEnd = getBlockEnd(blockStart);
+			
+				useSeqEnd = false;
+				useSeqLoop = false;
+				useSeqLoopPointer = false;
+			
+			
+				int tokenpos = locateToken(string("USE_LABEL"), blockStart, blockEnd);
+			
+				if (tokenpos != blockEnd) {
+			
+					seqLabel = trimChars(getArgument(cfgLines[tokenpos], 1), "\"");
+					if (seqLabel == "") throw (string("CFG_SEQUENCE: Missing argument in USE_LABEL() declaration."));
+				}
+			
+				if (verbose) cout << "Sequence label:\t\t" << seqLabel << endl;
+			
+			
+			
+				tokenpos = locateToken(string("USE_END"), blockStart, blockEnd);
+			
+				if (tokenpos != blockEnd) {
+			
+					useSeqEnd = true;
+					seqEndString = trimChars(getArgument(cfgLines[tokenpos], 1), "\"");
+					if (seqEndString == "") throw (string("CFG_SEQUENCE: Missing argument in USE_END() declaration."));
+					if (verbose) cout << "Sequence end:\t\t" << seqEndString << endl;
+				}
+			
+			
+				tokenpos = locateToken(string("USE_LOOP"), blockStart, blockEnd);
+			
+				if (tokenpos != blockEnd) {
+			
+					useSeqLoop = true;
+				
+					int argCount = getArgumentCount(cfgLines[tokenpos]);
+				
+					if (argCount < 2) throw (string("CFG_SEQUENCE: Incomplete loop configuration."));
+				
+					string arg = getArgument(cfgLines[tokenpos], 1);
+					//cout << arg << endl;
+				
+					if (arg != "LABEL" && arg != "POINTER") throw ("CFG_SEQUENCE: Invalid loop type \"" + arg + "\".");
+					else if (arg == "POINTER") useSeqLoopPointer = true;
+				
+					seqLoopLabel = trimChars(getArgument(cfgLines[tokenpos], 2), "\"");
+				
+					if (verbose) cout << "Loop type:\t\t" << arg << "\nLoop label:\t\t" << seqLoopLabel << endl;
+				}
+			
+			
+				tokenpos = locateToken(string("MAX_LENGTH"), blockStart, blockEnd);
+		
+				if (tokenpos != blockEnd) {
+		
+					string maxLengthStr = trimChars(getArgument(cfgLines[tokenpos], 1), "\"");
+					if (maxLengthStr == "") throw (string("CFG_SEQUENCE: Missing argument in MAX_LENGTH() declaration."));
+					if (getType(maxLengthStr) == DEC) seqMaxLength = stoi(maxLengthStr, nullptr, 10);
+					else if (getType(maxLengthStr) == HEX) seqMaxLength = stoi(trimChars(maxLengthStr, "$"), nullptr, 16);
+					else throw (string("CFG_SEQUENCE: MAX_LENGTH() does not specify an integer."));
+					if (verbose) cout << "Max. sequence length:\t" << seqMaxLength << endl;
+				}
+			}
+		
+			if (verbose) cout << endl;
+		}
+	
+	
+		int blockStart = locateToken(string("CFG_COMMANDS"), 0, configEnd);
+		
+		if (blockStart == linecount - 1) throw (string("No CFG_COMMANDS block found."));
+		
+		int blockEnd = getBlockEnd(blockStart);
+		blockStart++;
+
+		mdCmdCount = countBlockLines(blockStart, blockEnd);
+		if (!mdCmdCount) throw (string("CFG_COMMANDS: No commands specified."));
+	
+		mdCmdList = new mdCommand[mdCmdCount];
+		cmdIsTablePointer = new bool[mdCmdCount];
+		fill_n(cmdIsTablePointer, mdCmdCount, false);
+		int cmdNr = 0;
+	
+		if (verbose) cout << "User Commands:" << endl;
+	
+		for (int i = blockStart; i < blockEnd; i++) {
+	
+			string cmdStr = cfgLines[i];
+			cmdStr = trimChars(cmdStr, " \t");	//TODO: this trims all whitespace, don't trim whitespace within cmd string params!
+			size_t pos = cmdStr.find_first_of('/');
+			if (pos != string::npos) cmdStr.erase(pos);
+			if (cmdStr != "") {
+		
+				if (cmdStr.find("TBL_POINTER") != string::npos) cmdIsTablePointer[cmdNr] = true;
+				mdCmdList[cmdNr].init(cmdStr, verbose);
+			
+				cmdNr++;
+				//cout << cmdStr << ".\n";
+			}
+		}
+	
+		if (verbose) cout << endl;
+	
+	
+		usePatterns = false;
+	
+		if (locateToken(string("USE_PATTERNS"), 0, configEnd) != configEnd) {
+	
+			usePatterns = true;
+			if (verbose) cout << "using PATTERNS" << endl;
+		
+			blockStart = locateToken(string("CFG_PATTERNS"), 0, configEnd);
+		
+			if (blockStart == configEnd) throw (string("No CFG_PATTERNS block found."));
+		
+		
 			int blockEnd = getBlockEnd(blockStart);
-			
-			useSeqEnd = false;
-			useSeqLoop = false;
-			useSeqLoopPointer = false;
-			
-			
-			int tokenpos = locateToken(string("USE_LABEL"), blockStart, blockEnd);
-			
+			usePtnEnd = false;
+	
+			int tokenpos = locateToken(string("USE_END"), blockStart, blockEnd);
+		
 			if (tokenpos != blockEnd) {
-			
-				seqLabel = trimChars(getArgument(cfgLines[tokenpos], 1), "\"");
-				if (seqLabel == "") throw ("Sequence label used, but not specified in " + configname + ".cfg");	
+		
+				usePtnEnd = true;
+				ptnEndString = trimChars(getArgument(cfgLines[tokenpos], 1), "\"");
+				if (ptnEndString == "") throw (string("CFG_PATTERNS: Missing argument in USE_END() declaration."));
+				if (verbose) cout << "Pattern end:\t\t" << ptnEndString << endl;
 			}
-			
-			if (verbose) cout << "Sequence label:\t\t" << seqLabel << endl;
-			
-			
-			
-			tokenpos = locateToken(string("USE_END"), blockStart, blockEnd);
-			
-			if (tokenpos != blockEnd) {
-			
-				useSeqEnd = true;
-				seqEndString = trimChars(getArgument(cfgLines[tokenpos], 1), "\"");
-				if (seqEndString == "") throw ("Sequence end string not specified in " + configname + ".cfg");
- 				if (verbose) cout << "Sequence end:\t\t" << seqEndString << endl;
-			}
-			
-			
-			tokenpos = locateToken(string("USE_LOOP"), blockStart, blockEnd);
-			
-			if (tokenpos != blockEnd) {
-			
-				useSeqLoop = true;
-				
-				int argCount = getArgumentCount(cfgLines[tokenpos]);
-				
-				if (argCount < 2) throw ("Incomplete loop configuration in " + configname + ".cfg");
-				
-				string arg = getArgument(cfgLines[tokenpos], 1);
-				//cout << arg << endl;
-				
-				if (arg != "LABEL" && arg != "POINTER") throw ("Invalid loop type specified in " + configname + ".cfg");
-				else if (arg == "POINTER") useSeqLoopPointer = true;
-				
-				seqLoopLabel = trimChars(getArgument(cfgLines[tokenpos], 2), "\"");
-				
-				if (verbose) cout << "Loop type:\t\t" << arg << "\nLoop label:\t\t" << seqLoopLabel << endl;
-			}
-			
-			
+		
+		
 			tokenpos = locateToken(string("MAX_LENGTH"), blockStart, blockEnd);
 		
 			if (tokenpos != blockEnd) {
 		
 				string maxLengthStr = trimChars(getArgument(cfgLines[tokenpos], 1), "\"");
-				if (maxLengthStr == "") throw ("MAX_LENGTH set but not specified in " + configname + ".cfg");
-				if (getType(maxLengthStr) == DEC) seqMaxLength = stoi(maxLengthStr, nullptr, 10);
-				else if (getType(maxLengthStr) == HEX) seqMaxLength = stoi(trimChars(maxLengthStr, "$"), nullptr, 16);
-				else throw ("Invalid MAX_LENGTH specified in pattern configuration in " + configname + ".cfg");
-				if (verbose) cout << "Max. sequence length:\t" << seqMaxLength << endl;
+				if (maxLengthStr == "") throw (string("CFG_PATTERNS: Missing argument in MAX_LENGTH() declaration."));
+				if (getType(maxLengthStr) == DEC) ptnMaxLength = stoi(maxLengthStr, nullptr, 10);
+				else if (getType(maxLengthStr) == HEX) ptnMaxLength = stoi(trimChars(maxLengthStr, "$"), nullptr, 16);
+				else throw (string("CFG_PATTERNS: MAX_LENGTH() does not specify an integer."));
+				if (verbose) cout << "Max. pattern length:\t" << ptnMaxLength << endl;
 			}
-		}
 		
-		if (verbose) cout << endl;
-	}
-	
-	
-	int blockStart = locateToken(string("CFG_COMMANDS"), 0, configEnd);
 		
-	if (blockStart == linecount - 1) throw ("No CFG_COMMANDS block found in " + configname + ".cfg");
+			tokenpos = locateToken(string("LABEL_PREFIX"), blockStart, blockEnd);
 		
-	int blockEnd = getBlockEnd(blockStart);
-	blockStart++;
+			if (tokenpos != blockEnd) {
 
-	mdCmdCount = countBlockLines(blockStart, blockEnd);
-	if (!mdCmdCount) throw ("No commands specified in CFG_COMMAND block in " + configname + ".cfg");
-	
-	mdCmdList = new mdCommand[mdCmdCount];
-	cmdIsTablePointer = new bool[mdCmdCount];
-	fill_n(cmdIsTablePointer, mdCmdCount, false);
-	int cmdNr = 0;
-	
-	if (verbose) cout << "User Commands:" << endl;
-	
-	for (int i = blockStart; i < blockEnd; i++) {
-	
-		string cmdStr = cfgLines[i];
-		cmdStr = trimChars(cmdStr, " \t");	//TODO: this trims all whitespace, don't trim whitespace within cmd string params!
-		size_t pos = cmdStr.find_first_of('/');
-		if (pos != string::npos) cmdStr.erase(pos);
-		if (cmdStr != "") {
+				ptnLabelPrefix = trimChars(getArgument(cfgLines[tokenpos], 1), "\"");
+				if (ptnLabelPrefix == "") throw (string("CFG_PATTERNS: Missing argument in LABEL_PREFIX() declaration."));
+			}
 		
-			if (cmdStr.find("TBL_POINTER") != string::npos) cmdIsTablePointer[cmdNr] = true;
-			mdCmdList[cmdNr].init(cmdStr, verbose);
-			
-			cmdNr++;
-			//cout << cmdStr << ".\n";
-		}
-	}
-	
-	if (verbose) cout << endl;
-	
-	
-	usePatterns = false;
-	
-	if (locateToken(string("USE_PATTERNS"), 0, configEnd) != configEnd) {
-	
-		usePatterns = true;
-		if (verbose) cout << "using PATTERNS" << endl;
+			if (verbose) cout << "Pattern label prefix:\t" << ptnLabelPrefix << endl;
 		
-		blockStart = locateToken(string("CFG_PATTERNS"), 0, configEnd);
+			initPtnDefaults = false;
 		
-		if (blockStart == configEnd) throw ("No CFG_PATTERNS block found in " + configname + ".cfg");
+			tokenpos = locateToken(string("INIT_DEFAULTS"), blockStart, blockEnd);
 		
+			if (tokenpos != blockEnd) {
 		
-		int blockEnd = getBlockEnd(blockStart);
-		usePtnEnd = false;
-	
-		int tokenpos = locateToken(string("USE_END"), blockStart, blockEnd);
-		
-		if (tokenpos != blockEnd) {
-		
-			usePtnEnd = true;
-			ptnEndString = trimChars(getArgument(cfgLines[tokenpos], 1), "\"");
-			if (ptnEndString == "") throw ("Pattern end string not specified in " + configname + ".cfg");
- 			if (verbose) cout << "Pattern end:\t\t" << ptnEndString << endl;
-		}
-		
-		
-		tokenpos = locateToken(string("MAX_LENGTH"), blockStart, blockEnd);
-		
-		if (tokenpos != blockEnd) {
-		
-			string maxLengthStr = trimChars(getArgument(cfgLines[tokenpos], 1), "\"");
-			if (maxLengthStr == "") throw ("MAX_LENGTH set but not specified in " + configname + ".cfg");
-			if (getType(maxLengthStr) == DEC) ptnMaxLength = stoi(maxLengthStr, nullptr, 10);
-			else if (getType(maxLengthStr) == HEX) ptnMaxLength = stoi(trimChars(maxLengthStr, "$"), nullptr, 16);
-			else throw ("Invalid MAX_LENGTH specified in pattern configuration in " + configname + ".cfg");
-			if (verbose) cout << "Max. pattern length:\t" << ptnMaxLength << endl;
-		}
-		
-		
-		tokenpos = locateToken(string("LABEL_PREFIX"), blockStart, blockEnd);
-		
-		if (tokenpos != blockEnd) {
-
-			ptnLabelPrefix = trimChars(getArgument(cfgLines[tokenpos], 1), "\"");
-			if (ptnLabelPrefix == "") throw ("LABEL_PREFIX set but not specified in " + configname + ".cfg");
-		}
-		
-		if (verbose) cout << "Pattern label prefix:\t" << ptnLabelPrefix << endl;
-		
-		initPtnDefaults = false;
-		
-		tokenpos = locateToken(string("INIT_DEFAULTS"), blockStart, blockEnd);
-		
-		if (tokenpos != blockEnd) {
-		
-			initPtnDefaults = true;
- 			if (verbose) cout << "Initialize commands with default values at each pattern start" << endl;
-		}
+				initPtnDefaults = true;
+				if (verbose) cout << "Initialize commands with default values at each pattern start" << endl;
+			}
 
 		
-		ptnFieldCount = countFields(blockStart, blockEnd);
-		if (!ptnFieldCount) throw ("No fields specified in CFG_PATTERNS block in " + configname + ".cfg");
+			ptnFieldCount = countFields(blockStart, blockEnd);
+			if (!ptnFieldCount) throw (string("CFG_PATTERNS: No output fields specified."));
 		
-		//cout << ptnFieldCount << " fields found.\n";
+			//cout << ptnFieldCount << " fields found.\n";
 		
-		ptnFieldList = new mdField[ptnFieldCount];
+			ptnFieldList = new mdField[ptnFieldCount];
 		
-		int fieldNr = 0;
-		string requirePtnBeginStr = "";
-		string requireSeqBeginStr = "";
+			int fieldNr = 0;
+			string requirePtnBeginStr = "";
+			string requireSeqBeginStr = "";
 		
-		for (int i = blockStart; i < blockEnd; i++) {
+			for (int i = blockStart; i < blockEnd; i++) {
 	
-			string fieldStr = cfgLines[i];
-			fieldStr = trimChars(fieldStr, " \t");	//TODO: this trims all whitespace, don't trim whitespace within cmd string params!
-			size_t pos = fieldStr.find_first_of('/');
-			if (pos != string::npos) fieldStr.erase(pos);
-			if (fieldStr != "" && (fieldStr.find("WORD") != string::npos || fieldStr.find("BYTE") != string::npos)) {
+				string fieldStr = cfgLines[i];
+				fieldStr = trimChars(fieldStr, " \t");	//TODO: this trims all whitespace, don't trim whitespace within cmd string params!
+				size_t pos = fieldStr.find_first_of('/');
+				if (pos != string::npos) fieldStr.erase(pos);
+				if (fieldStr != "" && (fieldStr.find("WORD") != string::npos || fieldStr.find("BYTE") != string::npos)) {
 		
-				ptnFieldList[fieldNr].init(mdCmdList, mdCmdCount, fieldStr, verbose);
+					ptnFieldList[fieldNr].init(mdCmdList, mdCmdCount, fieldStr, verbose);
 			
-				if (verbose) {
+					if (verbose) {
 			
-					cout << "Field " << fieldNr;
-					if (ptnFieldList[fieldNr].requiredAlways) cout << " always required";
-					else {
-						cout << " required if ";
-						for (int j = 0; j < mdCmdCount; j++) {
+						cout << "Field " << fieldNr;
+						if (ptnFieldList[fieldNr].requiredAlways) cout << " always required";
+						else {
+							cout << " required if ";
+							for (int j = 0; j < mdCmdCount; j++) {
 				
-							if (ptnFieldList[fieldNr].requiredBy[j]) {
+								if (ptnFieldList[fieldNr].requiredBy[j]) {
 							
-								bool lastentry = true;
-								for (int k = j + 1; k < mdCmdCount; k++) if (ptnFieldList[fieldNr].requiredBy[k]) lastentry = false;
+									bool lastentry = true;
+									for (int k = j + 1; k < mdCmdCount; k++) if (ptnFieldList[fieldNr].requiredBy[k]) lastentry = false;
 					
-								cout << mdCmdList[j].mdCmdName;
-								if (ptnFieldList[fieldNr].requiredWhenSet[j]) cout << " is set ";
-								else cout << " is not set ";
+									cout << mdCmdList[j].mdCmdName;
+									if (ptnFieldList[fieldNr].requiredWhenSet[j]) cout << " is set ";
+									else cout << " is not set ";
 						
-								if (ptnFieldList[fieldNr].requiredByAny && !lastentry) cout << "or ";
-								else if (!ptnFieldList[fieldNr].requiredByAny && !lastentry) cout << "and ";
-								//else cout << endl;
+									if (ptnFieldList[fieldNr].requiredByAny && !lastentry) cout << "or ";
+									else if (!ptnFieldList[fieldNr].requiredByAny && !lastentry) cout << "and ";
+									//else cout << endl;
+								}
 							}
 						}
-					}
 				
-					cout << endl;
-				}
+						cout << endl;
+					}
 			
-				fieldNr++;
+					fieldNr++;
+				}
+		
+				if (fieldStr.find("REQUIRE_SEQ_BEGIN") != string::npos) requireSeqBeginStr = fieldStr;
+				if (fieldStr.find("REQUIRE_BLK_BEGIN") != string::npos) requirePtnBeginStr = fieldStr;
 			}
 		
-			if (fieldStr.find("REQUIRE_SEQ_BEGIN") != string::npos) requireSeqBeginStr = fieldStr;
-			if (fieldStr.find("REQUIRE_BLK_BEGIN") != string::npos) requirePtnBeginStr = fieldStr;
+		
+			//TODO: currently only checks presence of token, expr is not evaluated
+	
+			if (requireSeqBeginStr != "") {
+	
+				for (int i = 0; i < ptnFieldCount; i++) ptnFieldList[i].requiredSeqBegin = true;
+			}
+	
+			if (requirePtnBeginStr != "") {
+	
+				for (int i = 0; i < ptnFieldCount; i++) ptnFieldList[i].requiredBlkBegin = true;		//TODO: PatBegin is inconsistently named
+	
+			}
+		
 		}
-		
-		
-		//TODO: currently only checks presence of token, expr is not evaluated
-	
-		if (requireSeqBeginStr != "") {
-	
-			for (int i = 0; i < ptnFieldCount; i++) ptnFieldList[i].requiredSeqBegin = true;
-		}
-	
-		if (requirePtnBeginStr != "") {
-	
-			for (int i = 0; i < ptnFieldCount; i++) ptnFieldList[i].requiredBlkBegin = true;		//TODO: PatBegin is inconsistently named
-	
-		}
-		
-	}
 	
 	
 	
-	useTables = false;
+		useTables = false;
 	
-	if (locateToken(string("USE_TABLES"), 0, configEnd) != configEnd) {
+		if (locateToken(string("USE_TABLES"), 0, configEnd) != configEnd) {
 	
-		useTables = true;
-		if (verbose) cout << endl << "using TABLES" << endl;
+			useTables = true;
+			if (verbose) cout << endl << "using TABLES" << endl;
 		
-		blockStart = locateToken(string("CFG_TABLES"), 0, configEnd);
+			blockStart = locateToken(string("CFG_TABLES"), 0, configEnd);
 		
-		if (blockStart == configEnd) throw ("No CFG_TABLES block found in " + configname + ".cfg");
+			if (blockStart == configEnd) throw (string("No CFG_TABLES block found."));
 		
 		
-		int blockEnd = getBlockEnd(blockStart);
+			int blockEnd = getBlockEnd(blockStart);
 		
-		useTblEnd = false;
-		tblEndString = "";
+			useTblEnd = false;
+			tblEndString = "";
 	
-		int tokenpos = locateToken(string("USE_END"), blockStart, blockEnd);
+			int tokenpos = locateToken(string("USE_END"), blockStart, blockEnd);
 		
-		if (tokenpos != blockEnd) {
+			if (tokenpos != blockEnd) {
 		
-			useTblEnd = true;
-			tblEndString = trimChars(getArgument(cfgLines[tokenpos], 1), "\"");
-			if (tblEndString == "") throw ("Table end string not specified in " + configname + ".cfg");
- 			if (verbose) cout << "Table end:\t\t" << tblEndString << endl;
-		}
+				useTblEnd = true;
+				tblEndString = trimChars(getArgument(cfgLines[tokenpos], 1), "\"");
+				if (tblEndString == "") throw (string("CFG_TABLES: Missing argument in USE_END() declaration."));
+				if (verbose) cout << "Table end:\t\t" << tblEndString << endl;
+			}
 		
-		tokenpos = locateToken(string("MAX_LENGTH"), blockStart, blockEnd);
+			tokenpos = locateToken(string("MAX_LENGTH"), blockStart, blockEnd);
 		
-		if (tokenpos != blockEnd) {
+			if (tokenpos != blockEnd) {
 		
-			string maxLengthStr = trimChars(getArgument(cfgLines[tokenpos], 1), "\"");
-			if (maxLengthStr == "") throw ("MAX_LENGTH set but not specified in " + configname + ".cfg");
-			if (getType(maxLengthStr) == DEC) tblMaxLength = stoi(maxLengthStr, nullptr, 10);
-			else if (getType(maxLengthStr) == HEX) tblMaxLength = stoi(trimChars(maxLengthStr, "$"), nullptr, 16);
-			else throw ("Invalid MAX_LENGTH specified in pattern configuration in " + configname + ".cfg");
-			if (verbose) cout << "Max. table length:\t" << tblMaxLength << endl;
-		}
+				string maxLengthStr = trimChars(getArgument(cfgLines[tokenpos], 1), "\"");
+				if (maxLengthStr == "") throw (string("CFG_TABLES: Missing argument in MAX_LENGTH() declaration."));
+				if (getType(maxLengthStr) == DEC) tblMaxLength = stoi(maxLengthStr, nullptr, 10);
+				else if (getType(maxLengthStr) == HEX) tblMaxLength = stoi(trimChars(maxLengthStr, "$"), nullptr, 16);
+				else throw (string("CFG_TABLES: MAX_LENGTH() does not specify an integer."));
+				if (verbose) cout << "Max. table length:\t" << tblMaxLength << endl;
+			}
 		
 		
-		tokenpos = locateToken(string("LABEL_PREFIX"), blockStart, blockEnd);
+			tokenpos = locateToken(string("LABEL_PREFIX"), blockStart, blockEnd);
 		
-		if (tokenpos != blockEnd) {
+			if (tokenpos != blockEnd) {
 
-			tblLabelPrefix = trimChars(getArgument(cfgLines[tokenpos], 1), "\"");
-			if (tblLabelPrefix == "") throw ("LABEL_PREFIX set but not specified in " + configname + ".cfg");
-		}
+				tblLabelPrefix = trimChars(getArgument(cfgLines[tokenpos], 1), "\"");
+				if (tblLabelPrefix == "") throw (string("CFG_TABLES: Missing argument in LABEL_PREFIX() declaration."));
+			}
 		
-		if (verbose) cout << "Table label prefix:\t" << tblLabelPrefix << endl;
+			if (verbose) cout << "Table label prefix:\t" << tblLabelPrefix << endl;
 		
 		
-		tblFieldCount = countFields(blockStart, blockEnd);
-		if (!tblFieldCount) throw ("No fields specified in CFG_PATTERNS block in " + configname + ".cfg");
+			tblFieldCount = countFields(blockStart, blockEnd);
+			if (!tblFieldCount) throw (string("CFG_TABLES: No output fields specified."));
 		
-		tblFieldList = new mdField[tblFieldCount];
+			tblFieldList = new mdField[tblFieldCount];
 		
-		int fieldNr = 0;
+			int fieldNr = 0;
 		
-		for (int i = blockStart; i < blockEnd; i++) {
+			for (int i = blockStart; i < blockEnd; i++) {
 	
-			string fieldStr = cfgLines[i];
-			fieldStr = trimChars(fieldStr, " \t");	//TODO: this trims all whitespace, don't trim whitespace within cmd string params!
-			size_t pos = fieldStr.find_first_of('/');
-			if (pos != string::npos) fieldStr.erase(pos);
-			if (fieldStr != "" && (fieldStr.find("WORD") != string::npos || fieldStr.find("BYTE") != string::npos)) {
+				string fieldStr = cfgLines[i];
+				fieldStr = trimChars(fieldStr, " \t");	//TODO: this trims all whitespace, don't trim whitespace within cmd string params!
+				size_t pos = fieldStr.find_first_of('/');
+				if (pos != string::npos) fieldStr.erase(pos);
+				if (fieldStr != "" && (fieldStr.find("WORD") != string::npos || fieldStr.find("BYTE") != string::npos)) {
 		
-				tblFieldList[fieldNr].init(mdCmdList, mdCmdCount, fieldStr, verbose);
+					tblFieldList[fieldNr].init(mdCmdList, mdCmdCount, fieldStr, verbose);
 			
-				if (verbose) {
+					if (verbose) {
 			
-					cout << "Field " << fieldNr;
-					if (tblFieldList[fieldNr].requiredAlways) cout << " always required";
-					else {
-						cout << " required if ";
-						for (int j = 0; j < mdCmdCount; j++) {
+						cout << "Field " << fieldNr;
+						if (tblFieldList[fieldNr].requiredAlways) cout << " always required";
+						else {
+							cout << " required if ";
+							for (int j = 0; j < mdCmdCount; j++) {
 				
-							if (tblFieldList[fieldNr].requiredBy[j]) {
+								if (tblFieldList[fieldNr].requiredBy[j]) {
 							
-								bool lastentry = true;
-								for (int k = j + 1; k < mdCmdCount; k++) if (tblFieldList[fieldNr].requiredBy[k]) lastentry = false;
+									bool lastentry = true;
+									for (int k = j + 1; k < mdCmdCount; k++) if (tblFieldList[fieldNr].requiredBy[k]) lastentry = false;
 					
-								cout << mdCmdList[j].mdCmdName;
-								if (tblFieldList[fieldNr].requiredWhenSet[j]) cout << " is set ";
-								else cout << " is not set ";
+									cout << mdCmdList[j].mdCmdName;
+									if (tblFieldList[fieldNr].requiredWhenSet[j]) cout << " is set ";
+									else cout << " is not set ";
 						
-								if (tblFieldList[fieldNr].requiredByAny && !lastentry) cout << "or ";
-								else if (!tblFieldList[fieldNr].requiredByAny && !lastentry) cout << "and ";
-								//else cout << endl;
+									if (tblFieldList[fieldNr].requiredByAny && !lastentry) cout << "or ";
+									else if (!tblFieldList[fieldNr].requiredByAny && !lastentry) cout << "and ";
+									//else cout << endl;
+								}
 							}
 						}
-					}
 				
-					cout << endl;
-				}
+						cout << endl;
+					}
 			
-				fieldNr++;
-			}
-		}		
-	}
+					fieldNr++;
+				}
+			}		
+		}
 
 
 	
-	useSamples = false;
-	if (locateToken(string("USE_SAMPLES"), 0, configEnd) != configEnd) {
+		useSamples = false;
+		if (locateToken(string("USE_SAMPLES"), 0, configEnd) != configEnd) {
 	
-		useSamples = true;
-		if (verbose) cout << "using SAMPLES - this feature is not supported yet." << endl;
+			useSamples = true;
+			if (verbose) cout << "using SAMPLES - this feature is not supported yet." << endl;
+		}
+	
+	
+		return;
 	}
-	
-	
-	return;
+	catch(string &e) {
+		throw (configname + ".cfg: " + e + "\nConfig validation failed.");
+	}
 }
 
 mdConfig::~mdConfig() {
@@ -553,7 +560,7 @@ string mdConfig::getArgumentString(string token, int blockStart, int blockEnd) {
 		if (pos != string::npos) {
 		
 			quotcnt = count(cfgLines[line].begin(), cfgLines[line].end(), '"');
-			if ((quotcnt & 1) == 1) throw ("Expecting another \" in line " + to_string(line+1) + " of config file");
+			if ((quotcnt & 1) == 1) throw ("Expecting another \" in line " + to_string(line+1));
 			tempstr = trimChars(cfgLines[line].substr(pos + token.size()), " ");
 		}
 	}

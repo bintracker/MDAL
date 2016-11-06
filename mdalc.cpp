@@ -34,7 +34,7 @@ int main(int argc, char *argv[]){
 		mdModule mdf(infile, outfile, verbose);
 	}
 	catch(string &e) {
-		cout << "ERROR: " << e << "\nConfig validation failed, compilation terminated." << endl;
+		cout << "ERROR: " << e << "\nCompilation terminated." << endl;
 		return -1;
 	}
 	
