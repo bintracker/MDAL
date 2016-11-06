@@ -75,13 +75,13 @@ void mdField::init(mdCommand *mdCmdList, int &mdCmdCount, string &fieldString, b
 		(count(temp.begin(), temp.end(), '"') & 1)) throw ("Syntax error in field specification in " + fieldString);
 	
 	if (temp.find("WORD") == 0) isWord = true;
-	else if (temp.find("BYTE") != 0) throw ("Unknown field type specified in " + fieldString);
+	//else if (temp.find("BYTE") == string::npos) throw ("Unknown field type specified in " + fieldString);	//TODO: redundant, checked by config parser
 	
 	if (!isWord && temp.find("SET_HI") != string::npos) throw ("SET_HI is not permitted for BYTE fields in " + fieldString);
 	
 //	if (count(temp.begin(), temp.end(), ',') < 1) throw ("Insufficient arguments in " + fieldString);	
 	if (temp.find("SET(") == string::npos && temp.find("SET_HI(") == string::npos && temp.find("SET_LO(") == string::npos 
-		&& temp.find("SET_IF(") == string::npos) throw ("Field not set by any command in " + fieldString);
+		&& temp.find("SET_IF(") == string::npos && temp.find("SET_BITS(") == string::npos) throw ("Field not set by any command in " + fieldString);
 	
 	temp.erase(0, temp.find_first_of('(') + 1);
 	
@@ -337,6 +337,7 @@ void mdField::init(mdCommand *mdCmdList, int &mdCmdCount, string &fieldString, b
 	
 		//tmp1 = temp.substr(begin + 9, temp.find_first_of(',') - (begin + 9));
 		tmp1 = temp.substr(begin + 7, temp.size() - (begin + 7));
+		if (tmp1.find_first_of(',') == string::npos) throw ("Insufficient arguments in SET_IF expression in " + fieldString);
 		tmp1.erase(tmp1.find_first_of(','));
 		
 		string tmp2 = temp.substr(begin + 7 + tmp1.size() + 1, temp.size() - (begin + 7 + tmp1.size() + 1));
