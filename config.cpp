@@ -271,13 +271,16 @@ mdConfig::mdConfig(string &configname, bool &verbose) {
 						for (int j = 0; j < mdCmdCount; j++) {
 				
 							if (ptnFieldList[fieldNr].requiredBy[j]) {
+							
+								bool lastentry = true;
+								for (int k = j + 1; k < mdCmdCount; k++) if (ptnFieldList[fieldNr].requiredBy[k]) lastentry = false;
 					
 								cout << mdCmdList[j].mdCmdName;
 								if (ptnFieldList[fieldNr].requiredWhenSet[j]) cout << " is set ";
 								else cout << " is not set ";
 						
-								if (ptnFieldList[fieldNr].requiredByAny && j + 1 < mdCmdCount) cout << "or ";
-								else if (ptnFieldList[fieldNr].requiredByAny && j + 1 < mdCmdCount) cout << "and ";
+								if (ptnFieldList[fieldNr].requiredByAny && !lastentry) cout << "or ";
+								else if (!ptnFieldList[fieldNr].requiredByAny && !lastentry) cout << "and ";
 								//else cout << endl;
 							}
 						}
@@ -388,13 +391,16 @@ mdConfig::mdConfig(string &configname, bool &verbose) {
 						for (int j = 0; j < mdCmdCount; j++) {
 				
 							if (tblFieldList[fieldNr].requiredBy[j]) {
+							
+								bool lastentry = true;
+								for (int k = j + 1; k < mdCmdCount; k++) if (tblFieldList[fieldNr].requiredBy[k]) lastentry = false;
 					
 								cout << mdCmdList[j].mdCmdName;
 								if (tblFieldList[fieldNr].requiredWhenSet[j]) cout << " is set ";
 								else cout << " is not set ";
 						
-								if (tblFieldList[fieldNr].requiredByAny && j + 1 < mdCmdCount) cout << "or ";
-								else if (tblFieldList[fieldNr].requiredByAny && j + 1 < mdCmdCount) cout << "and ";
+								if (tblFieldList[fieldNr].requiredByAny && !lastentry) cout << "or ";
+								else if (!tblFieldList[fieldNr].requiredByAny && !lastentry) cout << "and ";
 								//else cout << endl;
 							}
 						}
