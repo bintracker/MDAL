@@ -238,20 +238,21 @@ int mdModule::getBlockEnd(int blockStart) {
 //TODO: throw error if token not found
 int mdModule::locateToken(string token) {
 
+	cout << "search for token " << token << endl;
+
 	int line;
-	size_t pos = string::npos;
+//	size_t pos = string::npos;
 	string tempstr = "";
 	string tempstr2;
-	
-	for (line = 0; line < linecount && tempstr == ""; line++) {	//used to be line <= linecount
-	
-		tempstr2 = trimChars(moduleLines[line], " \t");
-		pos = tempstr2.find(token.data());			//check if token is commented out
 		
-		if (pos == 0) tempstr = tempstr2;
+	for (line = 0; line < linecount && tempstr2 != token; line++) {		//used to be line <= linecount
+
+		tempstr2 = moduleLines[line];
+		if (tempstr2.find('/') != string::npos) tempstr2.erase(tempstr2.find_first_of('/'));
+		tempstr2 = trimChars(tempstr2, " \t");
 	}
 
-	if (pos == 0) line--;			//TODO: this seems somewhat fishy, investigate more
+	if (tempstr2 == token) line--;
 
 	return line;
 }
