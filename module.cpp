@@ -238,8 +238,6 @@ int mdModule::getBlockEnd(int blockStart) {
 //TODO: throw error if token not found
 int mdModule::locateToken(string token) {
 
-	cout << "search for token " << token << endl;
-
 	int line;
 //	size_t pos = string::npos;
 	string tempstr = "";
