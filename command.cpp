@@ -116,6 +116,7 @@ void mdCommand::init(string commandString, bool &verbose) {
 		if (getType(temp) == DEC && mdCmdType != BOOL) mdCmdAutoVal = stoi(temp, nullptr, 10);
 		else if (getType(temp) == HEX && mdCmdType != BOOL) mdCmdAutoVal = stoi(trimChars(temp, "$"), nullptr, 16);
 		else if (getType(temp) == BOOL && mdCmdType == BOOL) mdCmdAutoVal = (temp == "true") ? 1 : 0;
+		else if (getType(temp) != BOOL && mdCmdType == BOOL) throw ("Non-Boolean parameter specified for BOOL AUTO command in " + commandString);
 		else mdCmdAutoValString = temp;
 	}
 	
