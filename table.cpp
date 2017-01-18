@@ -93,11 +93,15 @@ void mdTable::read(const string *tblBlock, const int blockLength, const mdConfig
 			if (rowStr == ".") rowStr = "";
 			else {
 			
-				if (!count(begin(rowStr), end(rowStr), '=') || count(begin(rowStr), end(rowStr), ',') != count(begin(rowStr), end(rowStr), '=') - 1)
-					throw ("Syntax error in module, line " + tblBlock[i]);
+//				if (!count(begin(rowStr), end(rowStr), '=') || count(begin(rowStr), end(rowStr), ',') != count(begin(rowStr), end(rowStr), '=') - 1)
+//				if (count(begin(rowStr), end(rowStr), ',') != count(begin(rowStr), end(rowStr), '=') - 1)	//TODO: better syntax checking
+//					throw ("Syntax error in module, line " + tblBlock[i]);
 					
+				string temp;
 						
-				string temp = rowStr.substr(0, rowStr.find_first_of("="));				
+				if (rowStr.find_first_of("=") == string::npos) temp = rowStr;
+				else temp = rowStr.substr(0, rowStr.find_first_of("="));
+								
 				int cmdNr = -1;
 				
 				
@@ -125,16 +129,20 @@ void mdTable::read(const string *tblBlock, const int blockLength, const mdConfig
 				}
 				
 				
-				if (getType(temp) == BOOL) {
-					if (temp == "false") lineCmdVals[row][cmdNr] = 0;
-					else  lineCmdVals[row][cmdNr] = 1;
-				}
-				else if (getType(temp) == DEC) lineCmdVals[row][cmdNr] = stoi(temp, nullptr, 10);
-				else if (getType(temp) == HEX) lineCmdVals[row][cmdNr] = stoi(trimChars(temp, "$"), nullptr, 16);
-				else {
-					if (temp.find_first_of("0123456789") < temp.find_first_not_of("0123456789"))
-						throw ("Invalid argument \"" + temp + "\" in " + tblBlock[i]);
-					lineCmdStrVals[row][cmdNr] = temp;
+				
+				if (!config.mdCmdList[cmdNr].mdCmdAuto) {
+				
+					if (getType(temp) == BOOL) {
+						if (temp == "false") lineCmdVals[row][cmdNr] = 0;
+						else  lineCmdVals[row][cmdNr] = 1;
+					}
+					else if (getType(temp) == DEC) lineCmdVals[row][cmdNr] = stoi(temp, nullptr, 10);
+					else if (getType(temp) == HEX) lineCmdVals[row][cmdNr] = stoi(trimChars(temp, "$"), nullptr, 16);
+					else {
+						if (temp.find_first_of("0123456789") < temp.find_first_not_of("0123456789"))
+							throw ("Invalid argument \"" + temp + "\" in " + tblBlock[i]);
+						lineCmdStrVals[row][cmdNr] = temp;
+					}
 				}
 			}	
 		}

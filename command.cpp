@@ -18,10 +18,14 @@ mdCommand::mdCommand() {
 	mdCmdForceInt = false;
 	mdCmdForceRepeat = false;
 	mdCmdUseLastSet = false;
+	mdCmdAuto = false;
 	
 
 	mdCmdDefaultVal = -1;
 	mdCmdDefaultValString = "";
+	
+	mdCmdAutoVal = -1;
+	mdCmdAutoValString = "";
 	
 	mdCmdLastVal = -1;
 	mdCmdLastValString = "";	
@@ -63,7 +67,7 @@ void mdCommand::init(string commandString, bool &verbose) {
 	if (temp == "BOOL") mdCmdType = BOOL;
 	else if (temp == "BYTE") mdCmdType = BYTE;
 	else if (temp == "WORD") mdCmdType = WORD;
-	else throw("\"" + temp + "\" does not name a known type in " + commandString);
+	else throw("\"" + temp + "\" does not name a known command type in " + commandString);
 	
 	cmdStrCopy.erase(0,cmdStrCopy.find('(')+1);
 	
@@ -99,6 +103,23 @@ void mdCommand::init(string commandString, bool &verbose) {
 		throw ("Default value out of range in " + commandString);
 	
 	
+	if (cmdStrCopy.find("AUTO") != string::npos) {
+		
+		mdCmdAuto = true;
+	
+		temp = cmdStrCopy;
+		temp.erase(0, temp.find("AUTO")+4);
+		if (temp.find_first_of('(') == string::npos) throw ("AUTO enabled, but no auto replacement value specified in " + commandString);
+		temp.erase(0, temp.find_first_not_of("(\n\t"));
+		temp.erase(temp.find_first_of(')'));
+		
+		if (getType(temp) == DEC && mdCmdType != BOOL) mdCmdAutoVal = stoi(temp, nullptr, 10);
+		else if (getType(temp) == HEX && mdCmdType != BOOL) mdCmdAutoVal = stoi(trimChars(temp, "$"), nullptr, 16);
+		else if (getType(temp) == BOOL && mdCmdType == BOOL) mdCmdAutoVal = (temp == "true") ? 1 : 0;
+		else mdCmdAutoValString = temp;
+	}
+	
+	
 	if (cmdStrCopy.find(',') != string::npos) cmdStrCopy.erase(0,temp.find(',')+1);		//not really necessary
 	
 	
@@ -128,11 +149,7 @@ void mdCommand::init(string commandString, bool &verbose) {
 			
 			if (getType(tmp1) == DEC && mdCmdType != BOOL) mdCmdSubstitutionValues[i] = stoi(tmp1, nullptr, 10);
 			else if (getType(tmp1) == HEX && mdCmdType != BOOL) mdCmdSubstitutionValues[i] = stoi(trimChars(tmp1, "$"), nullptr, 16);
-			else if (getType(tmp1) == BOOL && mdCmdType == BOOL) {
-// 				if (tmp1 == "true") mdCmdSubstitutionValues[i] = 1;
-// 				else mdCmdSubstitutionValues[i] = 0;
-				mdCmdSubstitutionValues[i] = (tmp1 == "true") ? 1 : 0;
-			}
+			else if (getType(tmp1) == BOOL && mdCmdType == BOOL) mdCmdSubstitutionValues[i] = (tmp1 == "true") ? 1 : 0;
 			else throw ("Substitution parameter is not a number in " + commandString);
 			
 			temp.erase(0, temp.find_first_of(",)") + 1);
@@ -194,7 +211,8 @@ void mdCommand::init(string commandString, bool &verbose) {
 		if (mdCmdForceInt) cout << ", FORCE_INT";
 		if (mdCmdForceRepeat) cout << ", FORCE_REPEAT";
 		if (mdCmdUseLastSet) cout << ", USE_LAST_SET";
-		if (mdCmdGlobalConst) cout << ", CONST";
+		if (mdCmdGlobalConst) cout << ", GLOBAL_CONST";
+		if (mdCmdAuto) cout << ", AUTO";
 		if (limitRange) cout << ", RANGE: " << lowerRangeLimit << ".." << upperRangeLimit;
 		if (mdCmdForceSubstitution) {
 		
@@ -283,6 +301,14 @@ void mdCommand::set(int &currentVal, string &currentValString) {
 	if (mdCmdGlobalConst) throw (string("Global constant redefined in pattern "));
 	
 	mdCmdIsSetNow = true;
+	
+	if (mdCmdAuto) {
+		
+		mdCmdCurrentVal = mdCmdAutoVal;
+		mdCmdCurrentValString = mdCmdAutoValString;
+		return;
+	}
+	
 	
 	if (mdCmdForceInt && currentVal == -1) throw (string("String argument supplied for integer command "));
 	

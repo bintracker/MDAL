@@ -75,6 +75,7 @@ class mdCommand {
 public:
 	string mdCmdName;
 	int mdCmdType;		//BOOL|BYTE|WORD
+	bool mdCmdAuto;
 	
 	bool mdCmdIsSetNow;		//in the current pattern row | !force-repeat
 	int mdCmdCurrentVal;
@@ -102,6 +103,9 @@ protected:
 	
 	int mdCmdDefaultVal;
 	
+	int mdCmdAutoVal;
+	string mdCmdAutoValString;
+	
 	bool mdCmdForceString;
 	bool mdCmdForceInt;
 	bool mdCmdForceSubstitution;
@@ -111,6 +115,7 @@ protected:
 	bool mdCmdForceRepeat;
 	bool mdCmdUseLastSet;
 	bool mdCmdGlobalConst;
+	
 	int mdCmdLastVal;
 	string mdCmdLastValString;
 
