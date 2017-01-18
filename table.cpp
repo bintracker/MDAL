@@ -93,14 +93,13 @@ void mdTable::read(const string *tblBlock, const int blockLength, const mdConfig
 			if (rowStr == ".") rowStr = "";
 			else {
 			
-//				if (!count(begin(rowStr), end(rowStr), '=') || count(begin(rowStr), end(rowStr), ',') != count(begin(rowStr), end(rowStr), '=') - 1)
-//				if (count(begin(rowStr), end(rowStr), ',') != count(begin(rowStr), end(rowStr), '=') - 1)	//TODO: better syntax checking
-//					throw ("Syntax error in module, line " + tblBlock[i]);
+				if (count(begin(rowStr), end(rowStr), ',') > count(begin(rowStr), end(rowStr), '='))
+					throw ("Syntax error in module, line " + tblBlock[i]);
 					
 				string temp;
 						
-				if (rowStr.find_first_of("=") == string::npos) temp = rowStr;
-				else temp = rowStr.substr(0, rowStr.find_first_of("="));
+				if (rowStr.find_first_of(",=") == string::npos) temp = rowStr;
+				else temp = rowStr.substr(0, rowStr.find_first_of(",="));
 								
 				int cmdNr = -1;
 				

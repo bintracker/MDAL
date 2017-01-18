@@ -161,7 +161,7 @@ mdModule::mdModule(string &infile, string &outfile, bool &verbose) {
 		
 			if (config.useTables) {
 		
-				moduleTables->shrink_to_fit();
+				moduleTables->shrink_to_fit();		//TODO: disable this in conjunction with table block parsing inside table blocks
 		
 				if (verbose) {
 			

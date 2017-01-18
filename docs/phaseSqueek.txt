@@ -76,7 +76,7 @@ ESA             Set ES style duty modulation ch1 op1 (default: 0)
 ESB             Set ES style duty modulation ch1 op2 (default: 0)
 NC              En/disable Noise mode ch2 op1 (on|off, default: off)
 FXJUMP          Set jump to another fx table (default: "fx0");
-FXSTOP          Stop fx table execution (true, default: true);
+FXSTOP          Stop fx table execution (automatic, no parameter required);
 
 Note: 
 

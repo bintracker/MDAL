@@ -89,11 +89,14 @@ void mdPattern::read(const string *ptnBlock, const int patternNumber, const int 
 			if (rowStr == ".") rowStr = "";
 			else {
 			
-//				if (!count(begin(rowStr), end(rowStr), '=') || count(begin(rowStr), end(rowStr), ',') != count(begin(rowStr), end(rowStr), '=') - 1)
-//					throw ("Syntax error in module, line " + ptnBlock[i]);
-					
+				if (count(begin(rowStr), end(rowStr), ',') > count(begin(rowStr), end(rowStr), '='))
+					throw ("Syntax error in module, line " + ptnBlock[i]);
+				
+				string temp;	
 						
-				string temp = rowStr.substr(0, rowStr.find_first_of("="));				
+				if (rowStr.find_first_of(",=") == string::npos) temp = rowStr;
+				else temp = rowStr.substr(0, rowStr.find_first_of(",="));
+							
 				int cmdNr = -1;
 				
 				
