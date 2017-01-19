@@ -10,7 +10,7 @@ using namespace std;
 mdModule::mdModule(string &infile, string &outfile, bool &verbose) {
 
 	moduleLines = nullptr;
-	mdBlock = nullptr;
+	rawDataBlock = nullptr;
 	modulePatterns = nullptr;
 	moduleTables = nullptr;
 	//uniqueTableCount = 0;
@@ -73,14 +73,14 @@ mdModule::mdModule(string &infile, string &outfile, bool &verbose) {
 		
 			if (blockStart > blockEnd) throw (string("Sequence contains no patterns."));
 		
-			mdBlock = new string[blockEnd - blockStart];
+			rawDataBlock = new string[blockEnd - blockStart];
 		
-			for (int i = blockStart + 1; i <= blockEnd; i++) mdBlock[i - blockStart - 1] = moduleLines[i];
+			for (int i = blockStart + 1; i <= blockEnd; i++) rawDataBlock[i - blockStart - 1] = moduleLines[i];
 
-			mdSequence seq(mdBlock, blockEnd - blockStart, config, verbose);
+			mdSequence seq(rawDataBlock, blockEnd - blockStart, config, verbose);
 		
-			delete[] mdBlock;
-			mdBlock = nullptr;
+			delete[] rawDataBlock;
+			rawDataBlock = nullptr;
 		
 			if (verbose) cout << seq << endl;
 			MUSICASM << seq << endl;
@@ -133,19 +133,19 @@ mdModule::mdModule(string &infile, string &outfile, bool &verbose) {
 				if (blockStart >= blockEnd) throw ("Pattern \"" + seq.uniquePtnList[i] + "\" contains no data");
 				//TODO: does not reliably detect empty patterns.
 			
-				mdBlock = new string[blockEnd - blockStart];
+				rawDataBlock = new string[blockEnd - blockStart];
 			
-				for (int j = blockStart + 1; j <= blockEnd; j++) mdBlock[j - blockStart - 1] = moduleLines[j];
+				for (int j = blockStart + 1; j <= blockEnd; j++) rawDataBlock[j - blockStart - 1] = moduleLines[j];
 			
 				try {
-					modulePatterns[i].read(mdBlock, i, blockEnd - blockStart, config, moduleTables, verbose);
+					modulePatterns[i].read(rawDataBlock, i, blockEnd - blockStart, config, moduleTables, verbose);
 				}
 				catch(string &e) {
 					throw ("In pattern \"" + seq.uniquePtnList[i] + "\": " + e);
 				}
 			
-				delete[] mdBlock;
-				mdBlock = nullptr;
+				delete[] rawDataBlock;
+				rawDataBlock = nullptr;
 			
 				if (verbose) {
 			
@@ -181,19 +181,19 @@ mdModule::mdModule(string &infile, string &outfile, bool &verbose) {
 					if (blockStart >= blockEnd) throw ("Table \"" + it.tblName + "\" contains no data");
 				
 
-					mdBlock = new string[blockEnd - blockStart];
+					rawDataBlock = new string[blockEnd - blockStart];
 			
-					for (int j = blockStart + 1; j <= blockEnd; j++) mdBlock[j - blockStart - 1] = moduleLines[j];
+					for (int j = blockStart + 1; j <= blockEnd; j++) rawDataBlock[j - blockStart - 1] = moduleLines[j];
 			
 					try {
-						it.read(mdBlock, blockEnd - blockStart, config, verbose);
+						it.read(rawDataBlock, blockEnd - blockStart, config, verbose);
 					}
 					catch(string &e) {
 						throw ("In table \"" + it.tblName + "\": " + e);
 					}
 			
-					delete[] mdBlock;
-					mdBlock = nullptr;
+					delete[] rawDataBlock;
+					rawDataBlock = nullptr;
 				
 				
 				
@@ -216,7 +216,7 @@ mdModule::mdModule(string &infile, string &outfile, bool &verbose) {
 
 mdModule::~mdModule() {
 	
-	delete[] mdBlock;
+	delete[] rawDataBlock;
 	delete[] moduleLines;
 	delete[] modulePatterns;
 	delete moduleTables;

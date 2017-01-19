@@ -56,7 +56,7 @@ public:
 	friend ostream& operator<<(ostream& os, const mdModule &mdf);
 	
 protected:
-	string *mdBlock;
+	string *rawDataBlock;
 	
 	//int uniqueTableCount;
 
