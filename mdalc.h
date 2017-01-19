@@ -20,6 +20,7 @@ enum ClearFlags {CLEAR_HI = 1, CLEAR_LO, CLEAR_ALL};
 
 class mdConfig;
 class mdTable;
+class mdBlock;
 
 
 class mdPattern {
@@ -219,6 +220,14 @@ public:
 	mdField* tblFieldList;
 	int tblFieldCount;
 	int tblMaxLength;
+	
+	//block config parameters
+	bool useBlkEnd;
+	string blkEndString;
+	string blkLabelPrefix;
+	mdField* blkFieldList;
+	int blkFieldCount;
+	int blkMaxLength;
 
 	mdConfig(string &configname, bool &verbose);
 	~mdConfig();
@@ -281,6 +290,28 @@ public:
 
 private:
 	string tblString;
+};
+
+
+class mdBlock {
+
+public:
+	string blkName;
+	int blkLength;
+	bool *requestList;
+	bool **lineCommands;
+	int **lineCmdVals;
+	string **lineCmdStrVals;
+	
+	mdBlock(string name);
+	~mdBlock();
+	
+	void read(const string *rawData, const int blockLength, const mdConfig &config, const bool &verbose);
+
+	friend ostream& operator<<(ostream& os, const mdBlock &blk);
+
+private:
+	string blkString;
 };
 
 

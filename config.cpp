@@ -16,12 +16,15 @@ mdConfig::mdConfig(string &configname, bool &verbose) {
 	cmdIsTablePointer = nullptr;
 	ptnFieldList = nullptr;
 	tblFieldList = nullptr;
+	blkFieldList = nullptr;
 	ptnLabelPrefix = "mdp_";
 	tblLabelPrefix = "mdt_";
+	blkLabelPrefix = "mdb_";
 	seqLabel = ";sequence";
 	seqMaxLength = 0;
 	ptnMaxLength = 0;
 	tblMaxLength = 0;
+	blkMaxLength = 0;
 	
 	string filename = "config/" + configname + ".cfg";
 	
