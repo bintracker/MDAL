@@ -70,14 +70,8 @@ mdConfig::mdConfig(string &configname, bool &verbose) {
 		if (hexPrefix == "") hexPrefix = "$";
 		if (verbose) cout << "hex prefix:\t\t" << hexPrefix << endl;
 	
-		if (verbose) cout << endl;
-	
-//		useSequence = false;
-//		if (locateToken(string("USE_SEQUENCE"), 0, configEnd) != configEnd) {
-		//TODO: provide support for multi-track sequences
-	
-//			useSequence = true;
-		if (verbose) cout << "SEQUENCE CONFIGURATION\n======================" << endl;
+
+		if (verbose) cout << "\nSEQUENCE CONFIGURATION\n======================" << endl;
 
 		int blockStart = locateToken(string("CFG_SEQUENCE"), 0, configEnd);
 	
@@ -151,7 +145,7 @@ mdConfig::mdConfig(string &configname, bool &verbose) {
 		}
 	
 		if (verbose) cout << endl;
-//		}
+
 	
 	
 		blockStart = locateToken(string("CFG_COMMANDS"), 0, configEnd);

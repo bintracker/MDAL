@@ -15,6 +15,7 @@ int getType(const string& parameter);
 
 
 enum Type {BOOL, BYTE, WORD, DEC, HEX, STRING, INVALID};
+enum BlockType {GENERIC, PATTERN, TABLE};
 enum ConditionType {REQUIRED, SET_IF};
 enum ClearFlags {CLEAR_HI = 1, CLEAR_LO, CLEAR_ALL};
 
@@ -26,6 +27,7 @@ class mdBlock;
 class mdPattern {
 
 public:
+	string ptnName;
 	int ptnLength;
 	bool firstInSequence;
 	bool *requestList;
@@ -33,10 +35,10 @@ public:
 	int **lineCmdVals;
 	string **lineCmdStrVals;
 	
-	mdPattern();
+	mdPattern(string name, bool &sequenceStart);
 	~mdPattern();
 	
-	void read(const string *ptnBlock, const int patternNumber, const int blockLength, const mdConfig &config, vector<mdTable> *moduleTables, const bool &verbose);
+	void read(const string *ptnBlock, const int blockLength, const mdConfig &config, vector<mdTable> *moduleTables, const bool &verbose);
 
 	friend ostream& operator<<(ostream& os, const mdPattern &ptn);
 private:
@@ -48,7 +50,7 @@ class mdModule {
 	
 public:
 	string mdSequenceString;
-	mdPattern *modulePatterns;
+	vector<mdPattern> *modulePatterns;
 	vector<mdTable> *moduleTables;
 
 	mdModule(string &infile, string &outfile, bool &verbose);
@@ -182,7 +184,6 @@ class mdConfig {
 
 public:
 	//global config parameters
-	bool useSequence;
 	bool usePatterns;
 	bool useTables;
 	bool useSamples;
@@ -203,6 +204,28 @@ public:
 	string seqLoopLabel;
 	string seqLabel;
 	int seqMaxLength;
+	
+	
+	int blockTypeCount;
+	
+	class mdBlockConfig {
+	
+	public:	
+		string blockConfigID;
+		int baseType;
+		bool useBlkEnd;
+		string blkEndString;
+		bool initBlkDefaults;
+		string blkLabelPrefix;
+		mdField* blkFieldList;
+		int blkFieldCount;
+		int blkMaxLength;
+		
+		mdBlockConfig(string rawConfigData);
+		~mdBlockConfig();
+	};
+	
+	vector<mdBlockConfig>* blockTypes;
 	
 	//pattern config parameters
 	bool usePtnEnd;

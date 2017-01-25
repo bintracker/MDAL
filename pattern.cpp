@@ -6,8 +6,9 @@
 
 using namespace std;
 
-mdPattern::mdPattern() {
+mdPattern::mdPattern(string name, bool &sequenceStart) {
 
+	ptnName = name;
 	lineCommands = nullptr;
 	lineCmdVals = nullptr;
 	lineCmdStrVals = nullptr;
@@ -15,8 +16,7 @@ mdPattern::mdPattern() {
 	requestList = nullptr;
 	
 	ptnLength = 0;
-	firstInSequence = false;
-
+	firstInSequence = sequenceStart;
 }
 
 
@@ -37,9 +37,7 @@ mdPattern::~mdPattern() {
 
 }
 
-void mdPattern::read(const string *ptnBlock, const int patternNumber, const int blockLength, const mdConfig &config, vector<mdTable> *moduleTables, const bool &verbose) {
-
-	if (patternNumber == 0) firstInSequence = true;
+void mdPattern::read(const string *ptnBlock, const int blockLength, const mdConfig &config, vector<mdTable> *moduleTables, const bool &verbose) {
 
 	for (int i = 0; i < blockLength; i++) {
 	
@@ -143,7 +141,8 @@ void mdPattern::read(const string *ptnBlock, const int patternNumber, const int 
 		if (validData) row++;
 	}
 	
-	ptnString = "";		//TODO: add pattern name externally
+
+	ptnString = ptnName;
 	
 	for (int row = 0; row < ptnLength; row++) {
 	
@@ -186,7 +185,7 @@ void mdPattern::read(const string *ptnBlock, const int patternNumber, const int 
 		
 		for (int field = 0; field < config.ptnFieldCount; field++) {
 		
-			bool seqBegin = (patternNumber == 0) ? true : false;
+			bool seqBegin = (firstInSequence) ? true : false;
 			config.ptnFieldList[field].getRequests(requestList, config, row, seqBegin);
 			
 		}

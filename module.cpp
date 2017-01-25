@@ -13,7 +13,6 @@ mdModule::mdModule(string &infile, string &outfile, bool &verbose) {
 	rawDataBlock = nullptr;
 	modulePatterns = nullptr;
 	moduleTables = nullptr;
-	//uniqueTableCount = 0;
 
 	ifstream MDFILE(infile.data());	
 	if (!MDFILE.is_open()) throw (infile + " not found.");
@@ -66,8 +65,6 @@ mdModule::mdModule(string &infile, string &outfile, bool &verbose) {
 	
 		if (verbose) cout << endl << "Module data:" << endl;
 	
-//		if (config.useSequence) {
-		
 		int blockStart = locateToken(string(":SEQUENCE"));
 		int blockEnd = getBlockEnd(blockStart);
 	
@@ -106,31 +103,29 @@ mdModule::mdModule(string &infile, string &outfile, bool &verbose) {
 				}
 			}
 		
-// 			vector<mdTable>::iterator it;
-// 			it = moduleTables->begin();
-// 			cout << it->tblName << endl;
-//			cout << "Capacity: " << moduleTables->capacity() << endl;	
 		}
 	
 	
 		//if USE_PATTERNS
-		modulePatterns = new mdPattern[seq.uniquePtnCount];		//TODO should be conditional
-	
+		modulePatterns = new vector<mdPattern>;
+		bool seqBegin = true;
 	
 		for (int i = 0; i < seq.uniquePtnCount; i++) {
+		
+			modulePatterns->emplace_back(seq.uniquePtnList[i], seqBegin);
+			seqBegin = false;
+			
+		}
+		
+		for (auto it : *modulePatterns) {
 	
-			//cout << "Detecting pattern " << seq.uniquePtnList[i] << "... ";	//DEBUG
 
-			blockStart = locateToken(":" + seq.uniquePtnList[i]);
+			blockStart = locateToken(":" + it.ptnName);
 			blockEnd = getBlockEnd(blockStart);
-		
-			//cout << "detected." << endl;					//DEBUG
-		
-			if (blockStart >= linecount - 1) throw ("Pattern \"" + seq.uniquePtnList[i] + "\" is not defined.");
-		
-			//cout << seq.uniquePtnList[i] << " s: " << blockStart << " e: " << blockEnd << endl;
 
-			if (blockStart >= blockEnd) throw ("Pattern \"" + seq.uniquePtnList[i] + "\" contains no data");
+		
+			if (blockStart >= linecount - 1) throw ("Pattern \"" + it.ptnName + "\" is not defined.");
+			if (blockStart >= blockEnd) throw ("Pattern \"" + it.ptnName + "\" contains no data");
 			//TODO: does not reliably detect empty patterns.
 		
 			rawDataBlock = new string[blockEnd - blockStart];
@@ -138,24 +133,17 @@ mdModule::mdModule(string &infile, string &outfile, bool &verbose) {
 			for (int j = blockStart + 1; j <= blockEnd; j++) rawDataBlock[j - blockStart - 1] = moduleLines[j];
 		
 			try {
-				modulePatterns[i].read(rawDataBlock, i, blockEnd - blockStart, config, moduleTables, verbose);
+				it.read(rawDataBlock, blockEnd - blockStart, config, moduleTables, verbose);
 			}
 			catch(string &e) {
-				throw ("In pattern \"" + seq.uniquePtnList[i] + "\": " + e);
+				throw ("In pattern \"" + it.ptnName + "\": " + e);
 			}
 		
 			delete[] rawDataBlock;
 			rawDataBlock = nullptr;
 		
-			if (verbose) {
-		
-				cout << config.ptnLabelPrefix + seq.uniquePtnList[i] << endl;
-				cout << modulePatterns[i];
-			}
-		
-			MUSICASM << config.ptnLabelPrefix + seq.uniquePtnList[i] << endl;
-			MUSICASM << modulePatterns[i];
-		
+			MUSICASM << config.ptnLabelPrefix << it << endl;
+			if (verbose) cout << config.ptnLabelPrefix << it << endl;			
 		}
 	
 	
@@ -203,10 +191,7 @@ mdModule::mdModule(string &infile, string &outfile, bool &verbose) {
 			}
 		}
 		
-//		}
-
-		return;
-		
+		return;		
 	}
 	catch(string &e) {
 		throw (infile + ": " + e + "\nModule validation failed.");
@@ -218,7 +203,7 @@ mdModule::~mdModule() {
 	
 	delete[] rawDataBlock;
 	delete[] moduleLines;
-	delete[] modulePatterns;
+	delete modulePatterns;
 	delete moduleTables;
 	//delete seq;
 }
