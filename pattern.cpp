@@ -39,6 +39,8 @@ mdPattern::~mdPattern() {
 
 void mdPattern::read(const string *ptnBlock, const int blockLength, const mdConfig &config, vector<mdTable> *moduleTables, const bool &verbose) {
 
+	ptnString = config.ptnLabelPrefix + ptnName;
+
 	for (int i = 0; i < blockLength; i++) {
 	
 		string temp = trimChars(ptnBlock[i], " ()\t");
@@ -142,7 +144,7 @@ void mdPattern::read(const string *ptnBlock, const int blockLength, const mdConf
 	}
 	
 
-	ptnString = ptnName;
+//	ptnString = ptnName;
 	
 	for (int row = 0; row < ptnLength; row++) {
 	

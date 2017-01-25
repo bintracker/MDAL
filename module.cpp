@@ -150,8 +150,8 @@ mdModule::mdModule(string &infile, string &outfile, bool &verbose) {
 			delete[] rawDataBlock;
 			rawDataBlock = nullptr;
 		
-			MUSICASM << config.ptnLabelPrefix << it << endl;
-			if (verbose) cout << config.ptnLabelPrefix << it << endl;			
+			MUSICASM << it << endl;
+			if (verbose) cout << it << endl;			
 		}
 	
 	
