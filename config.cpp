@@ -13,6 +13,7 @@ mdConfig::mdConfig(string &configname, bool &verbose) {
 
 	cfgLines = nullptr;
 	mdCmdList = nullptr;
+	blockTypes = nullptr;
 	cmdIsTablePointer = nullptr;
 	ptnFieldList = nullptr;
 	tblFieldList = nullptr;
@@ -25,6 +26,8 @@ mdConfig::mdConfig(string &configname, bool &verbose) {
 	ptnMaxLength = 0;
 	tblMaxLength = 0;
 	blkMaxLength = 0;
+	
+	blockTypeCount = 0;
 	
 	string filename = "config/" + configname + ".cfg";
 	
@@ -69,89 +72,89 @@ mdConfig::mdConfig(string &configname, bool &verbose) {
 	
 		if (verbose) cout << endl;
 	
-		useSequence = false;
-		if (locateToken(string("USE_SEQUENCE"), 0, configEnd) != configEnd) {
+//		useSequence = false;
+//		if (locateToken(string("USE_SEQUENCE"), 0, configEnd) != configEnd) {
 		//TODO: provide support for multi-track sequences
 	
-			useSequence = true;
-			if (verbose) cout << "using SEQUENCE" << endl;
+//			useSequence = true;
+		if (verbose) cout << "SEQUENCE CONFIGURATION\n======================" << endl;
+
+		int blockStart = locateToken(string("CFG_SEQUENCE"), 0, configEnd);
+	
+		if (blockStart == configEnd) throw (string("No CFG_SEQUENCE block found."));
+	
+		else {
 		
-			int blockStart = locateToken(string("CFG_SEQUENCE"), 0, configEnd);
+			int blockEnd = getBlockEnd(blockStart);
 		
-			if (blockStart == configEnd) throw (string("No CFG_SEQUENCE block found."));
+			useSeqEnd = false;
+			useSeqLoop = false;
+			useSeqLoopPointer = false;
 		
-			else {
-			
-				int blockEnd = getBlockEnd(blockStart);
-			
-				useSeqEnd = false;
-				useSeqLoop = false;
-				useSeqLoopPointer = false;
-			
-			
-				int tokenpos = locateToken(string("USE_LABEL"), blockStart, blockEnd);
-			
-				if (tokenpos != blockEnd) {
-			
-					seqLabel = trimChars(getArgument(cfgLines[tokenpos], 1), "\"");
-					if (seqLabel == "") throw (string("CFG_SEQUENCE: Missing argument in USE_LABEL() declaration."));
-				}
-			
-				if (verbose) cout << "Sequence label:\t\t" << seqLabel << endl;
-			
-			
-			
-				tokenpos = locateToken(string("USE_END"), blockStart, blockEnd);
-			
-				if (tokenpos != blockEnd) {
-			
-					useSeqEnd = true;
-					seqEndString = trimChars(getArgument(cfgLines[tokenpos], 1), "\"");
-					if (seqEndString == "") throw (string("CFG_SEQUENCE: Missing argument in USE_END() declaration."));
-					if (verbose) cout << "Sequence end:\t\t" << seqEndString << endl;
-				}
-			
-			
-				tokenpos = locateToken(string("USE_LOOP"), blockStart, blockEnd);
-			
-				if (tokenpos != blockEnd) {
-			
-					useSeqLoop = true;
-				
-					int argCount = getArgumentCount(cfgLines[tokenpos]);
-				
-					if (argCount < 2) throw (string("CFG_SEQUENCE: Incomplete loop configuration."));
-				
-					string arg = getArgument(cfgLines[tokenpos], 1);
-					//cout << arg << endl;
-				
-					if (arg != "LABEL" && arg != "POINTER") throw ("CFG_SEQUENCE: Invalid loop type \"" + arg + "\".");
-					else if (arg == "POINTER") useSeqLoopPointer = true;
-				
-					seqLoopLabel = trimChars(getArgument(cfgLines[tokenpos], 2), "\"");
-				
-					if (verbose) cout << "Loop type:\t\t" << arg << "\nLoop label:\t\t" << seqLoopLabel << endl;
-				}
-			
-			
-				tokenpos = locateToken(string("MAX_LENGTH"), blockStart, blockEnd);
 		
-				if (tokenpos != blockEnd) {
+			int tokenpos = locateToken(string("USE_LABEL"), blockStart, blockEnd);
 		
-					string maxLengthStr = trimChars(getArgument(cfgLines[tokenpos], 1), "\"");
-					if (maxLengthStr == "") throw (string("CFG_SEQUENCE: Missing argument in MAX_LENGTH() declaration."));
-					if (getType(maxLengthStr) == DEC) seqMaxLength = stoi(maxLengthStr, nullptr, 10);
-					else if (getType(maxLengthStr) == HEX) seqMaxLength = stoi(trimChars(maxLengthStr, "$"), nullptr, 16);
-					else throw (string("CFG_SEQUENCE: MAX_LENGTH() does not specify an integer."));
-					if (verbose) cout << "Max. sequence length:\t" << seqMaxLength << endl;
-				}
+			if (tokenpos != blockEnd) {
+		
+				seqLabel = trimChars(getArgument(cfgLines[tokenpos], 1), "\"");
+				if (seqLabel == "") throw (string("CFG_SEQUENCE: Missing argument in USE_LABEL() declaration."));
 			}
 		
-			if (verbose) cout << endl;
+			if (verbose) cout << "Sequence label:\t\t" << seqLabel << endl;
+		
+		
+		
+			tokenpos = locateToken(string("USE_END"), blockStart, blockEnd);
+		
+			if (tokenpos != blockEnd) {
+		
+				useSeqEnd = true;
+				seqEndString = trimChars(getArgument(cfgLines[tokenpos], 1), "\"");
+				if (seqEndString == "") throw (string("CFG_SEQUENCE: Missing argument in USE_END() declaration."));
+				if (verbose) cout << "Sequence end:\t\t" << seqEndString << endl;
+			}
+		
+		
+			tokenpos = locateToken(string("USE_LOOP"), blockStart, blockEnd);
+		
+			if (tokenpos != blockEnd) {
+		
+				useSeqLoop = true;
+			
+				int argCount = getArgumentCount(cfgLines[tokenpos]);
+			
+				if (argCount < 2) throw (string("CFG_SEQUENCE: Incomplete loop configuration."));
+			
+				string arg = getArgument(cfgLines[tokenpos], 1);
+				//cout << arg << endl;
+			
+				if (arg != "LABEL" && arg != "POINTER") throw ("CFG_SEQUENCE: Invalid loop type \"" + arg + "\".");
+				else if (arg == "POINTER") useSeqLoopPointer = true;
+			
+				seqLoopLabel = trimChars(getArgument(cfgLines[tokenpos], 2), "\"");
+			
+				if (verbose) cout << "Loop type:\t\t" << arg << "\nLoop label:\t\t" << seqLoopLabel << endl;
+			}
+		
+		
+			tokenpos = locateToken(string("MAX_LENGTH"), blockStart, blockEnd);
+	
+			if (tokenpos != blockEnd) {
+	
+				string maxLengthStr = trimChars(getArgument(cfgLines[tokenpos], 1), "\"");
+				if (maxLengthStr == "") throw (string("CFG_SEQUENCE: Missing argument in MAX_LENGTH() declaration."));
+				if (getType(maxLengthStr) == DEC) seqMaxLength = stoi(maxLengthStr, nullptr, 10);
+				else if (getType(maxLengthStr) == HEX) seqMaxLength = stoi(trimChars(maxLengthStr, "$"), nullptr, 16);
+				else throw (string("CFG_SEQUENCE: MAX_LENGTH() does not specify an integer."));
+				if (verbose) cout << "Max. sequence length:\t" << seqMaxLength << endl;
+			}
 		}
 	
+		if (verbose) cout << endl;
+//		}
 	
-		int blockStart = locateToken(string("CFG_COMMANDS"), 0, configEnd);
+	
+		blockStart = locateToken(string("CFG_COMMANDS"), 0, configEnd);
 		
 		if (blockStart == linecount - 1) throw (string("No CFG_COMMANDS block found."));
 		
@@ -166,7 +169,7 @@ mdConfig::mdConfig(string &configname, bool &verbose) {
 		fill_n(cmdIsTablePointer, mdCmdCount, false);
 		int cmdNr = 0;
 	
-		if (verbose) cout << "User Commands:" << endl;
+		if (verbose) cout << "USER COMMANDS\n=============" << endl;
 	
 		for (int i = blockStart; i < blockEnd; i++) {
 	
@@ -185,6 +188,22 @@ mdConfig::mdConfig(string &configname, bool &verbose) {
 		}
 	
 		if (verbose) cout << endl;
+
+
+
+		for (int line = 0; line < configEnd; line++) {
+		
+			if (cfgLines[line].find("CFG_BLOCK") != string::npos) blockTypeCount++;
+		}
+
+
+		if (!blockTypeCount) throw (string("No block configurations found."));	
+		
+		if (verbose) cout << "BLOCK CONFIGURATIONS\n====================\nBlock types: \t\t" << blockTypeCount << endl;
+
+		blockTypes = new vector<mdBlockConfig>;
+		
+		
 	
 	
 		usePatterns = false;
@@ -443,6 +462,7 @@ mdConfig::~mdConfig() {
 	delete[] tblFieldList;
 	delete[] mdCmdList;
 	delete[] cmdIsTablePointer;
+	delete blockTypes;
 	delete[] cfgLines;
 
 }
@@ -572,4 +592,24 @@ string mdConfig::getArgumentString(string token, int blockStart, int blockEnd) {
 	if (pos != string::npos) tempstr.erase(pos);
 	
 	return tempstr;
+}
+
+
+mdConfig::mdBlockConfig::mdBlockConfig(string rawConfigData) {
+
+	blockConfigID = "";
+	baseType = GENERIC;
+	useBlkEnd = false;
+	blkEndString = "";
+	initBlkDefaults = false;
+	blkLabelPrefix = "mdb_";
+	blkFieldList = nullptr;
+	blkFieldCount = 0;
+	blkMaxLength = 0;
+
+}
+
+mdConfig::mdBlockConfig::~mdBlockConfig() {
+
+	delete[] blkFieldList;
 }

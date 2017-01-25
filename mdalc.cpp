@@ -10,7 +10,7 @@ using namespace std;
 
 int main(int argc, char *argv[]){
 
-	cout << "MDAL COMPILER v0.0.1\n";
+	cout << "MDAL COMPILER v0.0.1\n\n";
 
 	bool verbose = false;
 	string infile = "";

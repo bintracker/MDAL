@@ -66,144 +66,144 @@ mdModule::mdModule(string &infile, string &outfile, bool &verbose) {
 	
 		if (verbose) cout << endl << "Module data:" << endl;
 	
-		if (config.useSequence) {
+//		if (config.useSequence) {
 		
-			int blockStart = locateToken(string(":SEQUENCE"));
-			int blockEnd = getBlockEnd(blockStart);
+		int blockStart = locateToken(string(":SEQUENCE"));
+		int blockEnd = getBlockEnd(blockStart);
+	
+		if (blockStart > blockEnd) throw (string("Sequence contains no patterns."));
+	
+		rawDataBlock = new string[blockEnd - blockStart];
+	
+		for (int i = blockStart + 1; i <= blockEnd; i++) rawDataBlock[i - blockStart - 1] = moduleLines[i];
+
+		mdSequence seq(rawDataBlock, blockEnd - blockStart, config, verbose);
+	
+		delete[] rawDataBlock;
+		rawDataBlock = nullptr;
+	
+		if (verbose) cout << seq << endl;
+		MUSICASM << seq << endl;
+
+	
+	
+		if (config.useTables) {
 		
-			if (blockStart > blockEnd) throw (string("Sequence contains no patterns."));
+			moduleTables = new vector<mdTable>;
+		
+			for (int i = 0; i < config.mdCmdCount; i++) {
+		
+				if (config.cmdIsTablePointer[i]) {
+			
+					bool isUsed = false;
+				
+					for (auto it : *moduleTables) {
+					
+						if (config.mdCmdList[i].mdCmdDefaultValString == it.tblName) isUsed = true;	
+					}
+				
+					if (!isUsed) moduleTables->push_back(config.mdCmdList[i].mdCmdDefaultValString);
+				}
+			}
+		
+// 			vector<mdTable>::iterator it;
+// 			it = moduleTables->begin();
+// 			cout << it->tblName << endl;
+//			cout << "Capacity: " << moduleTables->capacity() << endl;	
+		}
+	
+	
+		//if USE_PATTERNS
+		modulePatterns = new mdPattern[seq.uniquePtnCount];		//TODO should be conditional
+	
+	
+		for (int i = 0; i < seq.uniquePtnCount; i++) {
+	
+			//cout << "Detecting pattern " << seq.uniquePtnList[i] << "... ";	//DEBUG
+
+			blockStart = locateToken(":" + seq.uniquePtnList[i]);
+			blockEnd = getBlockEnd(blockStart);
+		
+			//cout << "detected." << endl;					//DEBUG
+		
+			if (blockStart >= linecount - 1) throw ("Pattern \"" + seq.uniquePtnList[i] + "\" is not defined.");
+		
+			//cout << seq.uniquePtnList[i] << " s: " << blockStart << " e: " << blockEnd << endl;
+
+			if (blockStart >= blockEnd) throw ("Pattern \"" + seq.uniquePtnList[i] + "\" contains no data");
+			//TODO: does not reliably detect empty patterns.
 		
 			rawDataBlock = new string[blockEnd - blockStart];
 		
-			for (int i = blockStart + 1; i <= blockEnd; i++) rawDataBlock[i - blockStart - 1] = moduleLines[i];
-
-			mdSequence seq(rawDataBlock, blockEnd - blockStart, config, verbose);
+			for (int j = blockStart + 1; j <= blockEnd; j++) rawDataBlock[j - blockStart - 1] = moduleLines[j];
+		
+			try {
+				modulePatterns[i].read(rawDataBlock, i, blockEnd - blockStart, config, moduleTables, verbose);
+			}
+			catch(string &e) {
+				throw ("In pattern \"" + seq.uniquePtnList[i] + "\": " + e);
+			}
 		
 			delete[] rawDataBlock;
 			rawDataBlock = nullptr;
 		
-			if (verbose) cout << seq << endl;
-			MUSICASM << seq << endl;
-	
+			if (verbose) {
 		
-		
-			if (config.useTables) {
-			
-				moduleTables = new vector<mdTable>;
-			
-				for (int i = 0; i < config.mdCmdCount; i++) {
-			
-					if (config.cmdIsTablePointer[i]) {
-				
-						bool isUsed = false;
-					
-						for (auto it : *moduleTables) {
-						
-							if (config.mdCmdList[i].mdCmdDefaultValString == it.tblName) isUsed = true;	
-						}
-					
-						if (!isUsed) moduleTables->push_back(config.mdCmdList[i].mdCmdDefaultValString);
-					}
-				}
-			
-	// 			vector<mdTable>::iterator it;
-	// 			it = moduleTables->begin();
-	// 			cout << it->tblName << endl;
-	//			cout << "Capacity: " << moduleTables->capacity() << endl;	
+				cout << config.ptnLabelPrefix + seq.uniquePtnList[i] << endl;
+				cout << modulePatterns[i];
 			}
 		
+			MUSICASM << config.ptnLabelPrefix + seq.uniquePtnList[i] << endl;
+			MUSICASM << modulePatterns[i];
 		
-			//if USE_PATTERNS
-			modulePatterns = new mdPattern[seq.uniquePtnCount];		//TODO should be conditional
-		
-		
-			for (int i = 0; i < seq.uniquePtnCount; i++) {
-		
-				//cout << "Detecting pattern " << seq.uniquePtnList[i] << "... ";	//DEBUG
+		}
 	
-				blockStart = locateToken(":" + seq.uniquePtnList[i]);
+	
+		if (config.useTables) {
+	
+			moduleTables->shrink_to_fit();		//TODO: disable this in conjunction with table block parsing inside table blocks
+	
+			if (verbose) {
+		
+				cout << "Unique tables: " << moduleTables->size();
+			
+				for (auto it : *moduleTables) cout << ", " << it.tblName;
+			
+				cout << endl;
+			}
+		
+			for (auto it : *moduleTables) {
+		
+				blockStart = locateToken(":" + it.tblName);
 				blockEnd = getBlockEnd(blockStart);
+		
+				if (blockStart >= linecount - 1) throw ("Table \"" + it.tblName + "\" is not defined.");
+				if (blockStart >= blockEnd) throw ("Table \"" + it.tblName + "\" contains no data");
 			
-				//cout << "detected." << endl;					//DEBUG
-			
-				if (blockStart >= linecount - 1) throw ("Pattern \"" + seq.uniquePtnList[i] + "\" is not defined.");
-			
-				//cout << seq.uniquePtnList[i] << " s: " << blockStart << " e: " << blockEnd << endl;
-	
-				if (blockStart >= blockEnd) throw ("Pattern \"" + seq.uniquePtnList[i] + "\" contains no data");
-				//TODO: does not reliably detect empty patterns.
-			
+
 				rawDataBlock = new string[blockEnd - blockStart];
-			
+		
 				for (int j = blockStart + 1; j <= blockEnd; j++) rawDataBlock[j - blockStart - 1] = moduleLines[j];
-			
+		
 				try {
-					modulePatterns[i].read(rawDataBlock, i, blockEnd - blockStart, config, moduleTables, verbose);
+					it.read(rawDataBlock, blockEnd - blockStart, config, verbose);
 				}
 				catch(string &e) {
-					throw ("In pattern \"" + seq.uniquePtnList[i] + "\": " + e);
+					throw ("In table \"" + it.tblName + "\": " + e);
 				}
-			
+		
 				delete[] rawDataBlock;
 				rawDataBlock = nullptr;
 			
-				if (verbose) {
 			
-					cout << config.ptnLabelPrefix + seq.uniquePtnList[i] << endl;
-					cout << modulePatterns[i];
-				}
 			
-				MUSICASM << config.ptnLabelPrefix + seq.uniquePtnList[i] << endl;
-				MUSICASM << modulePatterns[i];
-			
+		
+				MUSICASM << it;
+				if (verbose) cout << it;
 			}
-		
-		
-			if (config.useTables) {
-		
-				moduleTables->shrink_to_fit();		//TODO: disable this in conjunction with table block parsing inside table blocks
-		
-				if (verbose) {
-			
-					cout << "Unique tables: " << moduleTables->size();
-				
-					for (auto it : *moduleTables) cout << ", " << it.tblName;
-				
-					cout << endl;
-				}
-			
-				for (auto it : *moduleTables) {
-			
-					blockStart = locateToken(":" + it.tblName);
-					blockEnd = getBlockEnd(blockStart);
-			
-					if (blockStart >= linecount - 1) throw ("Table \"" + it.tblName + "\" is not defined.");
-					if (blockStart >= blockEnd) throw ("Table \"" + it.tblName + "\" contains no data");
-				
-
-					rawDataBlock = new string[blockEnd - blockStart];
-			
-					for (int j = blockStart + 1; j <= blockEnd; j++) rawDataBlock[j - blockStart - 1] = moduleLines[j];
-			
-					try {
-						it.read(rawDataBlock, blockEnd - blockStart, config, verbose);
-					}
-					catch(string &e) {
-						throw ("In table \"" + it.tblName + "\": " + e);
-					}
-			
-					delete[] rawDataBlock;
-					rawDataBlock = nullptr;
-				
-				
-				
-			
-					MUSICASM << it;
-					if (verbose) cout << it;
-				}
-			}
-		
 		}
+		
+//		}
 
 		return;
 		
