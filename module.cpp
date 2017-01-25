@@ -149,6 +149,7 @@ mdModule::mdModule(string &infile, string &outfile, bool &verbose) {
 		
 			delete[] rawDataBlock;
 			rawDataBlock = nullptr;
+
 		
 			MUSICASM << it << endl;
 			if (verbose) cout << it << endl;			
@@ -156,8 +157,6 @@ mdModule::mdModule(string &infile, string &outfile, bool &verbose) {
 	
 	
 		if (config.useTables) {
-	
-			moduleTables->shrink_to_fit();		//TODO: disable this in conjunction with table block parsing inside table blocks
 	
 			if (verbose) {
 		
@@ -190,8 +189,6 @@ mdModule::mdModule(string &infile, string &outfile, bool &verbose) {
 		
 				delete[] rawDataBlock;
 				rawDataBlock = nullptr;
-			
-			
 			
 		
 				MUSICASM << it;
