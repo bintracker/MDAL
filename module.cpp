@@ -63,7 +63,7 @@ mdModule::mdModule(string &infile, string &outfile, bool &verbose) {
 	
 	try {
 	
-		if (verbose) cout << endl << "Module data:" << endl;
+		if (verbose) cout << endl << "MODULE DATA\n===========" << endl;
 	
 		int blockStart = locateToken(string(":SEQUENCE"));
 		int blockEnd = getBlockEnd(blockStart);
@@ -117,9 +117,17 @@ mdModule::mdModule(string &infile, string &outfile, bool &verbose) {
 			
 		}
 		
+		if (verbose) {
+			
+			cout << "Unique patterns: " << modulePatterns->size();
+				
+			for (auto it : *modulePatterns) cout << ", " << it.ptnName;
+				
+			cout << endl << endl;
+		}
+		
 		for (auto it : *modulePatterns) {
-	
-
+		
 			blockStart = locateToken(":" + it.ptnName);
 			blockEnd = getBlockEnd(blockStart);
 

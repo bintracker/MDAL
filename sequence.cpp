@@ -90,12 +90,6 @@ mdSequence::mdSequence(string *sequenceBlock, int sequenceBlockLength, mdConfig 
 	
 	if (verbose) {
 	
-		cout << "Unique patterns: " << uniquePtnCount << " (";
-		for (int i = 0; i < uniquePtnCount; i++) {
-			cout << uniquePtnList[i];
-			if (i < uniquePtnCount - 1) cout << ", ";
-			else cout << ")" << endl;
-		}
 		cout << "Sequence: " << endl;
 		for (int i = 0; i < mdSequenceLength; i++) cout << i+1 << ": " << mdSequenceArray[i] << endl;
 		cout << "Loop to position: " << mdSequenceLoopPosition + 1 << endl;
