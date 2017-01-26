@@ -4,6 +4,7 @@
 #include <string>
 #include <fstream>
 #include <vector>
+#include <memory>
 
 #define MDALVERSION 0
 
@@ -44,6 +45,20 @@ public:
 private:
 	string ptnString;
 };
+
+
+class mdBlockList {
+
+public: 
+	string blockID;
+	vector<string> *uniqueReferences;
+	
+	mdBlockList(string &blockIdentifier);
+	~mdBlockList();
+	
+	void addReference(string &title);
+};
+
 
 class mdModule {
 
@@ -208,7 +223,8 @@ public:
 	
 	int blockTypeCount;
 	
-	class mdBlockConfig {
+	//TODO: should probably become a seperate class
+	struct mdBlockConfig {
 	
 	public:	
 		string blockConfigID;
@@ -221,11 +237,12 @@ public:
 		int blkFieldCount;
 		int blkMaxLength;
 		
-		mdBlockConfig(string rawConfigData);
+		mdBlockConfig(string id);
 		~mdBlockConfig();
 	};
 	
 	vector<mdBlockConfig>* blockTypes;
+	//TODO: consider using unique_ptr<vector<mdBlockConfig>> blockTypes;
 	
 	//pattern config parameters
 	bool usePtnEnd;
@@ -245,19 +262,20 @@ public:
 	int tblMaxLength;
 	
 	//block config parameters
-	bool useBlkEnd;
-	string blkEndString;
-	string blkLabelPrefix;
-	mdField* blkFieldList;
-	int blkFieldCount;
-	int blkMaxLength;
+// 	bool useBlkEnd;
+// 	string blkEndString;
+// 	string blkLabelPrefix;
+// 	mdField* blkFieldList;
+// 	int blkFieldCount;
+// 	int blkMaxLength;
 
 	mdConfig(string &configname, bool &verbose);
 	~mdConfig();
 
+	string* cfgLines;
 private:
 	int linecount;
-	string* cfgLines;
+	
 	
 	int locateToken(string token, int blockStart, int blockEnd);
 	string getArgumentString(string token, int blockStart, int blockEnd);
