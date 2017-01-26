@@ -354,7 +354,8 @@ mdConfig::mdConfig(string &configname, bool &verbose) {
 		
 		bool ptnBlockPresent = false;
 		
-		for (auto it : *blockTypes) {
+
+		for (auto&& it : *blockTypes) {
 		
 			if (it.baseType == PATTERN) ptnBlockPresent = true;
 		}
@@ -615,7 +616,7 @@ mdConfig::mdConfig(string &configname, bool &verbose) {
 
 mdConfig::~mdConfig() {
 
-//	delete blockTypes;		TODO: memleak!
+	delete blockTypes;		//TODO: memleak!
 	delete[] ptnFieldList;
 	delete[] tblFieldList;
 	delete[] mdCmdList;
@@ -752,7 +753,7 @@ string mdConfig::getArgumentString(string token, int blockStart, int blockEnd) {
 }
 
 
-mdConfig::mdBlockConfig::mdBlockConfig(string id) {
+mdBlockConfig::mdBlockConfig(string id) {
 
 	blockConfigID = id;
 	baseType = GENERIC;
@@ -766,7 +767,7 @@ mdConfig::mdBlockConfig::mdBlockConfig(string id) {
 	
 }
 
-mdConfig::mdBlockConfig::~mdBlockConfig() {
+mdBlockConfig::~mdBlockConfig() {
 
 	delete[] blkFieldList;
 //	blkFieldList = nullptr;

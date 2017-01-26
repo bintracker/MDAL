@@ -195,6 +195,25 @@ private:
 };
 
 
+//TODO: should probably become a seperate class
+class mdBlockConfig {
+	
+public:	
+	string blockConfigID;
+	int baseType;
+	bool useBlkEnd;
+	string blkEndString;
+	bool initBlkDefaults;
+	string blkLabelPrefix;
+	mdField* blkFieldList;
+	int blkFieldCount;
+	int blkMaxLength;
+	
+	mdBlockConfig(string id);
+	~mdBlockConfig();
+};
+
+
 class mdConfig {
 
 public:
@@ -223,25 +242,9 @@ public:
 	
 	int blockTypeCount;
 	
-	//TODO: should probably become a seperate class
-	struct mdBlockConfig {
+
 	
-	public:	
-		string blockConfigID;
-		int baseType;
-		bool useBlkEnd;
-		string blkEndString;
-		bool initBlkDefaults;
-		string blkLabelPrefix;
-		mdField* blkFieldList;
-		int blkFieldCount;
-		int blkMaxLength;
-		
-		mdBlockConfig(string id);
-		~mdBlockConfig();
-	};
-	
-	vector<mdBlockConfig>* blockTypes;
+	vector<mdBlockConfig> *blockTypes;
 	//TODO: consider using unique_ptr<vector<mdBlockConfig>> blockTypes;
 	
 	//pattern config parameters
