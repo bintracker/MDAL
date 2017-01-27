@@ -13,7 +13,6 @@ mdConfig::mdConfig(string &configname, bool &verbose) {
 
 	cfgLines = nullptr;
 	mdCmdList = nullptr;
-	blockTypes = nullptr;
 	cmdIsTablePointer = nullptr;
 	ptnFieldList = nullptr;
 	tblFieldList = nullptr;
@@ -117,7 +116,6 @@ mdConfig::mdConfig(string &configname, bool &verbose) {
 				if (argCount < 2) throw (string("CFG_SEQUENCE: Incomplete loop configuration."));
 			
 				string arg = getArgument(cfgLines[tokenpos], 1);
-				//cout << arg << endl;
 			
 				if (arg != "LABEL" && arg != "POINTER") throw ("CFG_SEQUENCE: Invalid loop type \"" + arg + "\".");
 				else if (arg == "POINTER") useSeqLoopPointer = true;
@@ -174,7 +172,6 @@ mdConfig::mdConfig(string &configname, bool &verbose) {
 				mdCmdList[cmdNr].init(cmdStr, verbose);
 			
 				cmdNr++;
-				//cout << cmdStr << ".\n";
 			}
 		}
 	
@@ -192,8 +189,8 @@ mdConfig::mdConfig(string &configname, bool &verbose) {
 		
 		if (verbose) cout << "BLOCK CONFIGURATIONS\n====================\nBlock types: \t\t" << blockTypeCount << endl;
 
-		blockTypes = new vector<mdBlockConfig>;
-		blockTypes->reserve(blockTypeCount);		//TODO: consider using unique_ptr instead
+
+		blockTypes.reserve(blockTypeCount);
 		
 		int bline = 0;
 		
@@ -211,26 +208,26 @@ mdConfig::mdConfig(string &configname, bool &verbose) {
 			
 			if (id == "") throw (string("Invalid ID in block"));
 
-			blockTypes->emplace_back(id);
+			blockTypes.emplace_back(id);
 			
 			tokenpos = locateToken(string("TYPE"), blockStart, blockEnd)	;
 			
-			if (tokenpos >= blockEnd) blockTypes->back().baseType = GENERIC;
+			if (tokenpos >= blockEnd) blockTypes.back().baseType = GENERIC;
 			else {
 			
 				string type = getArgument(cfgLines[tokenpos], 1);
-				if (type == "PATTERN") blockTypes->back().baseType = PATTERN;
-				else if (type == "TABLE") blockTypes->back().baseType = TABLE;
-				else if (type == "GENERIC") blockTypes->back().baseType = GENERIC;
-				else throw ("CFG_BLOCK " + blockTypes->back().blockConfigID + ": Unknown block base type " + type);
+				if (type == "PATTERN") blockTypes.back().baseType = PATTERN;
+				else if (type == "TABLE") blockTypes.back().baseType = TABLE;
+				else if (type == "GENERIC") blockTypes.back().baseType = GENERIC;
+				else throw ("CFG_BLOCK " + blockTypes.back().blockConfigID + ": Unknown block base type " + type);
 			
 			}
 			
 			if (verbose) {
 			
-				cout << "\nBLOCK TYPE " << blockTypes->back().blockConfigID << "\nBase type: \t\t"; 
-				if (blockTypes->back().baseType == GENERIC) cout << "GENERIC";
-				else if (blockTypes->back().baseType == PATTERN) cout << "PATTERN";
+				cout << "\nBLOCK TYPE " << blockTypes.back().blockConfigID << "\nBase type: \t\t"; 
+				if (blockTypes.back().baseType == GENERIC) cout << "GENERIC";
+				else if (blockTypes.back().baseType == PATTERN) cout << "PATTERN";
 				else cout << "TABLE";
 				cout << endl;
 				
@@ -241,11 +238,11 @@ mdConfig::mdConfig(string &configname, bool &verbose) {
 		
 			if (tokenpos != blockEnd) {
 		
-				blockTypes->back().useBlkEnd = true;
-				blockTypes->back().blkEndString = trimChars(getArgument(cfgLines[tokenpos], 1), "\"");
-				if (blockTypes->back().blkEndString == "") 
-					throw("CFG_BLOCK " + blockTypes->back().blockConfigID + ": Missing argument in USE_END() declaration.");
-				if (verbose) cout << "Block end:\t\t" << blockTypes->back().blkEndString << endl;
+				blockTypes.back().useBlkEnd = true;
+				blockTypes.back().blkEndString = trimChars(getArgument(cfgLines[tokenpos], 1), "\"");
+				if (blockTypes.back().blkEndString == "") 
+					throw("CFG_BLOCK " + blockTypes.back().blockConfigID + ": Missing argument in USE_END() declaration.");
+				if (verbose) cout << "Block end:\t\t" << blockTypes.back().blkEndString << endl;
 			}
 			
 			
@@ -255,11 +252,11 @@ mdConfig::mdConfig(string &configname, bool &verbose) {
 		
 				string maxLengthStr = trimChars(getArgument(cfgLines[tokenpos], 1), "\"");
 				if (maxLengthStr == "") 
-					throw ("CFG_BLOCK " + blockTypes->back().blockConfigID + ": Missing argument in MAX_LENGTH() declaration.");
-				if (getType(maxLengthStr) == DEC) blockTypes->back().blkMaxLength = stoi(maxLengthStr, nullptr, 10);
-				else if (getType(maxLengthStr) == HEX) blockTypes->back().blkMaxLength = stoi(trimChars(maxLengthStr, "$"), nullptr, 16);
-				else throw("CFG_BLOCK " + blockTypes->back().blockConfigID + ": MAX_LENGTH() does not specify an integer.");
-				if (verbose) cout << "Max. block length:\t" << blockTypes->back().blkMaxLength << endl;
+					throw ("CFG_BLOCK " + blockTypes.back().blockConfigID + ": Missing argument in MAX_LENGTH() declaration.");
+				if (getType(maxLengthStr) == DEC) blockTypes.back().blkMaxLength = stoi(maxLengthStr, nullptr, 10);
+				else if (getType(maxLengthStr) == HEX) blockTypes.back().blkMaxLength = stoi(trimChars(maxLengthStr, "$"), nullptr, 16);
+				else throw("CFG_BLOCK " + blockTypes.back().blockConfigID + ": MAX_LENGTH() does not specify an integer.");
+				if (verbose) cout << "Max. block length:\t" << blockTypes.back().blkMaxLength << endl;
 			}
 			
 			
@@ -267,27 +264,27 @@ mdConfig::mdConfig(string &configname, bool &verbose) {
 		
 			if (tokenpos != blockEnd) {
 
-				blockTypes->back().blkLabelPrefix = trimChars(getArgument(cfgLines[tokenpos], 1), "\"");
-				if (blockTypes->back().blkLabelPrefix == "") 
-					throw ("CFG_BLOCK " + blockTypes->back().blockConfigID + ": Missing argument in LABEL_PREFIX() declaration.");
+				blockTypes.back().blkLabelPrefix = trimChars(getArgument(cfgLines[tokenpos], 1), "\"");
+				if (blockTypes.back().blkLabelPrefix == "") 
+					throw ("CFG_BLOCK " + blockTypes.back().blockConfigID + ": Missing argument in LABEL_PREFIX() declaration.");
 			}
 		
-			if (verbose) cout << "Pattern label prefix:\t" << blockTypes->back().blkLabelPrefix << endl;
+			if (verbose) cout << "Pattern label prefix:\t" << blockTypes.back().blkLabelPrefix << endl;
 		
 		
 			tokenpos = locateToken(string("INIT_DEFAULTS"), blockStart, blockEnd);
 		
 			if (tokenpos != blockEnd) {
 		
-				blockTypes->back().initBlkDefaults = true;
+				blockTypes.back().initBlkDefaults = true;
 				if (verbose) cout << "Initialize commands with default values at each block start" << endl;
 			}
 			
 			
-			blockTypes->back().blkFieldCount = countFields(blockStart, blockEnd);
-			if (!blockTypes->back().blkFieldCount) throw ("CFG_BLOCK " + blockTypes->back().blockConfigID + ": No output fields specified.");
+			blockTypes.back().blkFieldCount = countFields(blockStart, blockEnd);
+			if (!blockTypes.back().blkFieldCount) throw ("CFG_BLOCK " + blockTypes.back().blockConfigID + ": No output fields specified.");
 		
-			blockTypes->back().blkFieldList = new mdField[blockTypes->back().blkFieldCount];
+			blockTypes.back().blkFieldList = new mdField[blockTypes.back().blkFieldCount];
 		
 			int fieldNr = 0;
 			string requireBlkBeginStr = "";
@@ -301,28 +298,28 @@ mdConfig::mdConfig(string &configname, bool &verbose) {
 				if (pos != string::npos) fieldStr.erase(pos);
 				if (fieldStr != "" && (fieldStr.find("WORD") != string::npos || fieldStr.find("BYTE") != string::npos)) {
 		
-					blockTypes->back().blkFieldList[fieldNr].init(mdCmdList, mdCmdCount, fieldStr, verbose);
+					blockTypes.back().blkFieldList[fieldNr].init(mdCmdList, mdCmdCount, fieldStr, verbose);
 			
 					if (verbose) {
 			
 						cout << "Field " << fieldNr;
-						if (blockTypes->back().blkFieldList[fieldNr].requiredAlways) cout << " always required";
+						if (blockTypes.back().blkFieldList[fieldNr].requiredAlways) cout << " always required";
 						else {
 							cout << " required if ";
 							for (int j = 0; j < mdCmdCount; j++) {
 				
-								if (blockTypes->back().blkFieldList[fieldNr].requiredBy[j]) {
+								if (blockTypes.back().blkFieldList[fieldNr].requiredBy[j]) {
 							
 									bool lastentry = true;
 									for (int k = j + 1; k < mdCmdCount; k++) 
-										if (blockTypes->back().blkFieldList[fieldNr].requiredBy[k]) lastentry = false;
+										if (blockTypes.back().blkFieldList[fieldNr].requiredBy[k]) lastentry = false;
 					
 									cout << mdCmdList[j].mdCmdName;
-									if (blockTypes->back().blkFieldList[fieldNr].requiredWhenSet[j]) cout << " is set ";
+									if (blockTypes.back().blkFieldList[fieldNr].requiredWhenSet[j]) cout << " is set ";
 									else cout << " is not set ";
 						
-									if (blockTypes->back().blkFieldList[fieldNr].requiredByAny && !lastentry) cout << "or ";
-									else if (!blockTypes->back().blkFieldList[fieldNr].requiredByAny && !lastentry) cout << "and ";
+									if (blockTypes.back().blkFieldList[fieldNr].requiredByAny && !lastentry) cout << "or ";
+									else if (!blockTypes.back().blkFieldList[fieldNr].requiredByAny && !lastentry) cout << "and ";
 								}
 							}
 						}
@@ -340,12 +337,12 @@ mdConfig::mdConfig(string &configname, bool &verbose) {
 			//TODO implementation incomplete
 			if (requireSeqBeginStr != "") {
 	
-				for (int i = 0; i < blockTypes->back().blkFieldCount; i++) blockTypes->back().blkFieldList[i].requiredSeqBegin = true;
+				for (int i = 0; i < blockTypes.back().blkFieldCount; i++) blockTypes.back().blkFieldList[i].requiredSeqBegin = true;
 			}
 	
 			if (requireBlkBeginStr != "") {
 	
-				for (int i = 0; i < blockTypes->back().blkFieldCount; i++) blockTypes->back().blkFieldList[i].requiredBlkBegin = true;	
+				for (int i = 0; i < blockTypes.back().blkFieldCount; i++) blockTypes.back().blkFieldList[i].requiredBlkBegin = true;	
 
 			}
 		
@@ -355,7 +352,7 @@ mdConfig::mdConfig(string &configname, bool &verbose) {
 		bool ptnBlockPresent = false;
 		
 
-		for (auto&& it : *blockTypes) {
+		for (auto&& it : blockTypes) {
 		
 			if (it.baseType == PATTERN) ptnBlockPresent = true;
 		}
@@ -616,13 +613,12 @@ mdConfig::mdConfig(string &configname, bool &verbose) {
 
 mdConfig::~mdConfig() {
 
-	delete blockTypes;		//TODO: memleak!
+
 	delete[] ptnFieldList;
 	delete[] tblFieldList;
 	delete[] mdCmdList;
 	delete[] cmdIsTablePointer;
 	delete[] cfgLines;
-
 }
 
 
@@ -770,5 +766,4 @@ mdBlockConfig::mdBlockConfig(string id) {
 mdBlockConfig::~mdBlockConfig() {
 
 	delete[] blkFieldList;
-//	blkFieldList = nullptr;
 }

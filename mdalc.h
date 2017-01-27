@@ -51,7 +51,7 @@ class mdBlockList {
 
 public: 
 	string blockID;
-	vector<string> *uniqueReferences;
+	vector<string> uniqueReferences;
 	
 	mdBlockList(string &blockIdentifier);
 	~mdBlockList();
@@ -68,6 +68,8 @@ public:
 	vector<mdPattern> *modulePatterns;
 	vector<mdTable> *moduleTables;
 
+	vector<mdBlockList> uniqueRefs;
+
 	mdModule(string &infile, string &outfile, bool &verbose);
 	~mdModule();
 	
@@ -75,8 +77,6 @@ public:
 	
 protected:
 	string *rawDataBlock;
-	
-	//int uniqueTableCount;
 
 private:
 	int linecount;
@@ -195,7 +195,7 @@ private:
 };
 
 
-//TODO: should probably become a seperate class
+
 class mdBlockConfig {
 	
 public:	
@@ -241,11 +241,8 @@ public:
 	
 	
 	int blockTypeCount;
-	
+	vector<mdBlockConfig> blockTypes;
 
-	
-	vector<mdBlockConfig> *blockTypes;
-	//TODO: consider using unique_ptr<vector<mdBlockConfig>> blockTypes;
 	
 	//pattern config parameters
 	bool usePtnEnd;
@@ -264,13 +261,6 @@ public:
 	int tblFieldCount;
 	int tblMaxLength;
 	
-	//block config parameters
-// 	bool useBlkEnd;
-// 	string blkEndString;
-// 	string blkLabelPrefix;
-// 	mdField* blkFieldList;
-// 	int blkFieldCount;
-// 	int blkMaxLength;
 
 	mdConfig(string &configname, bool &verbose);
 	~mdConfig();

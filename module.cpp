@@ -14,6 +14,7 @@ mdModule::mdModule(string &infile, string &outfile, bool &verbose) {
 	modulePatterns = nullptr;
 	moduleTables = nullptr;
 
+
 	ifstream MDFILE(infile.data());	
 	if (!MDFILE.is_open()) throw (infile + " not found.");
 	
@@ -61,7 +62,14 @@ mdModule::mdModule(string &infile, string &outfile, bool &verbose) {
 	
 	mdConfig config(configname, verbose);
 	
+	
+	
 	try {
+	
+		for (auto&& it : config.blockTypes) uniqueRefs.emplace_back(it.blockConfigID);		
+		uniqueRefs.shrink_to_fit();
+		
+		
 	
 		if (verbose) cout << endl << "MODULE DATA\n===========" << endl;
 	
@@ -78,6 +86,11 @@ mdModule::mdModule(string &infile, string &outfile, bool &verbose) {
 	
 		delete[] rawDataBlock;
 		rawDataBlock = nullptr;
+		
+		
+		for (int i = 0; i < seq.mdSequenceLength; i++) uniqueRefs.at(0).addReference(seq.mdSequenceArray[i]);
+		
+		for (auto&& it : uniqueRefs.at(0).uniqueReferences) cout << it << endl;	//ok
 	
 		if (verbose) cout << seq << endl;
 		MUSICASM << seq << endl;
@@ -210,7 +223,6 @@ mdModule::~mdModule() {
 	delete[] moduleLines;
 	delete modulePatterns;
 	delete moduleTables;
-	//delete seq;
 }
 
 
