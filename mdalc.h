@@ -4,7 +4,6 @@
 #include <string>
 #include <fstream>
 #include <vector>
-#include <memory>
 
 #define MDALVERSION 0
 
@@ -340,7 +339,7 @@ public:
 	mdBlock(string name);
 	~mdBlock();
 	
-	void read(const string *rawData, const int blockLength, const mdConfig &config, const bool &verbose);
+	void read(const string *rawData, const int blockLength, const mdConfig &config, const mdBlockConfig &blkConfig, const bool &verbose);
 
 	friend ostream& operator<<(ostream& os, const mdBlock &blk);
 
