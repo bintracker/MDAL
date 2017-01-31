@@ -49,13 +49,15 @@ private:
 class mdBlockList {
 
 public: 
-	string blockID;
+	string blockTypeID;
+	int referenceCount;
 	vector<string> uniqueReferences;
+	vector<mdBlock> blocks;
 	
-	mdBlockList(string &blockIdentifier);
+	mdBlockList(string &blockTypeIdentifier);
 	~mdBlockList();
 	
-	void addReference(string &title);
+	void addReference(string &title, bool seqStart);
 };
 
 
@@ -67,7 +69,8 @@ public:
 	vector<mdPattern> *modulePatterns;
 	vector<mdTable> *moduleTables;
 
-	vector<mdBlockList> uniqueRefs;
+	//vector<mdBlockList> uniqueRefs;
+	vector<mdBlockList> moduleBlocks;
 
 	mdModule(string &infile, string &outfile, bool &verbose);
 	~mdModule();
@@ -338,7 +341,9 @@ public:
 	int **lineCmdVals;
 	string **lineCmdStrVals;
 	
-	mdBlock(string name);
+	bool firstInSequence;
+	
+	mdBlock(string name, bool seqStart);
 	~mdBlock();
 	
 	void read(const string *rawData, const int blockLength, const mdConfig &config, const mdBlockConfig &blkConfig, const bool &verbose);

@@ -6,11 +6,13 @@
 
 using namespace std;
 
-mdBlock::mdBlock(string name) {
+mdBlock::mdBlock(string name, bool seqStart) {
 
 	blkName = name;
 	blkString = "";
 	blkLength = 0;
+	
+	firstInSequence = seqStart;
 	
 	requestList = nullptr;
 	lineCommands = nullptr;
@@ -156,25 +158,8 @@ void mdBlock::read(const string *rawData, const int blockLength, const mdConfig 
 			if (row == 0) config.mdCmdList[cmd].resetToDefault();
 			else config.mdCmdList[cmd].reset();			//TODO reset all LastVals to default at beginning of pattern
 			
-			if (lineCommands[row][cmd]) {
-				//cout << "Set row " << row << " cmd " << cmd << endl;	//DEBUG
-				
-// 				if (config.useTables && config.cmdIsTablePointer[cmd]) {
-// 				
-// 					bool isUsed = false;
-// 					
-// 					for (auto it : *moduleTables) {
-// 						
-// 						if (lineCmdStrVals[row][cmd] == it.blkName) isUsed = true;	
-// 					}
-// 					
-// 					if (!isUsed) moduleTables->push_back(lineCmdStrVals[row][cmd]);
-// 				
-// 				}
-				
-				config.mdCmdList[cmd].set(lineCmdVals[row][cmd], lineCmdStrVals[row][cmd]);
-				
-			}
+			if (lineCommands[row][cmd]) config.mdCmdList[cmd].set(lineCmdVals[row][cmd], lineCmdStrVals[row][cmd]);
+
 		}
 		
 		
@@ -189,7 +174,7 @@ void mdBlock::read(const string *rawData, const int blockLength, const mdConfig 
 		for (int field = 0; field < blkConfig.blkFieldCount; field++) {
 		
 //			bool seqBegin = (patternNumber == 0) ? true : false;
-			blkConfig.blkFieldList[field].getRequests(requestList, config, row, false);
+			blkConfig.blkFieldList[field].getRequests(requestList, config, row, firstInSequence);
 			
 		}		
 		

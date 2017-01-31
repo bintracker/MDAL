@@ -75,7 +75,6 @@ void mdField::init(mdCommand *mdCmdList, int &mdCmdCount, string &fieldString, b
 		(count(temp.begin(), temp.end(), '"') & 1)) throw ("Syntax error in field specification in " + fieldString);
 	
 	if (temp.find("WORD") == 0) isWord = true;
-	//else if (temp.find("BYTE") == string::npos) throw ("Unknown field type specified in " + fieldString);	//TODO: redundant, checked by config parser
 	
 	if (!isWord && temp.find("SET_HI") != string::npos) throw ("SET_HI is not permitted for BYTE fields in " + fieldString);
 	
@@ -86,20 +85,7 @@ void mdField::init(mdCommand *mdCmdList, int &mdCmdCount, string &fieldString, b
 	temp.erase(0, temp.find_first_of('(') + 1);
 	
 	string tmp1 = temp;
-// 	tmp1.erase(tmp1.find_first_of(','));
-// 	
-// 	if (getType(tmp1) == STRING) {
-// 		
-// 		defaultIsString = true;
-// 		defaultString = tmp1;
-// 	}
-// 	else if (getType(tmp1) == DEC) defaultValue = stoi(tmp1, nullptr, 10);
-// 	else if (getType(tmp1) == HEX) defaultValue = stoi(trimChars(tmp1, "$"), nullptr, 16);
-// 	else throw ("Field default value type is invalid in " + fieldString);
-// 	
-// 	if (!isWord && defaultValue > 0xff) throw ("Field default value out of range in " + fieldString);
-// 	
-// 	temp.erase(0, temp.find_first_of(',') + 1);
+
 	
 	requiredBy = new bool[mdCmdCount];
 	requiredWhenSet = new bool[mdCmdCount];

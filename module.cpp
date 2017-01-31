@@ -66,8 +66,8 @@ mdModule::mdModule(string &infile, string &outfile, bool &verbose) {
 	
 	try {
 	
-		for (auto&& it : config.blockTypes) uniqueRefs.emplace_back(it.blockConfigID);		
-		uniqueRefs.shrink_to_fit();
+		for (auto&& it : config.blockTypes) moduleBlocks.emplace_back(it.blockConfigID);		
+		moduleBlocks.shrink_to_fit();
 		
 		
 	
@@ -87,14 +87,32 @@ mdModule::mdModule(string &infile, string &outfile, bool &verbose) {
 		delete[] rawDataBlock;
 		rawDataBlock = nullptr;
 		
+		int seqStart = true;		//TODO: temporary solution which requires Pattern block type to be configured first, needs to be replaced
 		
-		for (int i = 0; i < seq.mdSequenceLength; i++) uniqueRefs.at(0).addReference(seq.mdSequenceArray[i]);
+		for (int i = 0; i < seq.mdSequenceLength; i++) {
+			
+			moduleBlocks.at(0).addReference(seq.mdSequenceArray[i], seqStart);
+			seqStart = false;
+		}
 		
-		for (auto&& it : uniqueRefs.at(0).uniqueReferences) cout << it << endl;	//ok
+		for (auto&& it : moduleBlocks.at(0).uniqueReferences) cout << it << endl;	//TODO: remove
 	
 		if (verbose) cout << seq << endl;
 		MUSICASM << seq << endl;
 
+	
+		//add default references
+		for (int i = 0; i < config.mdCmdCount; i++) {
+		
+			if (config.mdCmdList[i].isBlkReference) {
+			
+				for (auto&& it: moduleBlocks) {
+				
+					if (it.blockTypeID == config.mdCmdList[i].referenceBlkID) it.addReference(config.mdCmdList[i].mdCmdDefaultValString, false);
+					//TODO: temporary solution for flagging sequence start, see above
+				}
+			}	
+		}
 	
 	
 		if (config.useTables) {
@@ -116,6 +134,51 @@ mdModule::mdModule(string &infile, string &outfile, bool &verbose) {
 				}
 			}
 		
+		}
+		
+		
+		int blockType = 0;
+		
+		for (auto&& it : moduleBlocks) {
+			
+			int blockNr = 0;
+		
+			while (it.referenceCount) {
+			
+				
+				
+				blockStart = locateToken(":" + it.blocks.at(blockNr).blkName);
+				blockEnd = getBlockEnd(blockStart);
+
+		
+				if (blockStart >= linecount - 1) throw ("Block \"" + it.blocks.at(blockNr).blkName + "\" is not defined.");
+				if (blockStart >= blockEnd) throw ("Block \"" + it.blocks.at(blockNr).blkName + "\" contains no data");
+				//TODO: does not reliably detect empty patterns.
+		
+				rawDataBlock = new string[blockEnd - blockStart];
+		
+				for (int j = blockStart + 1; j <= blockEnd; j++) rawDataBlock[j - blockStart - 1] = moduleLines[j];
+		
+				try {	
+					it.blocks.at(blockNr).read(rawDataBlock, blockEnd - blockStart, config, config.blockTypes.at(blockType), verbose);
+					//if (verbose) cout << it.blocks.at(blockNr) << endl;
+				}
+				catch(string &e) {
+					throw ("In pattern \"" + it.blocks.at(blockNr).blkName + "\": " + e);
+				}
+		
+				delete[] rawDataBlock;
+				rawDataBlock = nullptr;
+
+		
+				//MUSICASM << it << endl;
+				if (verbose) cout << it.blocks.at(blockNr) << endl;
+				
+				blockNr++;
+				it.referenceCount--;
+			}
+			
+			blockType++;
 		}
 	
 	

@@ -1,11 +1,13 @@
 #include <string>
+#include <iostream>	//can possibly be removed
 
 #include "mdalc.h"
 
 
-mdBlockList::mdBlockList(string &blockIdentifier) {
+mdBlockList::mdBlockList(string &blockTypeIdentifier) {
 
-	blockID = blockIdentifier;
+	blockTypeID = blockTypeIdentifier;
+	referenceCount = 0;
 }
 
 
@@ -14,7 +16,7 @@ mdBlockList::~mdBlockList() {
 }
 
 
-void mdBlockList::addReference(string &title) {
+void mdBlockList::addReference(string &title, bool seqStart) {
 
 	bool isUsed = false;
 
@@ -23,5 +25,10 @@ void mdBlockList::addReference(string &title) {
 		if (title == it) isUsed = true;
 	}
 
-	if (!isUsed) uniqueReferences.push_back(title);
+	if (!isUsed) {
+		
+		uniqueReferences.push_back(title);		//TODO: redundant, can probably remove uniqueReferences altogether
+		blocks.emplace_back(title, seqStart);
+		referenceCount++;	
+	}
 }
