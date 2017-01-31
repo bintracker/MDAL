@@ -359,6 +359,18 @@ mdConfig::mdConfig(string &configname, bool &verbose) {
 		
 		if (!ptnBlockPresent) throw(string("Must declare at least one block type as base type PATTERN"));
 		
+		
+		for (int i = 0; i < mdCmdCount; i++) {
+		
+			if (mdCmdList[i].isBlkReference) {
+			
+				bool validRef = false;
+				for (auto&& it : blockTypes) if (it.blockConfigID == mdCmdList[i].referenceBlkID) validRef = true;
+				
+				if (!validRef) throw("Block type referenced by command " + mdCmdList[i].mdCmdName + " does not exist.");
+			}
+		}
+		
 		//TODO: check reference command validity
 	
 		usePatterns = false;

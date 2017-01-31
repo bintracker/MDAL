@@ -104,6 +104,8 @@ public:
 	
 	string mdCmdDefaultValString;
 	
+	bool isBlkReference;
+	string referenceBlkID;
 	
 	mdCommand();
 	~mdCommand();

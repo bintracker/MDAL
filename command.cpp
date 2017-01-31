@@ -20,6 +20,9 @@ mdCommand::mdCommand() {
 	mdCmdUseLastSet = false;
 	mdCmdAuto = false;
 	
+	isBlkReference = false;
+	referenceBlkID = "";
+	
 
 	mdCmdDefaultVal = -1;
 	mdCmdDefaultValString = "";
@@ -157,6 +160,18 @@ void mdCommand::init(string commandString, bool &verbose) {
 		}	
 	}
 	
+	if (cmdStrCopy.find("REFERENCE") != string::npos) {
+	
+		isBlkReference = true;
+		
+		temp = cmdStrCopy;
+		temp.erase(0, temp.find("REFERENCE")+9);
+		if (temp.find_first_of('(') == string::npos) throw ("Command specified as REFERENCE, but no reference block ID given in " + commandString);
+		temp.erase(0, temp.find_first_not_of("(\n\t"));
+		temp.erase(temp.find_first_of(')'));
+		referenceBlkID = trimChars(temp, "\"");
+	}
+	
 	
 	size_t pos = cmdStrCopy.find("RANGE");
 	if (pos != string::npos) {
@@ -225,6 +240,7 @@ void mdCommand::init(string commandString, bool &verbose) {
 				if (i < mdCmdSubstitutionListLength - 1) cout << ", ";
 			}
 		}
+		if (isBlkReference) cout << ", REFERENCE to " << referenceBlkID;
 		cout << noboolalpha << dec << endl;
 	}
 }
