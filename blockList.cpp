@@ -1,5 +1,3 @@
-#include <string>
-#include <iostream>	//can possibly be removed
 
 #include "mdalc.h"
 

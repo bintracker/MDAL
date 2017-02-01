@@ -80,7 +80,7 @@ mdModule::mdModule(string &infile, string &outfile, bool &verbose) {
 	
 		for (int i = blockStart + 1; i <= blockEnd; i++) rawDataBlock[i - blockStart - 1] = moduleLines[i];
 
-		mdSequence seq(rawDataBlock, blockEnd - blockStart, config, verbose);
+		mdSequence seq(rawDataBlock, blockEnd - blockStart, config);
 	
 		delete[] rawDataBlock;
 		rawDataBlock = nullptr;
@@ -93,7 +93,6 @@ mdModule::mdModule(string &infile, string &outfile, bool &verbose) {
 			seqStart = false;
 		}
 		
-		for (auto&& it : moduleBlocks.at(0).uniqueReferences) cout << it << endl;	//TODO: remove
 	
 		if (verbose) cout << seq << endl;
 		MUSICASM << seq << endl;
@@ -121,8 +120,6 @@ mdModule::mdModule(string &infile, string &outfile, bool &verbose) {
 		
 			while (it.referenceCount) {
 			
-				
-				
 				blockStart = locateToken(":" + it.blocks.at(blockNr).blkName);
 				blockEnd = getBlockEnd(blockStart);
 
@@ -137,7 +134,6 @@ mdModule::mdModule(string &infile, string &outfile, bool &verbose) {
 		
 				try {	
 					it.blocks.at(blockNr).read(rawDataBlock, blockEnd - blockStart, config, config.blockTypes.at(blockType), moduleBlocks, verbose);
-					//if (verbose) cout << it.blocks.at(blockNr) << endl;
 				}
 				catch(string &e) {
 					throw ("In pattern \"" + it.blocks.at(blockNr).blkName + "\": " + e);

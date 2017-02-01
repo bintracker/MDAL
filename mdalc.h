@@ -252,7 +252,7 @@ public:
 	mdConfig *config;
 	
 	
-	mdSequence(string* sequenceBlock, int sequenceBlockLength, mdConfig &config, bool &verbose);
+	mdSequence(string* sequenceBlock, int sequenceBlockLength, mdConfig &config);
 	~mdSequence();
 	
 	

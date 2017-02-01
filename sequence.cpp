@@ -1,11 +1,10 @@
 #include <iostream>
-#include <string>
 
 #include "mdalc.h"
 
 using namespace std;
 
-mdSequence::mdSequence(string *sequenceBlock, int sequenceBlockLength, mdConfig &config, bool &verbose) {
+mdSequence::mdSequence(string *sequenceBlock, int sequenceBlockLength, mdConfig &config) {
 
 	mdSequenceArray = nullptr;
 	uniquePtnList = nullptr;
@@ -87,14 +86,6 @@ mdSequence::mdSequence(string *sequenceBlock, int sequenceBlockLength, mdConfig 
 	
 	sequenceString = getSequenceString(config);
 	
-	
-	if (verbose) {
-	
-		cout << "Sequence: " << endl;
-		for (int i = 0; i < mdSequenceLength; i++) cout << i+1 << ": " << mdSequenceArray[i] << endl;
-		cout << "Loop to position: " << mdSequenceLoopPosition + 1 << endl;
-	}
-	
 	return;
 }
 
@@ -111,7 +102,7 @@ string mdSequence::getSequenceString(const mdConfig &config) {
 	for (int i = 0; i < mdSequenceLength; i++) {
 	
 		if (i == mdSequenceLoopPosition && config.useSeqLoop) seqString = seqString + "\n" + config.seqLoopLabel;
-//		seqString = seqString + "\n\t" + config.wordDirective + " " + config.ptnLabelPrefix + mdSequenceArray[i];	
+	
 		seqString = seqString + "\n\t" + config.wordDirective + " " + config.blockTypes.at(0).blkLabelPrefix + mdSequenceArray[i];
 		//TODO: temporary solution, permanent solution must auto-detect correct block type
 	}
@@ -119,13 +110,12 @@ string mdSequence::getSequenceString(const mdConfig &config) {
 	seqString = seqString + "\n\t" + config.seqEndString;
 	if (config.useSeqLoopPointer) seqString = seqString + "\n\t" + config.wordDirective + " " + config.seqLoopLabel;
 	
-	//cout << seqString << endl;
 	return seqString;
 }
 
 
 ostream& operator<<(ostream& os, const mdSequence &seq) {
 	
-	os << seq.sequenceString;
+	os << seq.sequenceString << endl << endl;
 	return os;
 }
