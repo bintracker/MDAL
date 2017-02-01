@@ -171,7 +171,7 @@ mdModule::mdModule(string &infile, string &outfile, bool &verbose) {
 				rawDataBlock = nullptr;
 
 		
-				//MUSICASM << it << endl;
+				MUSICASM << it.blocks.at(blockNr) << endl;
 				if (verbose) cout << it.blocks.at(blockNr) << endl;
 				
 				blockNr++;
@@ -227,7 +227,7 @@ mdModule::mdModule(string &infile, string &outfile, bool &verbose) {
 			rawDataBlock = nullptr;
 
 		
-			MUSICASM << it << endl;
+			//MUSICASM << it << endl;
 			if (verbose) cout << it << endl;			
 		}
 	

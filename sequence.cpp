@@ -111,7 +111,9 @@ string mdSequence::getSequenceString(const mdConfig &config) {
 	for (int i = 0; i < mdSequenceLength; i++) {
 	
 		if (i == mdSequenceLoopPosition && config.useSeqLoop) seqString = seqString + "\n" + config.seqLoopLabel;
-		seqString = seqString + "\n\t" + config.wordDirective + " " + config.ptnLabelPrefix + mdSequenceArray[i];
+//		seqString = seqString + "\n\t" + config.wordDirective + " " + config.ptnLabelPrefix + mdSequenceArray[i];	
+		seqString = seqString + "\n\t" + config.wordDirective + " " + config.blockTypes.at(0).blkLabelPrefix + mdSequenceArray[i];
+		//TODO: temporary solution, permanent solution must auto-detect correct block type
 	}
 	
 	seqString = seqString + "\n\t" + config.seqEndString;

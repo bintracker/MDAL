@@ -502,6 +502,7 @@ string mdField::getFieldString(bool *requestList, const mdConfig &config) {
 	
 		currentValueString = config.mdCmdList[setBy].getValueString();
 		if (config.cmdIsTablePointer[setBy] && currentValueString != "") currentValueString = config.tblLabelPrefix + currentValueString;
+		//TODO: use blkLabelPrefix here!
 		currentValue = config.mdCmdList[setBy].getValue();
 	
 	}
