@@ -41,7 +41,7 @@ mdBlock::~mdBlock() {
 }
 
 
-void mdBlock::read(const string *rawData, const int blockLength, const mdConfig &config, const mdBlockConfig &blkConfig, const bool &verbose) {
+void mdBlock::read(const string *rawData, const int blockLength, const mdConfig &config, const mdBlockConfig &blkConfig, vector<mdBlockList> &moduleBlocks, const bool &verbose) {
 
 	blkString = blkConfig.blkLabelPrefix + blkName + "\n";
 	
@@ -152,14 +152,25 @@ void mdBlock::read(const string *rawData, const int blockLength, const mdConfig 
 	for (int row = 0; row < blkLength; row++) {
 	
 		for (int cmd = 0; cmd < config.mdCmdCount; cmd++) {
-	
-			//cout << "Reset row " << row << " cmd " << cmd << endl;		//DEBUG
-			
-			if (row == 0 && blkConfig.initBlkDefaults) config.mdCmdList[cmd].resetToDefault();
+
+			//TODO: this is probably not intended behaviour, but left in for now so mdalc produces same results as before
+			if (row == 0 && (blkConfig.initBlkDefaults || blkConfig.baseType != PATTERN)) config.mdCmdList[cmd].resetToDefault();
 			else config.mdCmdList[cmd].reset();			//TODO reset all LastVals to default at beginning of pattern
 			
-			if (lineCommands[row][cmd]) config.mdCmdList[cmd].set(lineCmdVals[row][cmd], lineCmdStrVals[row][cmd]);
+			
+			
+			if (lineCommands[row][cmd]) {
+			
+				if (config.mdCmdList[cmd].isBlkReference) {	//if cmd is reference
 
+					for (auto&& it : moduleBlocks) {
+							
+						if (it.blockTypeID == config.mdCmdList[cmd].referenceBlkID) it.addReference(lineCmdStrVals[row][cmd], false);						
+					}				
+				}
+			
+				config.mdCmdList[cmd].set(lineCmdVals[row][cmd], lineCmdStrVals[row][cmd]);	
+			}
 		}
 		
 		

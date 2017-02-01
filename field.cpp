@@ -501,8 +501,19 @@ string mdField::getFieldString(bool *requestList, const mdConfig &config) {
 	if (setBy != -1) {
 	
 		currentValueString = config.mdCmdList[setBy].getValueString();
-		if (config.cmdIsTablePointer[setBy] && currentValueString != "") currentValueString = config.tblLabelPrefix + currentValueString;
-		//TODO: use blkLabelPrefix here!
+		//if (config.cmdIsTablePointer[setBy] && currentValueString != "") currentValueString = config.tblLabelPrefix + currentValueString;
+		if (config.mdCmdList[setBy].isBlkReference && currentValueString != "") {
+			
+			string prefix;
+			
+			for (auto&& it : config.blockTypes) {
+			
+				if (config.mdCmdList[setBy].referenceBlkID == it.blockConfigID) prefix = it.blkLabelPrefix;	
+			}
+			
+			currentValueString = prefix + currentValueString;
+		}
+
 		currentValue = config.mdCmdList[setBy].getValue();
 	
 	}

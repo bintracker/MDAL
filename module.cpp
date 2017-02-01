@@ -160,7 +160,7 @@ mdModule::mdModule(string &infile, string &outfile, bool &verbose) {
 				for (int j = blockStart + 1; j <= blockEnd; j++) rawDataBlock[j - blockStart - 1] = moduleLines[j];
 		
 				try {	
-					it.blocks.at(blockNr).read(rawDataBlock, blockEnd - blockStart, config, config.blockTypes.at(blockType), verbose);
+					it.blocks.at(blockNr).read(rawDataBlock, blockEnd - blockStart, config, config.blockTypes.at(blockType), moduleBlocks, verbose);
 					//if (verbose) cout << it.blocks.at(blockNr) << endl;
 				}
 				catch(string &e) {
@@ -228,7 +228,7 @@ mdModule::mdModule(string &infile, string &outfile, bool &verbose) {
 
 		
 			//MUSICASM << it << endl;
-			if (verbose) cout << it << endl;			
+			//if (verbose) cout << it << endl;			
 		}
 	
 	
@@ -267,8 +267,8 @@ mdModule::mdModule(string &infile, string &outfile, bool &verbose) {
 				rawDataBlock = nullptr;
 			
 		
-				MUSICASM << it;
-				if (verbose) cout << it;
+				//MUSICASM << it;
+				//if (verbose) cout << it;
 			}
 		}
 		

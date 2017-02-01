@@ -346,7 +346,7 @@ public:
 	mdBlock(string name, bool seqStart);
 	~mdBlock();
 	
-	void read(const string *rawData, const int blockLength, const mdConfig &config, const mdBlockConfig &blkConfig, const bool &verbose);
+	void read(const string *rawData, const int blockLength, const mdConfig &config, const mdBlockConfig &blkConfig, vector<mdBlockList> &moduleBlocks, const bool &verbose);
 
 	friend ostream& operator<<(ostream& os, const mdBlock &blk);
 
