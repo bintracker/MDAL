@@ -20,30 +20,7 @@ enum ConditionType {REQUIRED, SET_IF};
 enum ClearFlags {CLEAR_HI = 1, CLEAR_LO, CLEAR_ALL};
 
 class mdConfig;
-class mdTable;
 class mdBlock;
-
-
-class mdPattern {
-
-public:
-	string ptnName;
-	int ptnLength;
-	bool firstInSequence;
-	bool *requestList;
-	bool **lineCommands;
-	int **lineCmdVals;
-	string **lineCmdStrVals;
-	
-	mdPattern(string name, bool &sequenceStart);
-	~mdPattern();
-	
-	void read(const string *ptnBlock, const int blockLength, const mdConfig &config, vector<mdTable> *moduleTables, const bool &verbose);
-
-	friend ostream& operator<<(ostream& os, const mdPattern &ptn);
-private:
-	string ptnString;
-};
 
 
 class mdBlockList {
@@ -66,10 +43,6 @@ class mdModule {
 	
 public:
 	string mdSequenceString;
-	vector<mdPattern> *modulePatterns;
-	vector<mdTable> *moduleTables;
-
-	//vector<mdBlockList> uniqueRefs;
 	vector<mdBlockList> moduleBlocks;
 
 	mdModule(string &infile, string &outfile, bool &verbose);
@@ -247,24 +220,6 @@ public:
 	int blockTypeCount;
 	vector<mdBlockConfig> blockTypes;
 
-	
-	//pattern config parameters
-	bool usePtnEnd;
-	bool initPtnDefaults;
-	string ptnEndString;
-	string ptnLabelPrefix;
-	mdField* ptnFieldList;
-	int ptnFieldCount;
-	int ptnMaxLength;
-	
-	//table config parameters
-	bool useTblEnd;
-	string tblEndString;
-	string tblLabelPrefix;
-	mdField* tblFieldList;
-	int tblFieldCount;
-	int tblMaxLength;
-	
 
 	mdConfig(string &configname, bool &verbose);
 	~mdConfig();
@@ -307,28 +262,6 @@ private:
 	string getSequenceString(const mdConfig &config);
 };
 
-
-
-class mdTable {
-
-public:
-	string tblName;
-	int tblLength;
-	bool *requestList;
-	bool **lineCommands;
-	int **lineCmdVals;
-	string **lineCmdStrVals;
-	
-	mdTable(string name);
-	~mdTable();
-	
-	void read(const string *tblBlock, const int blockLength, const mdConfig &config, const bool &verbose);
-
-	friend ostream& operator<<(ostream& os, const mdTable &tbl);
-
-private:
-	string tblString;
-};
 
 
 class mdBlock {

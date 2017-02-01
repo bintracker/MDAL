@@ -11,8 +11,6 @@ mdModule::mdModule(string &infile, string &outfile, bool &verbose) {
 
 	moduleLines = nullptr;
 	rawDataBlock = nullptr;
-	modulePatterns = nullptr;
-	moduleTables = nullptr;
 
 
 	ifstream MDFILE(infile.data());	
@@ -113,28 +111,6 @@ mdModule::mdModule(string &infile, string &outfile, bool &verbose) {
 				}
 			}	
 		}
-	
-	
-		if (config.useTables) {
-		
-			moduleTables = new vector<mdTable>;
-		
-			for (int i = 0; i < config.mdCmdCount; i++) {
-		
-				if (config.cmdIsTablePointer[i]) {
-			
-					bool isUsed = false;
-				
-					for (auto it : *moduleTables) {
-					
-						if (config.mdCmdList[i].mdCmdDefaultValString == it.tblName) isUsed = true;	
-					}
-				
-					if (!isUsed) moduleTables->push_back(config.mdCmdList[i].mdCmdDefaultValString);
-				}
-			}
-		
-		}
 		
 		
 		int blockType = 0;
@@ -180,97 +156,6 @@ mdModule::mdModule(string &infile, string &outfile, bool &verbose) {
 			
 			blockType++;
 		}
-	
-	
-		//if USE_PATTERNS
-		modulePatterns = new vector<mdPattern>;
-		bool seqBegin = true;
-	
-		for (int i = 0; i < seq.uniquePtnCount; i++) {
-		
-			modulePatterns->emplace_back(seq.uniquePtnList[i], seqBegin);
-			seqBegin = false;
-			
-		}
-		
-		if (verbose) {
-			
-			cout << "Unique patterns: " << modulePatterns->size();
-				
-			for (auto it : *modulePatterns) cout << ", " << it.ptnName;
-				
-			cout << endl << endl;
-		}
-		
-		for (auto it : *modulePatterns) {
-		
-			blockStart = locateToken(":" + it.ptnName);
-			blockEnd = getBlockEnd(blockStart);
-
-		
-			if (blockStart >= linecount - 1) throw ("Pattern \"" + it.ptnName + "\" is not defined.");
-			if (blockStart >= blockEnd) throw ("Pattern \"" + it.ptnName + "\" contains no data");
-			//TODO: does not reliably detect empty patterns.
-		
-			rawDataBlock = new string[blockEnd - blockStart];
-		
-			for (int j = blockStart + 1; j <= blockEnd; j++) rawDataBlock[j - blockStart - 1] = moduleLines[j];
-		
-			try {
-				it.read(rawDataBlock, blockEnd - blockStart, config, moduleTables, verbose);
-			}
-			catch(string &e) {
-				throw ("In pattern \"" + it.ptnName + "\": " + e);
-			}
-		
-			delete[] rawDataBlock;
-			rawDataBlock = nullptr;
-
-		
-			//MUSICASM << it << endl;
-			//if (verbose) cout << it << endl;			
-		}
-	
-	
-		if (config.useTables) {
-	
-			if (verbose) {
-		
-				cout << "Unique tables: " << moduleTables->size();
-			
-				for (auto it : *moduleTables) cout << ", " << it.tblName;
-			
-				cout << endl;
-			}
-		
-			for (auto it : *moduleTables) {
-		
-				blockStart = locateToken(":" + it.tblName);
-				blockEnd = getBlockEnd(blockStart);
-		
-				if (blockStart >= linecount - 1) throw ("Table \"" + it.tblName + "\" is not defined.");
-				if (blockStart >= blockEnd) throw ("Table \"" + it.tblName + "\" contains no data");
-			
-
-				rawDataBlock = new string[blockEnd - blockStart];
-		
-				for (int j = blockStart + 1; j <= blockEnd; j++) rawDataBlock[j - blockStart - 1] = moduleLines[j];
-		
-				try {
-					it.read(rawDataBlock, blockEnd - blockStart, config, verbose);
-				}
-				catch(string &e) {
-					throw ("In table \"" + it.tblName + "\": " + e);
-				}
-		
-				delete[] rawDataBlock;
-				rawDataBlock = nullptr;
-			
-		
-				//MUSICASM << it;
-				//if (verbose) cout << it;
-			}
-		}
 		
 		return;		
 	}
@@ -284,8 +169,6 @@ mdModule::~mdModule() {
 	
 	delete[] rawDataBlock;
 	delete[] moduleLines;
-	delete modulePatterns;
-	delete moduleTables;
 }
 
 
