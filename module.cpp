@@ -1,6 +1,5 @@
 #include <iostream>
 #include <string>
-#include <fstream>
 
 #include "mdalc.h"
 
@@ -14,10 +13,13 @@ mdModule::mdModule(vector<string> &moduleLines, bool &verbose) {
 	rawDataBlock = nullptr;
 	linecount = moduleLines.size();
 
-	string configname = getArgument(string("CONFIG"), moduleLines);		//TODO: occurs only once, make inline
+	string configname = getArgument(string("CONFIG"), moduleLines);		//TODO: occurs only once, make inline or merge with other getArgument functions
 	
-	mdConfig config(configname, verbose);
-	
+	config.init(configname, verbose);
+}
+
+
+void mdModule::parse(vector<string> &moduleLines, bool &verbose) {	
 	
 	
 	try {

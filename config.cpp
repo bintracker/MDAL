@@ -9,7 +9,7 @@ using namespace std;
 
 
 
-mdConfig::mdConfig(string &configname, bool &verbose) {
+mdConfig::mdConfig() {
 
 	cfgLines = nullptr;
 	mdCmdList = nullptr;
@@ -17,6 +17,10 @@ mdConfig::mdConfig(string &configname, bool &verbose) {
 	seqMaxLength = 0;
 	
 	blockTypeCount = 0;
+}
+
+
+void mdConfig::init(string &configname, bool &verbose) {
 	
 	string filename = "config/" + configname + ".cfg";
 	

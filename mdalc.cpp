@@ -71,6 +71,7 @@ int main(int argc, char *argv[]){
 		}
 	 
 		mdModule mdf(moduleLines, verbose);
+		mdf.parse(moduleLines, verbose);
 		
 		ASM << mdf;
 	}
