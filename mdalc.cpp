@@ -1,7 +1,9 @@
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <cstring>
 #include <algorithm>
+#include <vector>
 
 #include "mdalc.h"
 
@@ -30,11 +32,45 @@ int main(int argc, char *argv[]){
 		return -1;
 	}
 
-	try { 
-		mdModule mdf(infile, outfile, verbose);
+	try {
+		ifstream MDFILE(infile.data());	
+		if (!MDFILE.is_open()) throw (infile + " not found.");
+		
+		string tempstr;
+		vector<string> moduleLines;
+
+		bool blockComment = false;
+
+		while (getline(MDFILE, tempstr)) {
+
+			string remains = "";
+	
+			if (tempstr.find("/*", 0, 2) != string::npos) {				//detect and strip block comments
+	
+				remains = tempstr.erase(tempstr.find("/*", 0, 2), tempstr.find("*/", 0, 2));
+				blockComment = true;	
+			}
+	
+			if (tempstr.find("*/", 0, 2) != string::npos) {
+	
+				blockComment = false;
+				tempstr.erase(0, tempstr.find("*/", 0, 2) + 2);
+			}
+	
+			if (blockComment) tempstr = "" + remains;
+			else {
+	
+				size_t commentPos = tempstr.find("//", 0, 2);			//strip regular comments
+				if (commentPos != string::npos) tempstr.erase(commentPos);
+			}
+			
+			moduleLines.push_back(tempstr);
+		}
+	 
+		mdModule mdf(moduleLines, outfile, verbose);
 	}
 	catch(string &e) {
-		cout << "ERROR: " << e << "\nCompilation terminated." << endl;
+		cout << "In " << infile << endl << "ERROR: " << e << "\nCompilation terminated." << endl;
 		return -1;
 	}
 	
@@ -52,8 +88,6 @@ string trimChars(const string& inputString, const char* chars) {
 
 //TODO: flag strings that start with or contain only numbers as invalid
 int getType(const string& param) {
-
-	//cout << "getType: " << param << endl;	//DEBUG ok
 
 	if (param == "true" || param == "false") return BOOL;
 	if (param.find('"') != string::npos) return STRING;

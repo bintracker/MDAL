@@ -45,7 +45,7 @@ public:
 	string mdSequenceString;
 	vector<mdBlockList> moduleBlocks;
 
-	mdModule(string &infile, string &outfile, bool &verbose);
+	mdModule(vector<string> &moduleLines, string &outfile, bool &verbose);
 	~mdModule();
 	
 	friend ostream& operator<<(ostream& os, const mdModule &mdf);
@@ -55,11 +55,10 @@ protected:
 
 private:
 	int linecount;
-	string* moduleLines;
 	
-	int locateToken(string token);
-	int getBlockEnd(int blockStart);
-	string getArgument(string token);
+	int locateToken(string token, vector<string> &moduleLines);
+	int getBlockEnd(int blockStart, vector<string> &moduleLines);
+	string getArgument(string token, vector<string> &moduleLines);
 };
 
 

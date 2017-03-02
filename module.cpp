@@ -7,56 +7,19 @@
 using namespace std;
 
 
-mdModule::mdModule(string &infile, string &outfile, bool &verbose) {
+mdModule::mdModule(vector<string> &moduleLines, string &outfile, bool &verbose) {
 
-	moduleLines = nullptr;
 	rawDataBlock = nullptr;
 
+	linecount = moduleLines.size();
 
-	ifstream MDFILE(infile.data());	
-	if (!MDFILE.is_open()) throw (infile + " not found.");
-	
 	ofstream MUSICASM(outfile.data());
 	if (!MUSICASM.is_open()) throw ("Could not open " + outfile + ".");
 	
 	
 	string tempstr;
 
-	for (linecount = 0; getline(MDFILE,tempstr); linecount++);
-
-	MDFILE.clear();										//reset file pointer
-	MDFILE.seekg(0, ios::beg);
-
-	moduleLines = new string[linecount];
-	bool blockComment = false;
-
-	for (int i = 0; i < linecount; i++) {
-
-		getline(MDFILE, moduleLines[i]);
-
-		string remains = "";
-	
-		if (moduleLines[i].find("/*", 0, 2) != string::npos) {				//detect and strip block comments
-	
-			remains = moduleLines[i].erase(moduleLines[i].find("/*", 0, 2), moduleLines[i].find("*/", 0, 2));
-			blockComment = true;	
-		}
-	
-		if (moduleLines[i].find("*/", 0, 2) != string::npos) {
-	
-			blockComment = false;
-			moduleLines[i].erase(0, moduleLines[i].find("*/", 0, 2) + 2);
-		}
-	
-		if (blockComment) moduleLines[i] = "" + remains;
-		else {
-	
-			size_t commentPos = moduleLines[i].find("//", 0, 2);			//strip regular comments
-			if (commentPos != string::npos) moduleLines[i].erase(commentPos);
-		}
-	}
-
-	string configname = getArgument(string("CONFIG"));
+	string configname = getArgument(string("CONFIG"), moduleLines);		//TODO: occurs only once, make inline
 	
 	mdConfig config(configname, verbose);
 	
@@ -71,8 +34,8 @@ mdModule::mdModule(string &infile, string &outfile, bool &verbose) {
 	
 		if (verbose) cout << endl << "MODULE DATA\n===========" << endl;
 	
-		int blockStart = locateToken(string(":SEQUENCE"));
-		int blockEnd = getBlockEnd(blockStart);
+		int blockStart = locateToken(string(":SEQUENCE"), moduleLines);
+		int blockEnd = getBlockEnd(blockStart, moduleLines);
 	
 		if (blockStart > blockEnd) throw (string("Sequence contains no patterns."));
 	
@@ -120,8 +83,8 @@ mdModule::mdModule(string &infile, string &outfile, bool &verbose) {
 		
 			while (it.referenceCount) {
 			
-				blockStart = locateToken(":" + it.blocks.at(blockNr).blkName);
-				blockEnd = getBlockEnd(blockStart);
+				blockStart = locateToken(":" + it.blocks.at(blockNr).blkName, moduleLines);
+				blockEnd = getBlockEnd(blockStart, moduleLines);
 
 		
 				if (blockStart >= linecount - 1) throw ("Block \"" + it.blocks.at(blockNr).blkName + "\" is not defined.");
@@ -156,7 +119,7 @@ mdModule::mdModule(string &infile, string &outfile, bool &verbose) {
 		return;		
 	}
 	catch(string &e) {
-		throw (infile + ": " + e + "\nModule validation failed.");
+		throw (e + "\nModule validation failed.");
 	}
 }
 
@@ -164,11 +127,11 @@ mdModule::mdModule(string &infile, string &outfile, bool &verbose) {
 mdModule::~mdModule() {
 	
 	delete[] rawDataBlock;
-	delete[] moduleLines;
+//	delete[] moduleLines;
 }
 
 
-int mdModule::getBlockEnd(int blockStart) {
+int mdModule::getBlockEnd(int blockStart, vector<string> &moduleLines) {
 	
 	int line;
 	size_t pos = string::npos;
@@ -180,7 +143,7 @@ int mdModule::getBlockEnd(int blockStart) {
 }
 
 //TODO: throw error if token not found
-int mdModule::locateToken(string token) {
+int mdModule::locateToken(string token, vector<string> &moduleLines) {
 
 	int line;
 //	size_t pos = string::npos;
@@ -199,7 +162,7 @@ int mdModule::locateToken(string token) {
 	return line;
 }
 
-string mdModule::getArgument(string token) {
+string mdModule::getArgument(string token, vector<string> &moduleLines) {
 
 	string tempstr = "";
 	int line;
@@ -214,7 +177,6 @@ string mdModule::getArgument(string token) {
 	
 	return tempstr;
 }
-
 
 // ostream& operator<<(ostream &os, const mdModule &mdf) {
 //
