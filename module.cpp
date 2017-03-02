@@ -7,17 +7,12 @@
 using namespace std;
 
 
-mdModule::mdModule(vector<string> &moduleLines, string &outfile, bool &verbose) {
+mdModule::mdModule(vector<string> &moduleLines, bool &verbose) {
 
-	rawDataBlock = nullptr;
-
-	linecount = moduleLines.size();
-
-	ofstream MUSICASM(outfile.data());
-	if (!MUSICASM.is_open()) throw ("Could not open " + outfile + ".");
-	
-	
+	MUSICASM.str(string());
 	string tempstr;
+	rawDataBlock = nullptr;
+	linecount = moduleLines.size();
 
 	string configname = getArgument(string("CONFIG"), moduleLines);		//TODO: occurs only once, make inline
 	
@@ -178,15 +173,8 @@ string mdModule::getArgument(string token, vector<string> &moduleLines) {
 	return tempstr;
 }
 
-// ostream& operator<<(ostream &os, const mdModule &mdf) {
-//
-// 	os << mdf.seq << endl;
-// 	
-// 	for (int i = 0; i < seq.uniquePtnCount; i++) {
-// 	
-// 		os << mdf.seq.uniquePtnList[i] << endl;
-// 		os << mdf.modulePatterns[i];
-// 	}
-// 	
-// 	return os;
-// }
+ostream& operator<<(ostream &os, const mdModule &mdf) {
+
+	os << mdf.MUSICASM.str() << endl;	
+	return os;
+}

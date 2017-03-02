@@ -36,6 +36,9 @@ int main(int argc, char *argv[]){
 		ifstream MDFILE(infile.data());	
 		if (!MDFILE.is_open()) throw (infile + " not found.");
 		
+	 	ofstream ASM(outfile.data());
+	 	if (!ASM.is_open()) throw ("Could not open " + outfile + ".");
+		
 		string tempstr;
 		vector<string> moduleLines;
 
@@ -67,7 +70,9 @@ int main(int argc, char *argv[]){
 			moduleLines.push_back(tempstr);
 		}
 	 
-		mdModule mdf(moduleLines, outfile, verbose);
+		mdModule mdf(moduleLines, verbose);
+		
+		ASM << mdf;
 	}
 	catch(string &e) {
 		cout << "In " << infile << endl << "ERROR: " << e << "\nCompilation terminated." << endl;

@@ -3,6 +3,7 @@
 
 #include <string>
 #include <fstream>
+#include <sstream>
 #include <vector>
 
 #define MDALVERSION 0
@@ -44,8 +45,10 @@ class mdModule {
 public:
 	string mdSequenceString;
 	vector<mdBlockList> moduleBlocks;
+	
+	ostringstream MUSICASM;
 
-	mdModule(vector<string> &moduleLines, string &outfile, bool &verbose);
+	mdModule(vector<string> &moduleLines, bool &verbose);
 	~mdModule();
 	
 	friend ostream& operator<<(ostream& os, const mdModule &mdf);
