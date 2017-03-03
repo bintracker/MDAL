@@ -69,9 +69,12 @@ int main(int argc, char *argv[]){
 			
 			moduleLines.push_back(tempstr);
 		}
+		
+		string configname = getArgument(string("CONFIG"), moduleLines);
+		mdConfig config;
+		config.init(configname, verbose);
 	 
-		mdModule mdf(moduleLines, verbose);
-		mdf.parse(moduleLines, verbose);
+		mdModule mdf(moduleLines, config, verbose);
 		
 		ASM << mdf;
 	}
@@ -107,4 +110,19 @@ int getType(const string& param) {
 	if (param.find_first_not_of("0123456789") != string::npos) return INVALID;
 	
 	return DEC;
+}
+
+string getArgument(string token, vector<string> &moduleLines) {
+
+	string tempstr = "";
+	
+	for (auto&& it: moduleLines) {
+	
+		size_t pos = it.find(token.data());
+		if (pos != string::npos) tempstr = trimChars(it.substr(pos + token.size()), " =");
+	}
+	
+	if (tempstr == "") throw ("No " + token + " statement found.");
+	
+	return tempstr;
 }

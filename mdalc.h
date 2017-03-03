@@ -13,6 +13,7 @@ using namespace std;
 
 string trimChars(const string& inputString, const char* chars);
 int getType(const string& parameter);
+string getArgument(string token, vector<string> &moduleLines);
 
 
 enum Type {BOOL, BYTE, WORD, DEC, HEX, STRING, INVALID};
@@ -147,13 +148,10 @@ public:
 	string mdSequenceString;
 	vector<mdBlockList> moduleBlocks;
 	
-	mdConfig config;
-	
 	ostringstream MUSICASM;
 
-	mdModule(vector<string> &moduleLines, bool &verbose);
+	mdModule(vector<string> &moduleLines, mdConfig &config, bool &verbose);
 	~mdModule();
-	void parse(vector<string> &moduleLines, bool &verbose);
 	
 	friend ostream& operator<<(ostream& os, const mdModule &mdf);
 	
@@ -165,7 +163,6 @@ private:
 	
 	int locateToken(string token, vector<string> &moduleLines);
 	int getBlockEnd(int blockStart, vector<string> &moduleLines);
-	string getArgument(string token, vector<string> &moduleLines);
 };
 
 

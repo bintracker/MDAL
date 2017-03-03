@@ -6,23 +6,16 @@
 using namespace std;
 
 
-mdModule::mdModule(vector<string> &moduleLines, bool &verbose) {
-
-	MUSICASM.str(string());
-	string tempstr;
+mdModule::mdModule(vector<string> &moduleLines, mdConfig &config, bool &verbose) {	
+	
 	rawDataBlock = nullptr;
-	linecount = moduleLines.size();
-
-	string configname = getArgument(string("CONFIG"), moduleLines);		//TODO: occurs only once, make inline or merge with other getArgument functions
-	
-	config.init(configname, verbose);
-}
-
-
-void mdModule::parse(vector<string> &moduleLines, bool &verbose) {	
-	
+	linecount = 0;
 	
 	try {
+		
+	
+		MUSICASM.str(string());
+		linecount = moduleLines.size();
 	
 		for (auto&& it : config.blockTypes) moduleBlocks.emplace_back(it.blockConfigID);		
 		moduleBlocks.shrink_to_fit();
@@ -159,21 +152,21 @@ int mdModule::locateToken(string token, vector<string> &moduleLines) {
 	return line;
 }
 
-string mdModule::getArgument(string token, vector<string> &moduleLines) {
-
-	string tempstr = "";
-	int line;
-	
-	for (line = 0; line < linecount && tempstr == ""; line++) {
-	
-		size_t pos = moduleLines[line].find(token.data());
-		if (pos != string::npos) tempstr = trimChars(moduleLines[line].substr(pos + token.size()), " =");
-	}
-	
-	if (line == linecount) throw ("No " + token + " statement found.");
-	
-	return tempstr;
-}
+// string mdModule::getArgument(string token, vector<string> &moduleLines) {
+//
+// 	string tempstr = "";
+// 	int line;
+// 	
+// 	for (line = 0; line < linecount && tempstr == ""; line++) {
+// 	
+// 		size_t pos = moduleLines[line].find(token.data());
+// 		if (pos != string::npos) tempstr = trimChars(moduleLines[line].substr(pos + token.size()), " =");
+// 	}
+// 	
+// 	if (line == linecount) throw ("No " + token + " statement found.");
+// 	
+// 	return tempstr;
+// }
 
 ostream& operator<<(ostream &os, const mdModule &mdf) {
 
