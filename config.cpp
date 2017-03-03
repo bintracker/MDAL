@@ -22,9 +22,8 @@ mdConfig::mdConfig() {
 
 void mdConfig::init(string &configname, bool &verbose) {
 	
-	string filename = "config/" + configname + ".cfg";
-	
-	ifstream CFGFILE(filename.data());
+
+	ifstream CFGFILE(configname.data());
 	if (!CFGFILE.is_open()) throw ("Unknown configuration \"" + configname + "\".");
 
 

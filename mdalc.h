@@ -109,7 +109,7 @@ public:
 
 	mdConfig();
 	~mdConfig();
-	void init(string &configname, bool &verbose);
+	void init(string &configfile, bool &verbose);
 
 	string* cfgLines;
 private:
