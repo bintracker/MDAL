@@ -61,6 +61,8 @@ public:
 	int setBy;
 	int setHiBy;	
 	int setLoBy;
+	
+	bool* useCmd;
 
 	
 

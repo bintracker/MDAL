@@ -38,7 +38,9 @@ mdField::mdField() {
 	
 	setBy = -1;
 	setHiBy = -1;	
-	setLoBy = -1;		
+	setLoBy = -1;
+	
+	useCmd = nullptr;		
 }
 
 
@@ -50,6 +52,8 @@ mdField::~mdField() {
 		delete[] setIfBy[i];
 		delete[] setIfWhenSet[i];
 	}
+	
+	delete[] useCmd;
 	
 	delete[] setBitsBy;
 	delete[] setBitsMask;
@@ -178,6 +182,11 @@ void mdField::init(mdCommand *mdCmdList, int &mdCmdCount, string &fieldString, b
 	}
 	
 	
+	
+	useCmd = new bool[mdCmdCount];
+	fill_n(useCmd, mdCmdCount, false);
+	
+	
 	if (temp.find("SET_HI(") != string::npos) {
 		
 		size_t begin = temp.find("SET_HI(");
@@ -191,6 +200,8 @@ void mdField::init(mdCommand *mdCmdList, int &mdCmdCount, string &fieldString, b
 		
 		requiredBy[cmdNr] = true;
 		setHiBy = cmdNr;
+		
+		useCmd[setHiBy] = true;
 
 		temp.erase(begin, tmp1.size() + 8);	
 	}
@@ -210,6 +221,8 @@ void mdField::init(mdCommand *mdCmdList, int &mdCmdCount, string &fieldString, b
 		requiredBy[cmdNr] = true;
 		setLoBy = cmdNr;
 		
+		useCmd[setLoBy] = true;
+		
 		temp.erase(begin, tmp1.size() + 8);
 	}
 	
@@ -227,6 +240,8 @@ void mdField::init(mdCommand *mdCmdList, int &mdCmdCount, string &fieldString, b
 		
 		requiredBy[cmdNr] = true;
 		setBy = cmdNr;
+		
+		useCmd[setBy] = true;
 		
 		temp.erase(begin, tmp1.size() + 5);
 	}
@@ -279,6 +294,7 @@ void mdField::init(mdCommand *mdCmdList, int &mdCmdCount, string &fieldString, b
 		requiredBy[cmdNr] = true;
 		//cout << "setBits by " << getCmdNr(mdCmdList, mdCmdCount, tmp1) << endl;	//DEBUG, ok
 		setBitsBy[cmdNr] = true;
+		useCmd[cmdNr] = true;
 		
 		if (tmp3 == "CLEAR") setBitsClear[cmdNr] = CLEAR_ALL;
 		else if (tmp3 == "CLEAR_HI") setBitsClear[cmdNr] = CLEAR_HI;
@@ -355,10 +371,8 @@ void mdField::init(mdCommand *mdCmdList, int &mdCmdCount, string &fieldString, b
 			if (tmp1.find('|') != string::npos) throw ("Use of both & and | in SET_IF expression in " + fieldString);
 		}
 		
-		if (tmp1 == "") setIfAlways[i] = true;
-		
-				
-		if (tmp1 != "") {
+		if (tmp1 == "") setIfAlways[i] = true;			
+		else {
 			
 			if (tmp1.size() > 1 && tmp1.substr(0,2) == "!(") {
 			//handle global NOT
@@ -403,6 +417,8 @@ void mdField::init(mdCommand *mdCmdList, int &mdCmdCount, string &fieldString, b
 
 					int cmdNr = getCmdNr(mdCmdList, mdCmdCount, cmdString);
 					if (cmdNr == -1) throw ("Unknown command \"" + cmdString + "\" found in SET_IF expression in " + fieldString);
+					
+					useCmd[cmdNr] = true;
 				
 					setIfBy[i][cmdNr] = true;
 					if (setNot) setIfWhenSet[i][cmdNr] = false;
