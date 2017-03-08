@@ -12,9 +12,8 @@ mdModule::mdModule(vector<string> &moduleLines, mdConfig &config, bool &verbose)
 	linecount = 0;
 	
 	try {
-		
 	
-		MUSICASM.str(string());
+		MUSICASM.str(string());			//clear stream
 		linecount = moduleLines.size();
 	
 		for (auto&& it : config.blockTypes) moduleBlocks.emplace_back(it.blockConfigID);		
@@ -33,7 +32,7 @@ mdModule::mdModule(vector<string> &moduleLines, mdConfig &config, bool &verbose)
 	
 		for (int i = blockStart + 1; i <= blockEnd; i++) rawDataBlock[i - blockStart - 1] = moduleLines[i];
 
-		mdSequence seq(rawDataBlock, blockEnd - blockStart, config);
+		seq.init(rawDataBlock, blockEnd - blockStart, config);
 	
 		delete[] rawDataBlock;
 		rawDataBlock = nullptr;
@@ -152,21 +151,6 @@ int mdModule::locateToken(string token, vector<string> &moduleLines) {
 	return line;
 }
 
-// string mdModule::getArgument(string token, vector<string> &moduleLines) {
-//
-// 	string tempstr = "";
-// 	int line;
-// 	
-// 	for (line = 0; line < linecount && tempstr == ""; line++) {
-// 	
-// 		size_t pos = moduleLines[line].find(token.data());
-// 		if (pos != string::npos) tempstr = trimChars(moduleLines[line].substr(pos + token.size()), " =");
-// 	}
-// 	
-// 	if (line == linecount) throw ("No " + token + " statement found.");
-// 	
-// 	return tempstr;
-// }
 
 ostream& operator<<(ostream &os, const mdModule &mdf) {
 

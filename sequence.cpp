@@ -4,7 +4,7 @@
 
 using namespace std;
 
-mdSequence::mdSequence(string *sequenceBlock, int sequenceBlockLength, mdConfig &config) {
+mdSequence::mdSequence() {
 
 	mdSequenceArray = nullptr;
 	uniquePtnList = nullptr;
@@ -12,6 +12,16 @@ mdSequence::mdSequence(string *sequenceBlock, int sequenceBlockLength, mdConfig 
 	uniquePtnCount = 0;
 	mdSequenceLoopPosition = 0;
 	sequenceString = "";
+}
+
+mdSequence::~mdSequence() {
+
+	delete[] mdSequenceArray;
+	delete[] uniquePtnList;
+}
+
+
+void mdSequence::init(string *sequenceBlock, int sequenceBlockLength, mdConfig &config) {
 
 	
 	for (int i = 0; i < sequenceBlockLength; i++) {
@@ -89,11 +99,6 @@ mdSequence::mdSequence(string *sequenceBlock, int sequenceBlockLength, mdConfig 
 	return;
 }
 
-mdSequence::~mdSequence() {
-
-	delete[] mdSequenceArray;
-	delete[] uniquePtnList;
-}
 
 string mdSequence::getSequenceString(const mdConfig &config) {
 
