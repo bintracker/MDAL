@@ -12,7 +12,7 @@ using namespace std;
 
 int main(int argc, char *argv[]){
 
-	cout << "MDAL COMPILER v0.0.1\n\n";
+	cout << "MDAL COMPILER v0.0.2\n\n";
 
 	bool verbose = false;
 	string infile = "";
@@ -112,7 +112,7 @@ int getType(const string& param) {
 	return DEC;
 }
 
-string getArgument(string token, vector<string> &moduleLines) {
+string getArgument(string token, const vector<string> &moduleLines) {
 
 	string tempstr = "";
 	

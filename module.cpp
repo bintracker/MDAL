@@ -6,7 +6,7 @@
 using namespace std;
 
 
-mdModule::mdModule(vector<string> &moduleLines, mdConfig &config, bool &verbose) {	
+mdModule::mdModule(const vector<string> &moduleLines, const mdConfig &config, bool &verbose) {	
 	
 	rawDataBlock = nullptr;
 	linecount = 0;
@@ -23,14 +23,14 @@ mdModule::mdModule(vector<string> &moduleLines, mdConfig &config, bool &verbose)
 	
 		if (verbose) cout << endl << "MODULE DATA\n===========" << endl;
 	
-		int blockStart = locateToken(string(":SEQUENCE"), moduleLines);
-		int blockEnd = getBlockEnd(blockStart, moduleLines);
+		unsigned blockStart = locateToken(string(":SEQUENCE"), moduleLines);
+		unsigned blockEnd = getBlockEnd(blockStart, moduleLines);
 	
 		if (blockStart > blockEnd) throw (string("Sequence contains no patterns."));
 	
 		rawDataBlock = new string[blockEnd - blockStart];
 	
-		for (int i = blockStart + 1; i <= blockEnd; i++) rawDataBlock[i - blockStart - 1] = moduleLines[i];
+		for (unsigned i = blockStart + 1; i <= blockEnd; i++) rawDataBlock[static_cast<int>(i - blockStart - 1)] = moduleLines[i];
 
 		seq.init(rawDataBlock, blockEnd - blockStart, config);
 	
@@ -64,11 +64,11 @@ mdModule::mdModule(vector<string> &moduleLines, mdConfig &config, bool &verbose)
 		}
 		
 		
-		int blockType = 0;
+		size_t blockType = 0;
 		
 		for (auto&& it : moduleBlocks) {
 			
-			int blockNr = 0;
+			size_t blockNr = 0;
 		
 			while (it.referenceCount) {
 			
@@ -82,10 +82,11 @@ mdModule::mdModule(vector<string> &moduleLines, mdConfig &config, bool &verbose)
 		
 				rawDataBlock = new string[blockEnd - blockStart];
 		
-				for (int j = blockStart + 1; j <= blockEnd; j++) rawDataBlock[j - blockStart - 1] = moduleLines[j];
+				for (unsigned j = blockStart + 1; j <= blockEnd; j++) rawDataBlock[static_cast<int>(j - blockStart - 1)] = moduleLines[j];
 		
 				try {	
-					it.blocks.at(blockNr).read(rawDataBlock, blockEnd - blockStart, config, config.blockTypes.at(blockType), moduleBlocks, verbose);
+					it.blocks.at(blockNr).read(rawDataBlock, static_cast<int>(blockEnd - blockStart), config, 
+						config.blockTypes.at(blockType), moduleBlocks);
 				}
 				catch(string &e) {
 					throw ("In pattern \"" + it.blocks.at(blockNr).blkName + "\": " + e);
@@ -120,9 +121,9 @@ mdModule::~mdModule() {
 }
 
 
-int mdModule::getBlockEnd(int blockStart, vector<string> &moduleLines) {
+unsigned mdModule::getBlockEnd(const unsigned &blockStart, const vector<string> &moduleLines) {
 	
-	int line;
+	size_t line;
 	size_t pos = string::npos;
 	
 	for (line = blockStart + 1; line < linecount && pos == string::npos; line++) pos = moduleLines[line].find(":");
@@ -132,10 +133,9 @@ int mdModule::getBlockEnd(int blockStart, vector<string> &moduleLines) {
 }
 
 //TODO: throw error if token not found
-int mdModule::locateToken(string token, vector<string> &moduleLines) {
+unsigned mdModule::locateToken(const string &token, const vector<string> &moduleLines) {
 
-	int line;
-//	size_t pos = string::npos;
+	size_t line;
 	string tempstr = "";
 	string tempstr2;
 		

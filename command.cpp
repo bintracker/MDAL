@@ -6,10 +6,9 @@
 
 using namespace std;
 
+mdCommand::mdCommand(): mdCmdCurrentValString(""), mdCmdDefaultValString(""), referenceBlkID(""), mdCmdAutoValString(""), mdCmdLastValString("") {
 
-mdCommand::mdCommand() {
-
-	mdCmdType = BOOL;			//0 = BOOL, 1 = BYTE, 2 = WORD
+	mdCmdType = BOOL;
 	mdCmdGlobalConst = false;
 
 	mdCmdForceSubstitution = false;
@@ -21,22 +20,13 @@ mdCommand::mdCommand() {
 	mdCmdAuto = false;
 	
 	isBlkReference = false;
-	referenceBlkID = "";
-	
 
 	mdCmdDefaultVal = -1;
-	mdCmdDefaultValString = "";
-	
 	mdCmdAutoVal = -1;
-	mdCmdAutoValString = "";
-	
 	mdCmdLastVal = -1;
-	mdCmdLastValString = "";	
-	
+
 	mdCmdIsSetNow = false;
 	mdCmdCurrentVal = -1;
-	mdCmdCurrentValString = "";
-
 	
 	mdCmdSubstitutionNames = nullptr;
 	mdCmdSubstitutionValues = nullptr;
@@ -44,7 +34,6 @@ mdCommand::mdCommand() {
 	limitRange = false;
 	lowerRangeLimit = 0;
 	upperRangeLimit = 0;
-
 }
 
 mdCommand::~mdCommand() {
@@ -53,7 +42,7 @@ mdCommand::~mdCommand() {
 }
 
 
-void mdCommand::init(string commandString, bool &verbose) {
+void mdCommand::init(const string &commandString, bool &verbose) {
 
 	//primary validation
 	
@@ -76,7 +65,7 @@ void mdCommand::init(string commandString, bool &verbose) {
 	
 	temp = cmdStrCopy;
 	temp.erase(temp.find(','));
-	if (temp.find('"') != 0) throw ("\"" + temp + "\" is not a valid command name in " + commandString);
+	if (temp.compare(0, 1, "\"") != 0) throw ("\"" + temp + "\" is not a valid command name in " + commandString);
 	mdCmdName = trimChars(temp, " \"");
 	if (mdCmdName == "NONE" || mdCmdName == "ANY" || mdCmdName == "ALL" || mdCmdName == "CONFIG") 
 		throw ("Reserved keyword \"" + mdCmdName + "\" used as command name in " + commandString);
@@ -310,7 +299,7 @@ void mdCommand::reset() {
 }
 
 
-void mdCommand::set(int &currentVal, string &currentValString) {
+void mdCommand::set(const int &currentVal, const string &currentValString) {
 
 	//cout << "cval: " << currentVal << " cvalstr: " << currentValString << endl;
 

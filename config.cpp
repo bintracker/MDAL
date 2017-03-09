@@ -9,18 +9,30 @@ using namespace std;
 
 
 
-mdConfig::mdConfig() {
+mdConfig::mdConfig(): seqLabel(";sequence") {
+
+	useSeqEnd = false;
+	useSeqLoop = false;
+	useSeqLoopPointer = false;
+	useSamples = false;
 
 	cfgLines = nullptr;
 	mdCmdList = nullptr;
-	seqLabel = ";sequence";
-	seqMaxLength = 0;
-	
+
+	seqMaxLength = 0;	
 	blockTypeCount = 0;
+	linecount = 0;
+	mdCmdCount = 0;
+}
+
+mdConfig::~mdConfig() {
+
+	delete[] mdCmdList;
+	delete[] cfgLines;
 }
 
 
-void mdConfig::init(string &configname, bool &verbose) {
+void mdConfig::init(const string &configname, bool &verbose) {
 	
 
 	ifstream CFGFILE(configname.data());
@@ -72,12 +84,6 @@ void mdConfig::init(string &configname, bool &verbose) {
 		else {
 		
 			int blockEnd = getBlockEnd(blockStart);
-		
-			useSeqEnd = false;
-			useSeqLoop = false;
-			useSeqLoopPointer = false;
-		
-		
 			int tokenpos = locateToken(string("USE_LABEL"), blockStart, blockEnd);
 		
 			if (tokenpos != blockEnd) {
@@ -87,7 +93,6 @@ void mdConfig::init(string &configname, bool &verbose) {
 			}
 		
 			if (verbose) cout << "Sequence label:\t\t" << seqLabel << endl;
-		
 		
 		
 			tokenpos = locateToken(string("USE_END"), blockStart, blockEnd);
@@ -107,7 +112,7 @@ void mdConfig::init(string &configname, bool &verbose) {
 		
 				useSeqLoop = true;
 			
-				int argCount = getArgumentCount(cfgLines[tokenpos]);
+				int argCount = count(cfgLines[tokenpos].begin(), cfgLines[tokenpos].end(), ',') + 1;
 			
 				if (argCount < 2) throw (string("CFG_SEQUENCE: Incomplete loop configuration."));
 			
@@ -187,10 +192,10 @@ void mdConfig::init(string &configname, bool &verbose) {
 		
 		int bline = 0;
 		
-		for (int i = 0; i < blockTypeCount; i++) {
+		for (size_t i = 0; i < blockTypeCount; i++) {
 		
 			blockStart = locateToken(string("CFG_BLOCK"), bline, configEnd);
-			int blockEnd = getBlockEnd(blockStart);
+			blockEnd = getBlockEnd(blockStart);
 			bline = blockEnd + 1;
 			
 			int tokenpos = locateToken(string("ID"), blockStart, blockEnd);
@@ -283,15 +288,15 @@ void mdConfig::init(string &configname, bool &verbose) {
 			string requireBlkBeginStr = "";
 			string requireSeqBeginStr = "";
 		
-			for (int i = blockStart; i < blockEnd; i++) {
+			for (int line = blockStart; line < blockEnd; line++) {
 	
-				string fieldStr = cfgLines[i];
+				string fieldStr = cfgLines[line];
 				fieldStr = trimChars(fieldStr, " \t");	//TODO: this trims all whitespace, don't trim whitespace within cmd string params!
 				size_t pos = fieldStr.find_first_of('/');
 				if (pos != string::npos) fieldStr.erase(pos);
 				if (fieldStr != "" && (fieldStr.find("WORD") != string::npos || fieldStr.find("BYTE") != string::npos)) {
 		
-					blockTypes.back().blkFieldList[fieldNr].init(mdCmdList, mdCmdCount, fieldStr, verbose);
+					blockTypes.back().blkFieldList[fieldNr].init(mdCmdList, mdCmdCount, fieldStr);
 			
 					if (verbose) {
 			
@@ -330,12 +335,12 @@ void mdConfig::init(string &configname, bool &verbose) {
 			//TODO implementation incomplete
 			if (requireSeqBeginStr != "") {
 	
-				for (int i = 0; i < blockTypes.back().blkFieldCount; i++) blockTypes.back().blkFieldList[i].requiredSeqBegin = true;
+				for (int j = 0; j < blockTypes.back().blkFieldCount; j++) blockTypes.back().blkFieldList[j].requiredSeqBegin = true;
 			}
 	
 			if (requireBlkBeginStr != "") {
 	
-				for (int i = 0; i < blockTypes.back().blkFieldCount; i++) blockTypes.back().blkFieldList[i].requiredBlkBegin = true;	
+				for (int j = 0; j < blockTypes.back().blkFieldCount; j++) blockTypes.back().blkFieldList[j].requiredBlkBegin = true;	
 
 			}
 		
@@ -367,7 +372,6 @@ void mdConfig::init(string &configname, bool &verbose) {
 		//TODO: check reference command validity
 
 	
-		useSamples = false;
 		if (locateToken(string("USE_SAMPLES"), 0, configEnd) != configEnd) {
 	
 			useSamples = true;
@@ -378,23 +382,12 @@ void mdConfig::init(string &configname, bool &verbose) {
 		return;
 	}
 	catch(string &e) {
-		throw (configname + ".cfg: " + e + "\nConfig validation failed.");
+		throw (configname + ": " + e + "\nConfig validation failed.");
 	}
 }
 
-mdConfig::~mdConfig() {
 
-
-//	delete[] ptnFieldList;
-//	delete[] tblFieldList;
-	delete[] mdCmdList;
-//	delete[] cmdIsTablePointer;
-	delete[] cfgLines;
-}
-
-
-
-int mdConfig::countFields(int &blockStart, int &blockEnd) {
+int mdConfig::countFields(const int &blockStart, const int &blockEnd) {
 
 	int fieldCount = 0;
 	
@@ -410,7 +403,7 @@ int mdConfig::countFields(int &blockStart, int &blockEnd) {
 
 
 //count lines in a definition block, omitting comments and empty lines
-int mdConfig::countBlockLines(int &blockStart, int &blockEnd) {
+int mdConfig::countBlockLines(const int &blockStart, const int &blockEnd) {
 
 	int cmdlines = 0;
 	
@@ -428,7 +421,7 @@ int mdConfig::countBlockLines(int &blockStart, int &blockEnd) {
 }
 
 
-int mdConfig::getBlockEnd(int blockStart) {
+int mdConfig::getBlockEnd(const int &blockStart) {
 
 	int line;
 	size_t pos = string::npos;
@@ -439,7 +432,7 @@ int mdConfig::getBlockEnd(int blockStart) {
 }
 
 
-int mdConfig::locateToken(string token, int blockStart, int blockEnd) {
+int mdConfig::locateToken(string token, const int &blockStart, const int &blockEnd) {
 
 	int line;
 	size_t pos = string::npos;
@@ -460,13 +453,7 @@ int mdConfig::locateToken(string token, int blockStart, int blockEnd) {
 }
 
 
-int mdConfig::getArgumentCount(string argString) {
-
-	return count(argString.begin(), argString.end(), ',') + 1;
-}
-
-
-string mdConfig::getArgument(string argString, int argNumber) {
+string mdConfig::getArgument(const string &argString, int argNumber) {
 
 	string arg = argString;
 	size_t pos = arg.find("(");
@@ -495,12 +482,12 @@ string mdConfig::getArgument(string argString, int argNumber) {
 
 //TODO: do not delete any chars enclosed in quotation marks
 //not needed for now, can use getArgument() which does not trim whitespace
-string mdConfig::getArgumentString(string token, int blockStart, int blockEnd) {
+string mdConfig::getArgumentString(string token, const int &blockStart, const int &blockEnd) {
 
 	string tempstr = "";
 	int line;
 	size_t pos;
-	size_t quotcnt;
+	int quotcnt;
 
 	for (line = blockStart; line <= blockEnd && tempstr == ""; line++) {
 	
@@ -517,24 +504,4 @@ string mdConfig::getArgumentString(string token, int blockStart, int blockEnd) {
 	if (pos != string::npos) tempstr.erase(pos);
 	
 	return tempstr;
-}
-
-
-mdBlockConfig::mdBlockConfig(string id) {
-
-	blockConfigID = id;
-	baseType = GENERIC;
-	useBlkEnd = false;
-	blkEndString = "";
-	initBlkDefaults = false;
-	blkLabelPrefix = "mdb_" + id + "_";
-	blkFieldList = nullptr;
-	blkFieldCount = 0;
-	blkMaxLength = 0;
-	
-}
-
-mdBlockConfig::~mdBlockConfig() {
-
-	delete[] blkFieldList;
 }

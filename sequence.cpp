@@ -4,14 +4,10 @@
 
 using namespace std;
 
-mdSequence::mdSequence() {
+mdSequence::mdSequence(): mdSequenceLength(0), uniquePtnCount(0), sequenceString(""), mdSequenceLoopPosition(0) {
 
 	mdSequenceArray = nullptr;
 	uniquePtnList = nullptr;
-	mdSequenceLength = 0;
-	uniquePtnCount = 0;
-	mdSequenceLoopPosition = 0;
-	sequenceString = "";
 }
 
 mdSequence::~mdSequence() {
@@ -21,12 +17,12 @@ mdSequence::~mdSequence() {
 }
 
 
-void mdSequence::init(string *sequenceBlock, int sequenceBlockLength, mdConfig &config) {
+void mdSequence::init(string *sequenceBlock, const unsigned &sequenceBlockLength, const mdConfig &config) {
 
 	
-	for (int i = 0; i < sequenceBlockLength; i++) {
+	for (unsigned i = 0; i < sequenceBlockLength; i++) {
 		
-		string inputString = sequenceBlock[i];
+		string inputString = sequenceBlock[static_cast<int>(i)];
 		inputString.erase(0, inputString.find_first_not_of(" \t"));
 		inputString.erase(inputString.find_last_not_of(" \t")+1); 
 		
@@ -40,9 +36,9 @@ void mdSequence::init(string *sequenceBlock, int sequenceBlockLength, mdConfig &
 	mdSequenceArray = new string[mdSequenceLength];
 	int element = 0;
 	
-	for (int i = 0; i < sequenceBlockLength; i++) {
+	for (unsigned i = 0; i < sequenceBlockLength; i++) {
 	
-		string inputString = sequenceBlock[i];
+		string inputString = sequenceBlock[static_cast<int>(i)];
 		inputString.erase(0, inputString.find_first_not_of(" \t"));
 		inputString.erase(inputString.find_last_not_of(" \t")+1); 
 		

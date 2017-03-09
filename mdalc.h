@@ -13,7 +13,7 @@ using namespace std;
 
 string trimChars(const string& inputString, const char* chars);
 int getType(const string& parameter);
-string getArgument(string token, vector<string> &moduleLines);
+string getArgument(string token, const vector<string> &moduleLines);
 
 
 enum Type {BOOL, BYTE, WORD, DEC, HEX, STRING, INVALID};
@@ -69,14 +69,14 @@ public:
 
 	mdField();
 	~mdField();
-	void init(mdCommand *mdCmdList, int &mdCmdCount, string &fieldString, bool &verbose);	//or per reference?
+	void init(mdCommand *mdCmdList, const int &mdCmdCount, const string &fieldString);
 	void getRequests(bool *requestList, const mdConfig &config, const int &row, bool seqBegin);
 	string getFieldString(bool *requestList, const mdConfig &config);
 	bool checkCondition(const bool *by, const bool *whenSet, bool &byAny, const mdConfig &config);
 	bool checkSetifCondition(const bool *by, const bool *whenSet, bool &byAny, const mdConfig &config, bool *requestList);
 
 private:
-	int getCmdNr(mdCommand *mdCmdList, int &mdCmdCount, string &cmdString);
+	int getCmdNr(mdCommand *mdCmdList, const int &mdCmdCount, const string &cmdString);
 
 };
 
@@ -84,8 +84,6 @@ class mdConfig {
 
 public:
 	//global config parameters
-	bool usePatterns;
-	bool useTables;
 	bool useSamples;
 	string wordDirective;
 	string byteDirective;
@@ -93,7 +91,6 @@ public:
 	
 	//MDAL commands config parameters
 	mdCommand* mdCmdList;
-	bool* cmdIsTablePointer;
 	int mdCmdCount;
 	
 	//sequence config parameters
@@ -106,26 +103,24 @@ public:
 	int seqMaxLength;
 	
 	
-	int blockTypeCount;
+	size_t blockTypeCount;
 	vector<mdBlockConfig> blockTypes;
 
 
 	mdConfig();
 	~mdConfig();
-	void init(string &configfile, bool &verbose);
+	void init(const string &configfile, bool &verbose);
 
 	string* cfgLines;
 private:
 	int linecount;
 	
-	
-	int locateToken(string token, int blockStart, int blockEnd);
-	string getArgumentString(string token, int blockStart, int blockEnd);
-	int getArgumentCount(string argString);
-	string getArgument(string argString, int argNumber);
-	int getBlockEnd(int blockStart);
-	int countBlockLines(int &blockStart, int &blockEnd);
-	int countFields(int &blockStart, int &blockEnd);
+	int locateToken(string token, const int &blockStart, const int &blockEnd);
+	string getArgumentString(string token, const int &blockStart, const int &blockEnd);
+	string getArgument(const string &argString, int argNumber);
+	int getBlockEnd(const int &blockStart);
+	int countBlockLines(const int &blockStart, const int &blockEnd);
+	int countFields(const int &blockStart, const int &blockEnd);
 };
 
 
@@ -135,15 +130,13 @@ public:
 	int mdSequenceLength;
 	int uniquePtnCount;
 	string sequenceString;
-	string *uniquePtnList;
 	int mdSequenceLoopPosition;
+	string *uniquePtnList;
 	string *mdSequenceArray;
-	mdConfig *config;
-	
 	
 	mdSequence();
 	~mdSequence();
-	void init(string* sequenceBlock, int sequenceBlockLength, mdConfig &config);
+	void init(string* sequenceBlock, const unsigned &sequenceBlockLength, const mdConfig &config);
 	
 	
 	friend ostream& operator<<(ostream& os, const mdSequence &seq);
@@ -161,10 +154,11 @@ public:
 	vector<string> uniqueReferences;
 	vector<mdBlock> blocks;
 	
-	mdBlockList(string &blockTypeIdentifier);
+	mdBlockList(const string &blockTypeIdentifier);
+	mdBlockList(const mdBlockList &lst);
 	~mdBlockList();
 	
-	void addReference(string &title, bool seqStart);
+	void addReference(const string &title, bool seqStart);
 };
 
 
@@ -179,7 +173,7 @@ public:
 	
 	ostringstream MUSICASM;
 
-	mdModule(vector<string> &moduleLines, mdConfig &config, bool &verbose);
+	mdModule(const vector<string> &moduleLines, const mdConfig &config, bool &verbose);
 	~mdModule();
 	
 	friend ostream& operator<<(ostream& os, const mdModule &mdf);
@@ -188,10 +182,10 @@ protected:
 	string *rawDataBlock;
 
 private:
-	int linecount;
+	size_t linecount;
 	
-	int locateToken(string token, vector<string> &moduleLines);
-	int getBlockEnd(int blockStart, vector<string> &moduleLines);
+	unsigned locateToken(const string &token, const vector<string> &moduleLines);
+	unsigned getBlockEnd(const unsigned &blockStart, const vector<string> &moduleLines);
 };
 
 
@@ -217,17 +211,16 @@ public:
 	
 	mdCommand();
 	~mdCommand();
-	void init(string commandString, bool &verbose);
+	void init(const string &commandString, bool &verbose);
 	void reset();
 	void resetToDefault();
-	void set(int &currentVal, string &currentValString);
+	void set(const int &currentVal, const string &currentValString);
 	
 	int getValue();
 	string getValueString();
 	
 protected:
-	
-	
+		
 	int mdCmdDefaultVal;
 	
 	int mdCmdAutoVal;
@@ -236,8 +229,7 @@ protected:
 	bool mdCmdForceString;
 	bool mdCmdForceInt;
 	bool mdCmdForceSubstitution;
-	string* mdCmdSubstitutionNames;
-	int* mdCmdSubstitutionValues;
+	
 	int mdCmdSubstitutionListLength;
 	bool mdCmdForceRepeat;
 	bool mdCmdUseLastSet;
@@ -245,9 +237,12 @@ protected:
 	
 	int mdCmdLastVal;
 	string mdCmdLastValString;
+	
+	string* mdCmdSubstitutionNames;
+	int* mdCmdSubstitutionValues;
 
 private:
-	bool wasSet;			//to check against Const
+//	bool wasSet;			//to check against Const
 	
 };
 
@@ -261,11 +256,12 @@ public:
 	string blkEndString;
 	bool initBlkDefaults;
 	string blkLabelPrefix;
-	mdField* blkFieldList;
 	int blkFieldCount;
 	int blkMaxLength;
+	mdField* blkFieldList;
 	
-	mdBlockConfig(string id);
+	mdBlockConfig(const string &id);
+	mdBlockConfig(const mdBlockConfig &blkCfg);
 	~mdBlockConfig();
 };
 
@@ -282,10 +278,11 @@ public:
 	
 	bool firstInSequence;
 	
-	mdBlock(string name, bool seqStart);
+	mdBlock(const string &name, bool seqStart);
+	mdBlock(const mdBlock &blk);
 	~mdBlock();
 	
-	void read(const string *rawData, const int blockLength, const mdConfig &config, const mdBlockConfig &blkConfig, vector<mdBlockList> &moduleBlocks, const bool &verbose);
+	void read(const string *rawData, const int blockLength, const mdConfig &config, const mdBlockConfig &blkConfig, vector<mdBlockList> &moduleBlocks);
 
 	friend ostream& operator<<(ostream& os, const mdBlock &blk);
 

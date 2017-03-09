@@ -8,12 +8,12 @@
 using namespace std;
 
 
-mdField::mdField() {
+mdField::mdField(): currentValueString("") {
 
 	isWord = false;
+	isRequiredNow = false;
 	currentIsString = false;
-	currentValue = -1;			//TODO probably does not need to be a class member
-	currentValueString = "";		//TODO probably does not need to be a class member
+	currentValue = -1;			//TODO this and currentValueString probably does not need to be a class member
 
 	requiredSeqBegin = false;
 	requiredBlkBegin = false;
@@ -70,19 +70,17 @@ mdField::~mdField() {
 }
 
 
-
-void mdField::init(mdCommand *mdCmdList, int &mdCmdCount, string &fieldString, bool &verbose) {
+void mdField::init(mdCommand *mdCmdList, const int &mdCmdCount, const string &fieldString) {
 
 	string temp = fieldString;
 	
 	if (count(temp.begin(), temp.end(), '(') < 2 || count(temp.begin(), temp.end(), '(') != count(temp.begin(), temp.end(), ')') ||
 		(count(temp.begin(), temp.end(), '"') & 1)) throw ("Syntax error in field specification in " + fieldString);
 	
-	if (temp.find("WORD") == 0) isWord = true;
+	if (temp.compare(0, 4, "WORD") == 0) isWord = true;
 	
 	if (!isWord && temp.find("SET_HI") != string::npos) throw ("SET_HI is not permitted for BYTE fields in " + fieldString);
-	
-//	if (count(temp.begin(), temp.end(), ',') < 1) throw ("Insufficient arguments in " + fieldString);	
+		
 	if (temp.find("SET(") == string::npos && temp.find("SET_HI(") == string::npos && temp.find("SET_LO(") == string::npos 
 		&& temp.find("SET_IF(") == string::npos && temp.find("SET_BITS(") == string::npos) throw ("Field not set by any command in " + fieldString);
 	
@@ -275,7 +273,6 @@ void mdField::init(mdCommand *mdCmdList, int &mdCmdCount, string &fieldString, b
 		string tmp3 = temp.substr(begin + 9 + tmp1.size() + tmp2.size() + 2, temp.size() - (begin + 9 + tmp1.size() + tmp2.size() + 2));
 		tmp3.erase(tmp3.find_first_of(",)"));
 		
-		//cout << "tmp1: " << tmp1 << ", tmp2: " << tmp2 << ", tmp3: " << tmp3 << endl;		//DEBUG ok
 	
 		size_t slen = tmp1.size() + 10 + tmp2.size() + 1 + tmp3.size() + 1;
 	
@@ -286,13 +283,11 @@ void mdField::init(mdCommand *mdCmdList, int &mdCmdCount, string &fieldString, b
 		else if (argtype == HEX) setBitsMask[cmdNr] = stoi(trimChars(tmp2, "$"), nullptr, 16);
 		else throw ("\"" + tmp2 + "\" is not a valid bit mask in " + fieldString);
 		
-		//cout << "setBitsMask[" << cmdNr << "] = " << setBitsMask[cmdNr] << endl;	//DEBUG ok
 	
 		if (cmdNr == -1) throw ("Unknown command \"" + tmp1 + "\" found in SET_BITS expression in " + fieldString);
 		if (mdCmdList[cmdNr].mdCmdType != BOOL) throw ("Non-boolean command \"" + tmp1 + "\" cannot be used for SET_BITS in " + fieldString);
 	
 		requiredBy[cmdNr] = true;
-		//cout << "setBits by " << getCmdNr(mdCmdList, mdCmdCount, tmp1) << endl;	//DEBUG, ok
 		setBitsBy[cmdNr] = true;
 		useCmd[cmdNr] = true;
 		
@@ -303,7 +298,6 @@ void mdField::init(mdCommand *mdCmdList, int &mdCmdCount, string &fieldString, b
 
 		temp.erase(begin, slen);
 	
-		//cout << "SET_BITS by " << tmp1 << " with " << setBitsMask[cmdNr] << ", clear " << setBitsClear[cmdNr] << ", temp: " << temp << ", tmp3: " << tmp3 << endl;		//DEBUG
 	}
 	
 
@@ -437,7 +431,7 @@ void mdField::init(mdCommand *mdCmdList, int &mdCmdCount, string &fieldString, b
 
 
 
-int mdField::getCmdNr(mdCommand *mdCmdList, int &mdCmdCount, string &cmdString) {
+int mdField::getCmdNr(mdCommand *mdCmdList, const int &mdCmdCount, const string &cmdString) {
 
 	int cnr = -1;
 	
@@ -462,11 +456,8 @@ void mdField::getRequests(bool *requestList, const mdConfig &config, const int &
 		
  	for (int i = 0; i < config.mdCmdCount; i++) {
 	
-		//cout << "setBitsCount: " << setBitsCount << endl;	//DEBUG ok
-	
 		if (setBitsCount && setBitsBy[i] && config.mdCmdList[i].mdCmdCurrentVal > -1) {
  		
-// 			cout << "SetBits requires... " << endl;		//DEBUG
 			isRequiredNow = true;
 			requestList[i] = true;
  		}
@@ -478,38 +469,18 @@ void mdField::getRequests(bool *requestList, const mdConfig &config, const int &
 	if (setHiBy != -1) requestList[setHiBy] = true;
 	if (setLoBy != -1) requestList[setLoBy] = true;
 	
-
-	//cout << boolalpha << requestList[1] << endl;
 }
 
 
 string mdField::getFieldString(bool *requestList, const mdConfig &config) {
 
-	//cout << boolalpha << requestList[1] << endl;
-	
 	string fstr = "";
 
 	currentIsString = false;
 	currentValue = -1;
 	currentValueString = "";
 	
-// 	isRequiredNow = false;
-// 	
-// 	
-// 	if ((requiredSeqBegin && seqBegin && row == 0) || (requiredBlkBegin && row == 0) || requiredAlways
-//  		|| checkCondition(requiredBy, requiredWhenSet, requiredByAny, config)) isRequiredNow = true;
-// 	if (setBy != -1 && (config.mdCmdList[setBy].mdCmdCurrentValString != "" || config.mdCmdList[setBy].mdCmdCurrentVal != -1))
-// 		isRequiredNow = true;
-// 	if (setHiBy != -1 && (config.mdCmdList[setHiBy].mdCmdCurrentValString != "" || config.mdCmdList[setHiBy].mdCmdCurrentVal != -1))
-// 		isRequiredNow = true;
-// 	if (setLoBy != -1 && (config.mdCmdList[setLoBy].mdCmdCurrentValString != "" || config.mdCmdList[setLoBy].mdCmdCurrentVal != -1))
-// 		isRequiredNow = true;
-
-	
-	
 	if (!isRequiredNow) return fstr;
-	
-	//cout << "is required" << endl;
 	
 	bool hiWasSet = false;
 	bool hiWasSetStr = false;
@@ -517,7 +488,7 @@ string mdField::getFieldString(bool *requestList, const mdConfig &config) {
 	if (setBy != -1) {
 	
 		currentValueString = config.mdCmdList[setBy].getValueString();
-		//if (config.cmdIsTablePointer[setBy] && currentValueString != "") currentValueString = config.tblLabelPrefix + currentValueString;
+
 		if (config.mdCmdList[setBy].isBlkReference && currentValueString != "") {
 			
 			string prefix;
@@ -572,10 +543,6 @@ string mdField::getFieldString(bool *requestList, const mdConfig &config) {
 	
 		if (setBitsBy[i]) {
 	
-// 			cout << "Requesting " << i << ": " << config.mdCmdList[i].mdCmdName << endl;
-// 			cout << "NC returns " << config.mdCmdList[i].getValue() << endl;		//DEBUG -> Dafuq? Returns A instead of NC
-// 			cout << hex << "currentValue: " << currentValue << endl;
-		
 			if (config.mdCmdList[i].getValue() > 0) {
 			
 				if (currentValue == -1 || setBitsClear[i] == CLEAR_ALL) {
@@ -594,9 +561,7 @@ string mdField::getFieldString(bool *requestList, const mdConfig &config) {
 			
 				//TODO: support STRING cmds -> same with setIf
 				currentValue |= setBitsMask[i];
-			}
-			
-//			cout << "setBitsMask: " << setBitsMask[i] << ", currentValue: " << currentValue << dec << endl;	
+			}	
 		}	
 	}
 	
@@ -605,17 +570,11 @@ string mdField::getFieldString(bool *requestList, const mdConfig &config) {
 	
 	for (int i = 0; i < setIfCount && !clearedBySetBits; i++) {
 	
-		
 	
-		//TODO: this needs a new function because we should check again requestList!!!
+		//TODO: this needs a new function because we should check against requestList!!!
 		if (checkSetifCondition(setIfBy[i], setIfWhenSet[i], setIfByAny[i], config, requestList) || setIfAlways[i]) {
 		
-//			cout << hex << "Set_If " << i << " check requested, condition true, " << setIfMask[i] << " masked in." << dec << endl;	//DEBUG
-		
-			if (currentValue == -1 || setIfClear[i] == CLEAR_ALL) {
-				currentValue = 0;
-				//cout << "Clear All" << endl;
-			}
+			if (currentValue == -1 || setIfClear[i] == CLEAR_ALL) currentValue = 0;
 			else if (setIfClear[i] == CLEAR_HI) currentValue &= 0xff;
 			else if (setIfClear[i] == CLEAR_LO) currentValue &= 0xff00;
 			
@@ -633,7 +592,6 @@ string mdField::getFieldString(bool *requestList, const mdConfig &config) {
 		fstr = config.hexPrefix + val.str();
 	}	
 
-	//cout << "ok\n";
 	return fstr;
 }
 
