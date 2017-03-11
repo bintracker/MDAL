@@ -9,7 +9,7 @@ using namespace std;
 
 
 
-mdConfig::mdConfig(): seqLabel(";sequence") {
+mdConfig::mdConfig(): targetPlatform("generic"), seqLabel(";sequence") {
 
 	useSeqEnd = false;
 	useSeqLoop = false;
@@ -41,7 +41,7 @@ void mdConfig::init(const string &configname, bool &verbose) {
 
 	try {
 	
-		if (verbose) cout << "configuration:\t\t" << configname << ".cfg" << endl;
+		if (verbose) cout << "configuration:\t\t" << configname << endl;
 	
 		string tempstr;
 	
@@ -60,7 +60,10 @@ void mdConfig::init(const string &configname, bool &verbose) {
 		if (getType(mdVersion) != DEC) throw (string("MDAL_VERSION argument is not a decimal number."));
 		if (stoi(mdVersion, nullptr, 10) > MDALVERSION) throw ("MDAL VERSION " + mdVersion + " not supported in this version of mdalc.");
 		if (verbose) cout << "MDAL version: \t\t" << stoi(mdVersion, nullptr, 10) << endl;
-	
+		
+		if (locateToken(string("TARGET_PLATFORM"), 0, configEnd) != configEnd)
+			targetPlatform = trimChars(getArgumentString(string("TARGET_PLATFORM"), 0, linecount-1), "()\"");
+		if (verbose) cout << "target platform:\t" << targetPlatform << endl;
 	
 		wordDirective = trimChars(getArgumentString(string("WORD_DIRECTIVE"), 0, configEnd), "()\"");
 		if (wordDirective == "") wordDirective = "dw";

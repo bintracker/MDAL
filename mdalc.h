@@ -88,6 +88,7 @@ public:
 	string wordDirective;
 	string byteDirective;
 	string hexPrefix;
+	string targetPlatform;
 	
 	//MDAL commands config parameters
 	mdCommand* mdCmdList;
@@ -196,6 +197,9 @@ public:
 	int mdCmdType;		//BOOL|BYTE|WORD
 	bool mdCmdAuto;
 	
+	bool useNoteNames;
+	bool allowModifiers;
+	
 	bool mdCmdIsSetNow;		//in the current pattern row | !force-repeat
 	int mdCmdCurrentVal;
 	string mdCmdCurrentValString;
@@ -209,18 +213,6 @@ public:
 	bool isBlkReference;
 	string referenceBlkID;
 	
-	mdCommand();
-	~mdCommand();
-	void init(const string &commandString, bool &verbose);
-	void reset();
-	void resetToDefault();
-	void set(const int &currentVal, const string &currentValString);
-	
-	int getValue();
-	string getValueString();
-	
-protected:
-		
 	int mdCmdDefaultVal;
 	
 	int mdCmdAutoVal;
@@ -241,6 +233,17 @@ protected:
 	string* mdCmdSubstitutionNames;
 	int* mdCmdSubstitutionValues;
 
+
+	mdCommand();
+	~mdCommand();
+	void init(const string &commandString, bool &verbose);
+	void reset();
+	void resetToDefault();
+	void set(const int &currentVal, const string &currentValString);
+	
+	int getValue();
+	string getValueString();
+	
 private:
 //	bool wasSet;			//to check against Const
 	

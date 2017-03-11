@@ -10,6 +10,9 @@ mdCommand::mdCommand(): mdCmdCurrentValString(""), mdCmdDefaultValString(""), re
 
 	mdCmdType = BOOL;
 	mdCmdGlobalConst = false;
+	
+	useNoteNames = false;
+	allowModifiers = false;
 
 	mdCmdForceSubstitution = false;
 	mdCmdSubstitutionListLength = 0;
@@ -191,6 +194,8 @@ void mdCommand::init(const string &commandString, bool &verbose) {
 	
 	}
 	
+	if (cmdStrCopy.find("USE_NOTE_NAMES") != string::npos) useNoteNames = true;
+	if (cmdStrCopy.find("ALLOW_MODIFIERS") != string::npos) allowModifiers = true;
 	if (cmdStrCopy.find("FORCE_STRING") != string::npos) mdCmdForceString = true;
 	if (cmdStrCopy.find("FORCE_INT") != string::npos) mdCmdForceInt = true;
 	if (cmdStrCopy.find("FORCE_REPEAT") != string::npos) mdCmdForceRepeat = true;
@@ -212,6 +217,8 @@ void mdCommand::init(const string &commandString, bool &verbose) {
 		if (mdCmdDefaultValString != "") cout << ", default is \"" << mdCmdDefaultValString << "\"";
 		else if (mdCmdType != BOOL) cout << ", default is " << mdCmdDefaultVal;
 		
+		if (useNoteNames) cout << ", USE_NOTE_NAMES";
+		if (allowModifiers) cout << ", ALLOW_MODIFIERS";
 		if (mdCmdForceString) cout << ", FORCE_STRING";
 		if (mdCmdForceInt) cout << ", FORCE_INT";
 		if (mdCmdForceRepeat) cout << ", FORCE_REPEAT";
