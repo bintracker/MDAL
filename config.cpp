@@ -412,13 +412,8 @@ int mdConfig::countBlockLines(const int &blockStart, const int &blockEnd) {
 	
 	for (int line = blockStart; line < blockEnd; line++) {
 	
-		string temp = cfgLines[line];
-		temp = trimChars(temp, " \t");
-		size_t pos = temp.find_first_of('/');
-		if (pos != string::npos) temp.erase(pos);
-		if (temp != "") cmdlines++;
+		if (trimChars(cfgLines[line], " \t") != "") cmdlines++;
 	}
-	
 	
 	return cmdlines;
 }
@@ -435,24 +430,18 @@ int mdConfig::getBlockEnd(const int &blockStart) {
 }
 
 
-int mdConfig::locateToken(string token, const int &blockStart, const int &blockEnd) {
+int mdConfig::locateToken(const string &token, const int &blockStart, const int &blockEnd) {
 
-	int line;
-	size_t pos = string::npos;
-	string tempstr = "";
+	size_t tokensize = token.size();
 	string tempstr2;
 	
-	for (line = blockStart; line <= blockEnd && tempstr == ""; line++) {
+	for (int line = blockStart; line <= blockEnd; line++) {
 	
 		tempstr2 = trimChars(cfgLines[line], " \t");
-		pos = tempstr2.find(token.data());			//check if token is commented out
-		
-		if (pos == 0) tempstr = tempstr2;
+		if (tempstr2.compare(0, tokensize, token) == 0) return line;
 	}
 
-	if (pos == 0) line--;			//TODO: this seems somewhat fishy, investigate more
-	else line = blockEnd;
-	return line;
+	return blockEnd;
 }
 
 

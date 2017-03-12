@@ -116,7 +116,7 @@ public:
 private:
 	int linecount;
 	
-	int locateToken(string token, const int &blockStart, const int &blockEnd);
+	int locateToken(const string &token, const int &blockStart, const int &blockEnd);
 	string getArgumentString(string token, const int &blockStart, const int &blockEnd);
 	string getArgument(const string &argString, int argNumber);
 	int getBlockEnd(const int &blockStart);

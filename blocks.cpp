@@ -57,7 +57,7 @@ void mdBlock::read(const string *rawData, const int blockLength, const mdConfig 
 		if (temp != "") blkLength++;
 	}
 	
-	if (blkConfig.blkMaxLength && blkLength > blkConfig.blkMaxLength) throw (string("Maximum table length exceeded."));
+	if (blkConfig.blkMaxLength && blkLength > blkConfig.blkMaxLength) throw (string("Maximum block length exceeded."));
 	
 	
 	lineCommands = new bool*[blkLength];

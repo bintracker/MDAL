@@ -271,36 +271,25 @@ void mdCommand::reset() {
 	
 		if (mdCmdUseLastSet || mdCmdForceRepeat) {
 	
-			if (mdCmdCurrentVal != -1 && mdCmdIsSetNow) {
-				mdCmdLastVal = mdCmdCurrentVal;
-				//cout << hex << mdCmdCurrentVal << " -> " << mdCmdLastVal << endl;	//DEBUG
-			}
-			if (mdCmdLastValString != "" && mdCmdIsSetNow) {
-				mdCmdLastValString = mdCmdCurrentValString;
-				//cout << hex << "String " << mdCmdCurrentValString << " -> " << mdCmdLastValString << endl;	//DEBUG
-				
-			}
+			if (mdCmdCurrentVal != -1 && mdCmdIsSetNow) mdCmdLastVal = mdCmdCurrentVal;
+			if (mdCmdLastValString != "" && mdCmdIsSetNow) mdCmdLastValString = mdCmdCurrentValString;
 		}
 
+		if (!mdCmdForceRepeat) {
+		
+			mdCmdIsSetNow = false;
+			mdCmdCurrentVal = -1;
+			mdCmdCurrentValString = "";
+		}
 		if (mdCmdForceRepeat) {
 		
 			mdCmdIsSetNow = true;
-			
-			//cout << "reset to: " << mdCmdCurrentVal << endl;	//DEBUG: ok
 			
 			if (mdCmdLastVal == -1) mdCmdLastVal = mdCmdDefaultVal;
 			if (mdCmdLastValString == "") mdCmdLastValString = mdCmdDefaultValString;
 			
 			mdCmdCurrentVal = mdCmdLastVal;
 			mdCmdCurrentValString = mdCmdLastValString;
-			
-			
-		}
-		else {
-		
-			mdCmdIsSetNow = false;
-			mdCmdCurrentVal = -1;
-			mdCmdCurrentValString = "";		
 		}
 	}
 }

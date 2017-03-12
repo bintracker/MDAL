@@ -136,17 +136,11 @@ unsigned mdModule::getBlockEnd(const unsigned &blockStart, const vector<string> 
 unsigned mdModule::locateToken(const string &token, const vector<string> &moduleLines) {
 
 	size_t line;
-	string tempstr = "";
-	string tempstr2;
 		
-	for (line = 0; line < linecount && tempstr2 != token; line++) {		//used to be line <= linecount
-
-		tempstr2 = moduleLines[line];
-		if (tempstr2.find('/') != string::npos) tempstr2.erase(tempstr2.find_first_of('/'));
-		tempstr2 = trimChars(tempstr2, " \t");
+	for (line = 0; line < linecount; line++) {
+	
+		if (trimChars(moduleLines[line], " \t") == token) return line;
 	}
-
-	if (tempstr2 == token) line--;
 
 	return line;
 }
