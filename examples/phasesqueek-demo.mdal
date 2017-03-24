@@ -154,7 +154,7 @@ CONFIG=PhaseSqueek
 :fx0
 	FXSTOP
 :snare1
-	DC=$40, NC=on
+	DC=$40, DD=$10, NC=on
 	.
 	DC=$30
 	.

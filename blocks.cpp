@@ -250,18 +250,10 @@ mdBlockList::~mdBlockList() {
 
 void mdBlockList::addReference(const string &title, bool seqStart) {
 
-	bool isUsed = false;
-
-	for (auto&& it : uniqueReferences) {
+	if (uniqueReferences.insert(title).second == true) {
 	
-		if (title == it) isUsed = true;
-	}
-
-	if (!isUsed) {
-		
-		uniqueReferences.push_back(title);		//TODO: redundant, can probably remove uniqueReferences altogether
 		blocks.emplace_back(title, seqStart);
-		referenceCount++;	
+		referenceCount++;
 	}
 }
 

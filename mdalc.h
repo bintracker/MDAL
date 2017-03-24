@@ -5,6 +5,7 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
+#include <set>
 
 #define MDALVERSION 0
 
@@ -152,7 +153,7 @@ class mdBlockList {
 public: 
 	string blockTypeID;
 	int referenceCount;
-	vector<string> uniqueReferences;
+	set<string> uniqueReferences;
 	vector<mdBlock> blocks;
 	
 	mdBlockList(const string &blockTypeIdentifier);
@@ -236,6 +237,7 @@ public:
 
 	mdCommand();
 	~mdCommand();
+	mdCommand(const mdCommand &cmd) = delete;
 	void init(const string &commandString, bool &verbose);
 	void reset();
 	void resetToDefault();
