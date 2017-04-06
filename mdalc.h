@@ -112,6 +112,7 @@ public:
 	mdConfig();
 	~mdConfig();
 	void init(const string &configfile, bool &verbose);
+	void reset();
 
 	string* cfgLines;
 private:

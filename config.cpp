@@ -32,6 +32,29 @@ mdConfig::~mdConfig() {
 }
 
 
+void mdConfig::reset() {
+
+	targetPlatform = "generic";
+	seqLabel = ";sequence";
+	
+	useSeqEnd = false;
+	useSeqLoop = false;
+	useSeqLoopPointer = false;
+	useSamples = false;
+
+	delete[] mdCmdList;
+	delete[] cfgLines;
+	cfgLines = nullptr;
+	mdCmdList = nullptr;
+	
+	blockTypes.clear();
+
+	seqMaxLength = 0;	
+	blockTypeCount = 0;
+	linecount = 0;
+	mdCmdCount = 0;	
+}
+
 void mdConfig::init(const string &configname, bool &verbose) {
 	
 
