@@ -23,6 +23,7 @@ mdCommand::mdCommand(): mdCmdCurrentValString(""), mdCmdDefaultValString(""), re
 	mdCmdAuto = false;
 	
 	isBlkReference = false;
+	defaultSubstitute = nullptr;
 
 	mdCmdDefaultVal = -1;
 	mdCmdAutoVal = -1;
@@ -79,23 +80,12 @@ void mdCommand::init(const string &commandString, bool &verbose) {
 	if (cmdStrCopy.find(',') != string::npos) temp.erase(temp.find(','));
 	else temp.erase(temp.find(')'));
 	
-	
-	if (getType(temp) == INVALID) throw ("\"" + temp + "\" is not a valid argument in " + commandString);
-	
-	if (getType(temp) == BOOL) {
-	
-		if (mdCmdType != BOOL) throw ("Default value does not match command type in " + commandString);
-		
-		if (temp == "true") mdCmdDefaultVal = 1;
-		else mdCmdDefaultVal = 0;
+	try {
+		setDefault(temp);
 	}
-	else if (getType(temp) == STRING) mdCmdDefaultValString = trimChars(temp, "\"");
-	else if (getType(temp) == DEC) mdCmdDefaultVal = static_cast<int>(stoul(trimChars(temp, " "), nullptr, 10));
-	else mdCmdDefaultVal = static_cast<int>(stoul(trimChars(temp, " $"), nullptr, 16));
-
-	
-	if ((mdCmdType == WORD && mdCmdDefaultVal > 0xffff) || (mdCmdType == BYTE && mdCmdDefaultVal > 0xff))
-		throw ("Default value out of range in " + commandString);
+	catch(string &e) {
+		throw (e + " in " + commandString);
+	}
 	
 	
 	if (cmdStrCopy.find("AUTO") != string::npos) {
@@ -209,13 +199,23 @@ void mdCommand::init(const string &commandString, bool &verbose) {
 	
 	if (verbose) {
 		cout << hex << boolalpha << showbase << mdCmdName << ":\t Type is ";
-//		if (mdCmdType == BOOL) cout << "BOOL, default is " << mdCmdDefaultValBool;
-		if (mdCmdType == BOOL) cout << "BOOL, default is " << static_cast<bool>(mdCmdDefaultVal);
+		if (mdCmdType == BOOL) {
+			cout << "BOOL, default is ";
+			if (defaultSubstitute == nullptr) cout << static_cast<bool>(mdCmdDefaultVal);
+			else cout << "substituted by " << defaultSubstitute->mdCmdName;
+		}
 		else if (mdCmdType == BYTE) cout << "BYTE";
-		else cout << "WORD";	
-//		if (mdCmdDefaultIsString) cout << ", default is \"" << mdCmdDefaultValString << "\"";
-		if (mdCmdDefaultValString != "") cout << ", default is \"" << mdCmdDefaultValString << "\"";
-		else if (mdCmdType != BOOL) cout << ", default is " << mdCmdDefaultVal;
+		else cout << "WORD";
+		if (mdCmdDefaultValString != "") {
+			cout << ", default is ";
+			if (defaultSubstitute == nullptr) cout << "\"" << mdCmdDefaultValString << "\"";
+			else cout << "substituted by " << defaultSubstitute->mdCmdName;
+		}
+		else if (mdCmdType != BOOL) {
+			cout << ", default is ";
+			if (defaultSubstitute == nullptr) cout << mdCmdDefaultVal; 
+			else cout << "substituted by " << defaultSubstitute->mdCmdName;
+		}
 		
 		if (useNoteNames) cout << ", USE_NOTE_NAMES";
 		if (allowModifiers) cout << ", ALLOW_MODIFIERS";
@@ -249,8 +249,8 @@ void mdCommand::resetToDefault() {		//TODO: keep an eye on this to see if it rea
 		mdCmdIsSetNow = false;
 		mdCmdCurrentVal = -1;
 		mdCmdCurrentValString = "";
-		mdCmdLastVal = mdCmdDefaultVal;
-		mdCmdLastValString = mdCmdDefaultValString;
+		mdCmdLastVal = getDefaultVal();
+		mdCmdLastValString = getDefaultValString();
 		
 		if (mdCmdForceRepeat) {
 		
@@ -258,8 +258,6 @@ void mdCommand::resetToDefault() {		//TODO: keep an eye on this to see if it rea
 			
 			mdCmdCurrentVal = mdCmdLastVal;
 			mdCmdCurrentValString = mdCmdLastValString;
-			
-			//cout << "triggered\n";	//DEBUG
 		}	
 	}
 }
@@ -285,8 +283,8 @@ void mdCommand::reset() {
 		
 			mdCmdIsSetNow = true;
 			
-			if (mdCmdLastVal == -1) mdCmdLastVal = mdCmdDefaultVal;
-			if (mdCmdLastValString == "") mdCmdLastValString = mdCmdDefaultValString;
+			if (mdCmdLastVal == -1) mdCmdLastVal = getDefaultVal();
+			if (mdCmdLastValString == "") mdCmdLastValString = getDefaultValString();
 			
 			mdCmdCurrentVal = mdCmdLastVal;
 			mdCmdCurrentValString = mdCmdLastValString;
@@ -297,10 +295,8 @@ void mdCommand::reset() {
 
 void mdCommand::set(const int &currentVal, const string &currentValString) {
 
-	//cout << "cval: " << currentVal << " cvalstr: " << currentValString << endl;
 
-
-	if (mdCmdGlobalConst) throw (string("Global constant redefined in pattern "));
+	if (mdCmdGlobalConst) throw (string("Global constant redefined in block "));
 	
 	mdCmdIsSetNow = true;
 	
@@ -357,7 +353,6 @@ void mdCommand::set(const int &currentVal, const string &currentValString) {
 		if (mdCmdCurrentVal < lowerRangeLimit || mdCmdCurrentVal > upperRangeLimit) throw (string("Argument out of range for command "));
 	
 	}
-	//cout << "command set to " << mdCmdCurrentVal << " | " << mdCmdCurrentValString << endl;
 }
 
 
@@ -365,7 +360,7 @@ int mdCommand::getValue() {
 
 	if (mdCmdIsSetNow) return mdCmdCurrentVal;
 	if (mdCmdUseLastSet && mdCmdLastVal != -1) return mdCmdLastVal;
-	return mdCmdDefaultVal;
+	return getDefaultVal();
 }
 
 
@@ -374,5 +369,40 @@ string mdCommand::getValueString() {
 
 	if (mdCmdIsSetNow) return mdCmdCurrentValString;
 	if (mdCmdUseLastSet && mdCmdLastValString != "") return mdCmdLastValString;
-	return mdCmdDefaultValString;
+	return getDefaultValString();
+}
+
+
+int mdCommand::getDefaultVal() {
+
+	return (defaultSubstitute == nullptr) ? mdCmdDefaultVal : defaultSubstitute->mdCmdDefaultVal;
+}
+
+
+string mdCommand::getDefaultValString() {
+
+	return (defaultSubstitute == nullptr) ? mdCmdDefaultValString : defaultSubstitute->mdCmdDefaultValString;
+}
+
+
+void mdCommand::setDefault(const string &param) {
+
+	if (param.find("SUBSTITUTE_FROM") != string::npos) return;
+
+	if (getType(param) == INVALID) throw ("\"" + param + "\" is not a valid argument");
+	
+	if (getType(param) == BOOL) {
+	
+		if (mdCmdType != BOOL) throw (string("Default value does not match command type"));
+		
+		if (param == "true") mdCmdDefaultVal = 1;
+		else mdCmdDefaultVal = 0;
+	}
+	else if (getType(param) == STRING) mdCmdDefaultValString = trimChars(param, "\"");
+	else if (getType(param) == DEC) mdCmdDefaultVal = static_cast<int>(stoul(trimChars(param, " "), nullptr, 10));
+	else mdCmdDefaultVal = static_cast<int>(stoul(trimChars(param, " $"), nullptr, 16));
+
+	
+	if ((mdCmdType == WORD && mdCmdDefaultVal > 0xffff) || (mdCmdType == BYTE && mdCmdDefaultVal > 0xff))
+		throw (string("Default value out of range"));
 }

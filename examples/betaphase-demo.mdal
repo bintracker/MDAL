@@ -1,5 +1,7 @@
 CONFIG=BetaPhase
 
+GSPD=$6
+
 :SEQUENCE
 	
 	ptn0
@@ -46,7 +48,7 @@ CONFIG=BetaPhase
 	
 
 :ptn0
-	A=a1, MIXA=xor, PHA=$800, PSCA1=down, C=c4, PSCC=down, SLSPD=$30, SPD=6	//test
+	A=a1, MIXA=xor, PHA=$800, PSCA1=down, C=c4, PSCC=down, SLSPD=$30	//test
 	A=a2, C=rest, SLSPD=0
 	A=a3, C=a1
 	A=a2
@@ -64,7 +66,7 @@ CONFIG=BetaPhase
 	A=c3
 	
 :ptn1
-	A=a1, MIXA=xor, PHA=$800, PSCA1=down, C=c4, PSCC=down, SLSPD=$30, SPD=6
+	A=a1, MIXA=xor, PHA=$800, PSCA1=down, C=c4, PSCC=down, SLSPD=$30
 	A=a2, C=rest, SLSPD=0
 	A=a3, C=a1
 	A=a2
@@ -82,7 +84,7 @@ CONFIG=BetaPhase
 	A=gis2
 	
 :ptn1a
-	A=a1, MIXA=xor, PHA=$800, PSCA1=down, C=c4, PSCC=down, SLSPD=$30, SPD=6
+	A=a1, MIXA=xor, PHA=$800, PSCA1=down, C=c4, PSCC=down, SLSPD=$30
 	A=a2, C=rest, SLSPD=0
 	A=a3, C=a1
 	A=a2
@@ -100,7 +102,7 @@ CONFIG=BetaPhase
 	A=gis2, C=c4, SLSPD=$30
 
 :ptn1b
-	A=a1, MIXA=xor, PHA=$800, PSCA1=down, C=c4, PSCC=down, SLSPD=$30, SPD=6
+	A=a1, MIXA=xor, PHA=$800, PSCA1=down, C=c4, PSCC=down, SLSPD=$30
 	A=rest, PHA=0, C=rest, SLSPD=0
 	.
 	.

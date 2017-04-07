@@ -111,6 +111,7 @@ public:
 
 	mdConfig();
 	~mdConfig();
+	mdConfig(const mdConfig &config) = delete;
 	void init(const string &configfile, bool &verbose);
 	void reset();
 
@@ -215,6 +216,8 @@ public:
 	bool isBlkReference;
 	string referenceBlkID;
 	
+	mdCommand *defaultSubstitute;
+	
 	int mdCmdDefaultVal;
 	
 	int mdCmdAutoVal;
@@ -243,13 +246,14 @@ public:
 	void reset();
 	void resetToDefault();
 	void set(const int &currentVal, const string &currentValString);
+	void setDefault(const string &param);
 	
 	int getValue();
 	string getValueString();
 	
 private:
-//	bool wasSet;			//to check against Const
-	
+	int getDefaultVal();
+	string getDefaultValString();	
 };
 
 

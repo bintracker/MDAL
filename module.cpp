@@ -20,8 +20,28 @@ mdModule::mdModule(const vector<string> &moduleLines, const mdConfig &config, bo
 		moduleBlocks.shrink_to_fit();
 		
 		
-	
 		if (verbose) cout << endl << "MODULE DATA\n===========" << endl;
+		
+		//parse global constants
+		for (int i = 0; i < config.mdCmdCount; i++) {
+		
+			if (config.mdCmdList[i].mdCmdGlobalConst) {
+			
+				for (auto&& it: moduleLines) {
+				
+					if (!it.compare(0, config.mdCmdList[i].mdCmdName.size() + 1, config.mdCmdList[i].mdCmdName + "=")) {
+					
+						try {
+							config.mdCmdList[i].setDefault(it.substr(config.mdCmdList[i].mdCmdName.size() + 1, 
+								string::npos));
+						}
+						catch(string &e) {
+							throw (e + "in global constant definition of " + config.mdCmdList[i].mdCmdName);
+						}
+					}
+				}
+			}
+		}
 	
 		unsigned blockStart = locateToken(string(":SEQUENCE"), moduleLines);
 		unsigned blockEnd = getBlockEnd(blockStart, moduleLines);

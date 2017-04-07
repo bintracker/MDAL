@@ -193,6 +193,20 @@ void mdConfig::init(const string &configname, bool &verbose) {
 			size_t pos = cmdStr.find_first_of('/');
 			if (pos != string::npos) cmdStr.erase(pos);
 			if (cmdStr != "") {
+			
+				if (cmdStr.find("SUBSTITUTE_FROM(") != string::npos) {
+				
+					string tmp = cmdStr.substr(cmdStr.find("SUBSTITUTE_FROM(") + 16);
+					tmp.erase(tmp.find_first_of(")"));
+					
+					for (int i = 0; i < mdCmdCount; i++) {
+					
+						if (tmp == mdCmdList[i].mdCmdName) mdCmdList[cmdNr].defaultSubstitute = &mdCmdList[i];
+					}
+					
+					if (mdCmdList[cmdNr].defaultSubstitute == nullptr) 
+						throw ("In line " + cmdStr + ": Substitution command \"" + tmp + "\" is undefined."); 
+				}
 		
 				mdCmdList[cmdNr].init(cmdStr, verbose);
 				cmdNr++;
