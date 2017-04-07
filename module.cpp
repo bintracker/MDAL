@@ -38,6 +38,8 @@ mdModule::mdModule(const vector<string> &moduleLines, const mdConfig &config, bo
 						catch(string &e) {
 							throw (e + "in global constant definition of " + config.mdCmdList[i].mdCmdName);
 						}
+						
+						break;
 					}
 				}
 			}
