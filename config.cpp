@@ -199,9 +199,9 @@ void mdConfig::init(const string &configname, bool &verbose) {
 					string tmp = cmdStr.substr(cmdStr.find("SUBSTITUTE_FROM(") + 16);
 					tmp.erase(tmp.find_first_of(")"));
 					
-					for (int i = 0; i < mdCmdCount; i++) {
+					for (int j = 0; j < mdCmdCount; j++) {
 					
-						if (tmp == mdCmdList[i].mdCmdName) mdCmdList[cmdNr].defaultSubstitute = &mdCmdList[i];
+						if (tmp == mdCmdList[j].mdCmdName) mdCmdList[cmdNr].defaultSubstitute = &mdCmdList[j];
 					}
 					
 					if (mdCmdList[cmdNr].defaultSubstitute == nullptr) 
