@@ -9,12 +9,10 @@
 
 #define MDALVERSION 0
 
-using namespace std;
 
-
-string trimChars(const string& inputString, const char* chars);
-int getType(const string& parameter);
-string getArgument(string token, const vector<string> &moduleLines);
+std::string trimChars(const std::string& inputString, const char* chars);
+int getType(const std::string& parameter);
+std::string getArgument(std::string token, const std::vector<std::string> &moduleLines);
 
 
 enum Type {BOOL, BYTE, WORD, DEC, HEX, STRING, INVALID};
@@ -36,7 +34,7 @@ public:
 	
 	bool currentIsString;		//false: is int
 	int currentValue;
-	string currentValueString;
+	std::string currentValueString;
 
 	bool requiredSeqBegin;
 	bool requiredBlkBegin;
@@ -70,14 +68,14 @@ public:
 
 	mdField();
 	~mdField();
-	void init(mdCommand *mdCmdList, const int &mdCmdCount, const string &fieldString);
+	void init(mdCommand *mdCmdList, const int &mdCmdCount, const std::string &fieldString);
 	void getRequests(bool *requestList, const mdConfig &config, const int &row, bool seqBegin);
-	string getFieldString(bool *requestList, const mdConfig &config);
+	std::string getFieldString(bool *requestList, const mdConfig &config);
 	bool checkCondition(const bool *by, const bool *whenSet, bool &byAny, const mdConfig &config);
 	bool checkSetifCondition(const bool *by, const bool *whenSet, bool &byAny, const mdConfig &config, bool *requestList);
 
 private:
-	int getCmdNr(mdCommand *mdCmdList, const int &mdCmdCount, const string &cmdString);
+	int getCmdNr(mdCommand *mdCmdList, const int &mdCmdCount, const std::string &cmdString);
 
 };
 
@@ -86,10 +84,10 @@ class mdConfig {
 public:
 	//global config parameters
 	bool useSamples;
-	string wordDirective;
-	string byteDirective;
-	string hexPrefix;
-	string targetPlatform;
+	std::string wordDirective;
+	std::string byteDirective;
+	std::string hexPrefix;
+	std::string targetPlatform;
 	
 	//MDAL commands config parameters
 	mdCommand* mdCmdList;
@@ -99,29 +97,29 @@ public:
 	bool useSeqEnd;
 	bool useSeqLoop;
 	bool useSeqLoopPointer;
-	string seqEndString;
-	string seqLoopLabel;
-	string seqLabel;
+	std::string seqEndString;
+	std::string seqLoopLabel;
+	std::string seqLabel;
 	int seqMaxLength;
 	
 	
 	size_t blockTypeCount;
-	vector<mdBlockConfig> blockTypes;
+	std::vector<mdBlockConfig> blockTypes;
 
 
 	mdConfig();
 	~mdConfig();
 	mdConfig(const mdConfig &config) = delete;
-	void init(const string &configfile, bool &verbose);
+	void init(const std::string &configfile, bool &verbose);
 	void reset();
 
-	string* cfgLines;
+	std::string* cfgLines;
 private:
 	int linecount;
 	
-	int locateToken(const string &token, const int &blockStart, const int &blockEnd);
-	string getArgumentString(string token, const int &blockStart, const int &blockEnd);
-	string getArgument(const string &argString, int argNumber);
+	int locateToken(const std::string &token, const int &blockStart, const int &blockEnd);
+	std::string getArgumentString(std::string token, const int &blockStart, const int &blockEnd);
+	std::string getArgument(const std::string &argString, int argNumber);
 	int getBlockEnd(const int &blockStart);
 	int countBlockLines(const int &blockStart, const int &blockEnd);
 	int countFields(const int &blockStart, const int &blockEnd);
@@ -133,70 +131,69 @@ class mdSequence {
 public:
 	int mdSequenceLength;
 	int uniquePtnCount;
-	string sequenceString;
+	std::string sequenceString;
 	int mdSequenceLoopPosition;
-	string *uniquePtnList;
-	string *mdSequenceArray;
+	std::string *uniquePtnList;
+	std::string *mdSequenceArray;
 	
 	mdSequence();
 	~mdSequence();
-	void init(string* sequenceBlock, const unsigned &sequenceBlockLength, const mdConfig &config);
+	void init(std::string* sequenceBlock, const unsigned &sequenceBlockLength, const mdConfig &config);
 	
 	
-	friend ostream& operator<<(ostream& os, const mdSequence &seq);
+	friend std::ostream& operator<<(std::ostream& os, const mdSequence &seq);
 	
 private:
-	string getSequenceString(const mdConfig &config);
+	std::string getSequenceString(const mdConfig &config);
 };
 
 
 class mdBlockList {
 
 public: 
-	string blockTypeID;
+	std::string blockTypeID;
 	int referenceCount;
-	set<string> uniqueReferences;
-	vector<mdBlock> blocks;
+	std::set<std::string> uniqueReferences;
+	std::vector<mdBlock> blocks;
 	
-	mdBlockList(const string &blockTypeIdentifier);
+	mdBlockList(const std::string &blockTypeIdentifier);
 	mdBlockList(const mdBlockList &lst);
 	~mdBlockList();
 	
-	void addReference(const string &title, bool seqStart);
+	void addReference(const std::string &title, bool seqStart);
 };
 
 
 class mdModule {
-
 	
 public:
-	string mdSequenceString;
-	vector<mdBlockList> moduleBlocks;
+	std::string mdSequenceString;
+	std::vector<mdBlockList> moduleBlocks;
 	
 	mdSequence seq;
 	
-	ostringstream MUSICASM;
+	std::ostringstream MUSICASM;
 
-	mdModule(const vector<string> &moduleLines, const mdConfig &config, bool &verbose);
+	mdModule(const std::vector<std::string> &moduleLines, const mdConfig &config, bool &verbose);
 	~mdModule();
 	
-	friend ostream& operator<<(ostream& os, const mdModule &mdf);
+	friend std::ostream& operator<<(std::ostream& os, const mdModule &mdf);
 	
 protected:
-	string *rawDataBlock;
+	std::string *rawDataBlock;
 
 private:
 	size_t linecount;
 	
-	unsigned locateToken(const string &token, const vector<string> &moduleLines);
-	unsigned getBlockEnd(const unsigned &blockStart, const vector<string> &moduleLines);
+	unsigned locateToken(const std::string &token, const std::vector<std::string> &moduleLines);
+	unsigned getBlockEnd(const unsigned &blockStart, const std::vector<std::string> &moduleLines);
 };
 
 
 class mdCommand {
 
 public:
-	string mdCmdName;
+	std::string mdCmdName;
 	int mdCmdType;		//BOOL|BYTE|WORD
 	bool mdCmdAuto;
 	
@@ -205,23 +202,23 @@ public:
 	
 	bool mdCmdIsSetNow;		//in the current pattern row | !force-repeat
 	int mdCmdCurrentVal;
-	string mdCmdCurrentValString;
+	std::string mdCmdCurrentValString;
 	
 	bool limitRange;
 	int lowerRangeLimit;
 	int upperRangeLimit;
 	
-	string mdCmdDefaultValString;
+	std::string mdCmdDefaultValString;
 	
 	bool isBlkReference;
-	string referenceBlkID;
+	std::string referenceBlkID;
 	
 	mdCommand *defaultSubstitute;
 	
 	int mdCmdDefaultVal;
 	
 	int mdCmdAutoVal;
-	string mdCmdAutoValString;
+	std::string mdCmdAutoValString;
 	
 	bool mdCmdForceString;
 	bool mdCmdForceInt;
@@ -233,44 +230,44 @@ public:
 	bool mdCmdGlobalConst;
 	
 	int mdCmdLastVal;
-	string mdCmdLastValString;
+	std::string mdCmdLastValString;
 	
-	string* mdCmdSubstitutionNames;
+	std::string* mdCmdSubstitutionNames;
 	int* mdCmdSubstitutionValues;
 
 
 	mdCommand();
 	~mdCommand();
 	mdCommand(const mdCommand &cmd) = delete;
-	void init(const string &commandString, bool &verbose);
+	void init(const std::string &commandString, bool &verbose);
 	void reset();
 	void resetToDefault();
-	void set(const int &currentVal, const string &currentValString);
-	void setDefault(const string &param);
+	void set(const int &currentVal, const std::string &currentValString);
+	void setDefault(const std::string &param);
 	
 	int getValue();
-	string getValueString();
+	std::string getValueString();
 	
 private:
 	int getDefaultVal();
-	string getDefaultValString();	
+	std::string getDefaultValString();	
 };
 
 
 class mdBlockConfig {
 	
 public:	
-	string blockConfigID;
+	std::string blockConfigID;
 	int baseType;
 	bool useBlkEnd;
-	string blkEndString;
+	std::string blkEndString;
 	bool initBlkDefaults;
-	string blkLabelPrefix;
+	std::string blkLabelPrefix;
 	int blkFieldCount;
 	int blkMaxLength;
 	mdField* blkFieldList;
 	
-	mdBlockConfig(const string &id);
+	mdBlockConfig(const std::string &id);
 	mdBlockConfig(const mdBlockConfig &blkCfg);
 	~mdBlockConfig();
 };
@@ -279,25 +276,26 @@ public:
 class mdBlock {
 
 public:
-	string blkName;
+	std::string blkName;
 	int blkLength;
 	bool *requestList;
 	bool **lineCommands;
 	int **lineCmdVals;
-	string **lineCmdStrVals;
+	std::string **lineCmdStrVals;
 	
 	bool firstInSequence;
 	
-	mdBlock(const string &name, bool seqStart);
+	mdBlock(const std::string &name, bool seqStart);
 	mdBlock(const mdBlock &blk);
 	~mdBlock();
 	
-	void read(const string *rawData, const int blockLength, const mdConfig &config, const mdBlockConfig &blkConfig, vector<mdBlockList> &moduleBlocks);
+	void read(const std::string *rawData, const int blockLength, const mdConfig &config, const mdBlockConfig &blkConfig, 
+		std::vector<mdBlockList> &moduleBlocks);
 
-	friend ostream& operator<<(ostream& os, const mdBlock &blk);
+	friend std::ostream& operator<<(std::ostream& os, const mdBlock &blk);
 
 private:
-	string blkString;
+	std::string blkString;
 };
 
 
