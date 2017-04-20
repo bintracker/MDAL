@@ -166,9 +166,7 @@ void mdConfig::init(const string &configname, bool &verbose) {
 			}
 		}
 	
-		if (verbose) cout << endl;
-
-	
+		if (verbose) cout << endl << "USER COMMANDS\n=============" << endl;
 	
 		blockStart = locateToken(string("CFG_COMMANDS"), 0, configEnd);
 		
@@ -179,12 +177,15 @@ void mdConfig::init(const string &configname, bool &verbose) {
 
 		mdCmdCount = countBlockLines(blockStart, blockEnd);
 		if (!mdCmdCount) throw (string("CFG_COMMANDS: No commands specified."));
+		mdCmdCount += DEFAULT_COMMAND_COUNT;
 	
 		mdCmdList = new mdCommand[mdCmdCount];
+		
+		//add two default commands, AUTHOR and TITLE
+		mdCmdList[0].init("BYTE(\"AUTHOR\",\"unknown\",FORCE_STRING|GLOBAL_CONST);", verbose);
+		mdCmdList[1].init("BYTE(\"TITLE\",\"untitled\",FORCE_STRING|GLOBAL_CONST);", verbose);
 
-		int cmdNr = 0;
-	
-		if (verbose) cout << "USER COMMANDS\n=============" << endl;
+		int cmdNr = DEFAULT_COMMAND_COUNT;
 	
 		for (int i = blockStart; i < blockEnd; i++) {
 	

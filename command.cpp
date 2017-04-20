@@ -193,7 +193,6 @@ void mdCommand::init(const string &commandString, bool &verbose) {
 	if (cmdStrCopy.find("GLOBAL_CONST") != string::npos) mdCmdGlobalConst = true;
 	
 	if (mdCmdForceSubstitution && mdCmdForceString) throw ("FORCE_SUBSTITUTION and FORCE_STRING are mutually exclusive in " + commandString);
-	if (mdCmdGlobalConst && mdCmdForceString) throw ("CONST and FORCE_STRING are mutually exclusive in " + commandString);
 	if (mdCmdForceString && mdCmdForceInt) throw ("FORCE_INT and FORCE_STRING are mutually exclusive in " + commandString);
 
 	
