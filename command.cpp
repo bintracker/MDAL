@@ -388,11 +388,11 @@ void mdCommand::setDefault(const string &param) {
 
 	if (param.find("SUBSTITUTE_FROM") != string::npos) return;
 
-	if (getType(param) == INVALID) throw ("\"" + param + "\" is not a valid argument");
+	if (getType(param) == INVALID) throw ("\"" + param + "\" is not a valid argument ");
 	
 	if (getType(param) == BOOL) {
 	
-		if (mdCmdType != BOOL) throw (string("Default value does not match command type"));
+		if (mdCmdType != BOOL) throw (string("Default value does not match command type "));
 		
 		if (param == "true") mdCmdDefaultVal = 1;
 		else mdCmdDefaultVal = 0;
@@ -403,5 +403,5 @@ void mdCommand::setDefault(const string &param) {
 
 	
 	if ((mdCmdType == WORD && mdCmdDefaultVal > 0xffff) || (mdCmdType == BYTE && mdCmdDefaultVal > 0xff))
-		throw (string("Default value out of range"));
+		throw (string("Default value out of range "));
 }
