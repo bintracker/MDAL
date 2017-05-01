@@ -113,6 +113,8 @@ public:
 	mdConfig(const mdConfig &config) = delete;
 	void init(const std::string &configfile, bool &verbose);
 	void reset();
+	
+	static bool isCompatible(const mdCommand &cmd1, const mdCommand &cmd2);
 
 	std::string* cfgLines;
 private:
