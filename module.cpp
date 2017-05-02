@@ -19,6 +19,8 @@ mdModule::mdModule(const vector<string> &moduleLines, const mdConfig &config, bo
 		for (auto&& it : config.blockTypes) moduleBlocks.emplace_back(it.blockConfigID);		
 		moduleBlocks.shrink_to_fit();
 		
+		for (int i = 0; i < config.mdCmdCount; i++) config.mdCmdList[i].resetToDefault();
+		
 		
 		if (verbose) cout << endl << "MODULE DATA\n===========" << endl;
 		
