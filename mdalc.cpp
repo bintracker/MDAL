@@ -126,3 +126,29 @@ string getArgument(string token, const vector<string> &moduleLines) {
 	
 	return tempstr;
 }
+
+bool isNumber(const string &str) {
+
+	if (str.size() == 0) return false;
+	if ((str.find_first_not_of("0123456789") == string::npos) || 
+		(((str.substr(0,1) == "#") || (str.substr(0,1) == "$")) 
+		&& ((str.substr(1, string::npos)).find_first_not_of("0123456789abcdefABCDEF") == string::npos) 
+		&& str.substr(1, string::npos).size())) return true;
+	
+	return false;
+}
+
+long strToNum(string str) {
+
+	long num;
+
+	if (str.find("$") != string::npos) {
+				
+		str.erase(0, 1);
+		num = stol(str, nullptr, 16);
+	}
+	else num = stol(str, nullptr, 10);
+	
+	return num;
+}
+

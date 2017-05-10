@@ -6,7 +6,7 @@
 
 using namespace std;
 
-mdCommand::mdCommand(): mdCmdCurrentValString(""), mdCmdDefaultValString(""), referenceBlkID(""), mdCmdAutoValString(""), mdCmdLastValString("") {
+mdCommand::mdCommand(): referenceBlkID(""), mdCmdDefaultValString(""), mdCmdAutoValString(""), mdCmdCurrentValString(""), mdCmdLastValString("") {
 
 	mdCmdType = BOOL;
 	mdCmdGlobalConst = false;
@@ -15,7 +15,6 @@ mdCommand::mdCommand(): mdCmdCurrentValString(""), mdCmdDefaultValString(""), re
 	allowModifiers = false;
 
 	mdCmdForceSubstitution = false;
-	mdCmdSubstitutionListLength = 0;
 	mdCmdForceString = false;
 	mdCmdForceInt = false;
 	mdCmdForceRepeat = false;
@@ -25,25 +24,14 @@ mdCommand::mdCommand(): mdCmdCurrentValString(""), mdCmdDefaultValString(""), re
 	isBlkReference = false;
 	defaultSubstitute = nullptr;
 
-	mdCmdDefaultVal = -1;
-	mdCmdAutoVal = -1;
-	mdCmdLastVal = -1;
-
 	mdCmdIsSetNow = false;
-	mdCmdCurrentVal = -1;
-	
-	mdCmdSubstitutionNames = nullptr;
-	mdCmdSubstitutionValues = nullptr;
 	
 	limitRange = false;
 	lowerRangeLimit = 0;
 	upperRangeLimit = 0;
 }
 
-mdCommand::~mdCommand() {
-	delete[] mdCmdSubstitutionNames;
-	delete[] mdCmdSubstitutionValues;
-}
+mdCommand::~mdCommand() {}
 
 
 void mdCommand::init(const string &commandString, bool &verbose) {
@@ -71,9 +59,9 @@ void mdCommand::init(const string &commandString, bool &verbose) {
 	temp.erase(temp.find(','));
 	if (temp.compare(0, 1, "\"") != 0) throw ("\"" + temp + "\" is not a valid command name in " + commandString);
 	mdCmdName = trimChars(temp, " \"");
+	//TODO: check for more reserved keywords
 	if (mdCmdName == "NONE" || mdCmdName == "ANY" || mdCmdName == "ALL" || mdCmdName == "CONFIG") 
 		throw ("Reserved keyword \"" + mdCmdName + "\" used as command name in " + commandString);
-	//cout << mdCmdName << endl;
 	
 	cmdStrCopy.erase(0,cmdStrCopy.find(',')+1);
 	temp = cmdStrCopy;
@@ -98,11 +86,8 @@ void mdCommand::init(const string &commandString, bool &verbose) {
 		temp.erase(0, temp.find_first_not_of("(\n\t"));
 		temp.erase(temp.find_first_of(')'));
 		
-		if (getType(temp) == DEC && mdCmdType != BOOL) mdCmdAutoVal = stoi(temp, nullptr, 10);
-		else if (getType(temp) == HEX && mdCmdType != BOOL) mdCmdAutoVal = stoi(trimChars(temp, "$"), nullptr, 16);
-		else if (getType(temp) == BOOL && mdCmdType == BOOL) mdCmdAutoVal = (temp == "true") ? 1 : 0;
-		else if (getType(temp) != BOOL && mdCmdType == BOOL) throw ("Non-Boolean parameter specified for BOOL AUTO command in " + commandString);
-		else mdCmdAutoValString = temp;
+		if (getType(temp) == BOOL && mdCmdType != BOOL) throw ("Non-Boolean parameter specified for BOOL AUTO command in " + commandString);
+		mdCmdAutoValString = temp;
 	}
 	
 	
@@ -119,25 +104,18 @@ void mdCommand::init(const string &commandString, bool &verbose) {
 		temp.erase(0, temp.find_first_not_of("(\n\t"));
 		temp.erase(temp.find_first_of(')'));
 		
-		mdCmdSubstitutionListLength = count(temp.begin(), temp.end(), ',') + 1;
-		
-		if ((count(temp.begin(), temp.end(), '"') != mdCmdSubstitutionListLength * 2) || 
-			(count(temp.begin(), temp.end(), '=') * 2 != count(temp.begin(), temp.end(), '"')))
+		if (count(temp.begin(), temp.end(), '=') * 2 != count(temp.begin(), temp.end(), '"'))
 			throw ("Invalid substitution list specification in " + commandString);
 		
-		mdCmdSubstitutionNames = new string[mdCmdSubstitutionListLength];
-		mdCmdSubstitutionValues = new int[mdCmdSubstitutionListLength];
+		int listlen = count(temp.begin(), temp.end(), ',') + 1;
 		
-		for (int i = 0; i < mdCmdSubstitutionListLength; i++) {
+		for (int i = 0; i < listlen; i++) {
 		
-			mdCmdSubstitutionNames[i] = trimChars(temp.substr(0, temp.find('=')), "\"");	
-			string tmp1 = trimChars(temp.substr(temp.find('=') + 1, temp.find_first_of(",)") - (temp.find('=') + 1)), " ");
-			
-			if (getType(tmp1) == DEC && mdCmdType != BOOL) mdCmdSubstitutionValues[i] = stoi(tmp1, nullptr, 10);
-			else if (getType(tmp1) == HEX && mdCmdType != BOOL) mdCmdSubstitutionValues[i] = stoi(trimChars(tmp1, "$"), nullptr, 16);
-			else if (getType(tmp1) == BOOL && mdCmdType == BOOL) mdCmdSubstitutionValues[i] = (tmp1 == "true") ? 1 : 0;
-			else throw ("Substitution parameter is not a number in " + commandString);
-			
+			substitutionList.insert(make_pair(trimChars(temp.substr(0, temp.find('=')), "\""), 
+				trimChars(temp.substr(temp.find('=') + 1, temp.find_first_of(",)") - (temp.find('=') + 1)), " \"")));
+				
+			//TODO check substitution parameter against FORCE_INT/STRING
+				
 			temp.erase(0, temp.find_first_of(",)") + 1);
 		}	
 	}
@@ -192,30 +170,21 @@ void mdCommand::init(const string &commandString, bool &verbose) {
 	if (cmdStrCopy.find("USE_LAST_SET") != string::npos) mdCmdUseLastSet = true;
 	if (cmdStrCopy.find("GLOBAL_CONST") != string::npos) mdCmdGlobalConst = true;
 	
-	if (mdCmdForceSubstitution && mdCmdForceString) throw ("FORCE_SUBSTITUTION and FORCE_STRING are mutually exclusive in " + commandString);
 	if (mdCmdForceString && mdCmdForceInt) throw ("FORCE_INT and FORCE_STRING are mutually exclusive in " + commandString);
 
 	
 	if (verbose) {
-		cout << hex << boolalpha << showbase << mdCmdName << ":\t Type is ";
-		if (mdCmdType == BOOL) {
-			cout << "BOOL, default is ";
-			if (defaultSubstitute == nullptr) cout << static_cast<bool>(mdCmdDefaultVal);
-			else cout << "substituted by " << defaultSubstitute->mdCmdName;
-		}
-		else if (mdCmdType == BYTE) cout << "BYTE";
+		cout << mdCmdName << ":\t Type is ";
+
+		if (mdCmdType == BYTE) cout << "BYTE";
+		else if (mdCmdType == BOOL) cout << "BOOL";
 		else cout << "WORD";
-		if (mdCmdDefaultValString != "") {
-			cout << ", default is ";
-			if (defaultSubstitute == nullptr) cout << "\"" << mdCmdDefaultValString << "\"";
-			else cout << "substituted by " << defaultSubstitute->mdCmdName;
-		}
-		else if (mdCmdType != BOOL) {
-			cout << ", default is ";
-			if (defaultSubstitute == nullptr) cout << mdCmdDefaultVal; 
-			else cout << "substituted by " << defaultSubstitute->mdCmdName;
-		}
-		
+
+		cout << ", default is ";
+		if (defaultSubstitute == nullptr) cout << mdCmdDefaultValString;
+		else cout << "substituted by " << defaultSubstitute->mdCmdName;
+
+		//TODO formatting is odd with FORCE_SUBSTITUTION
 		if (useNoteNames) cout << ", USE_NOTE_NAMES";
 		if (allowModifiers) cout << ", ALLOW_MODIFIERS";
 		if (mdCmdForceString) cout << ", FORCE_STRING";
@@ -225,18 +194,13 @@ void mdCommand::init(const string &commandString, bool &verbose) {
 		if (mdCmdGlobalConst) cout << ", GLOBAL_CONST";
 		if (mdCmdAuto) cout << ", AUTO";
 		if (limitRange) cout << ", RANGE: " << lowerRangeLimit << ".." << upperRangeLimit;
+		if (isBlkReference) cout << ", REFERENCE to " << referenceBlkID;
 		if (mdCmdForceSubstitution) {
 		
-			cout << ", FORCE_SUBSTITUTION: ";
-			for (int i = 0; i < mdCmdSubstitutionListLength; i++) {
-				cout << mdCmdSubstitutionNames[i];
-				if (mdCmdType != BOOL) cout << " = " << mdCmdSubstitutionValues[i];
-				else cout << " = " << boolalpha << static_cast<bool>(mdCmdSubstitutionValues[i]);
-				if (i < mdCmdSubstitutionListLength - 1) cout << ", ";
-			}
+			cout << ", FORCE_SUBSTITUTION: " << endl;
+			for (auto&& it: substitutionList) cout << "\t" << it.first << " ==> " << it.second << endl;
 		}
-		if (isBlkReference) cout << ", REFERENCE to " << referenceBlkID;
-		cout << noboolalpha << dec << endl;
+		else cout << endl;
 	}
 }
 
@@ -246,16 +210,12 @@ void mdCommand::resetToDefault() {		//TODO: keep an eye on this to see if it rea
 	if (!mdCmdGlobalConst) {
 	
 		mdCmdIsSetNow = false;
-		mdCmdCurrentVal = -1;
 		mdCmdCurrentValString = "";
-		mdCmdLastVal = getDefaultVal();
 		mdCmdLastValString = getDefaultValString();
 		
 		if (mdCmdForceRepeat) {
 		
 			mdCmdIsSetNow = true;
-			
-			mdCmdCurrentVal = mdCmdLastVal;
 			mdCmdCurrentValString = mdCmdLastValString;
 		}	
 	}
@@ -266,102 +226,60 @@ void mdCommand::reset() {
 
 	if (!mdCmdGlobalConst) {
 	
-		if (mdCmdUseLastSet || mdCmdForceRepeat) {
-	
-			if (mdCmdCurrentVal != -1 && mdCmdIsSetNow) mdCmdLastVal = mdCmdCurrentVal;
-			if (mdCmdLastValString != "" && mdCmdIsSetNow) mdCmdLastValString = mdCmdCurrentValString;
-		}
+		if ((mdCmdUseLastSet || mdCmdForceRepeat) && mdCmdIsSetNow) mdCmdLastValString = mdCmdCurrentValString;
 
 		if (!mdCmdForceRepeat) {
 		
 			mdCmdIsSetNow = false;
-			mdCmdCurrentVal = -1;
 			mdCmdCurrentValString = "";
 		}
-		if (mdCmdForceRepeat) {
+		else {
 		
 			mdCmdIsSetNow = true;
-			
-			if (mdCmdLastVal == -1) mdCmdLastVal = getDefaultVal();
 			if (mdCmdLastValString == "") mdCmdLastValString = getDefaultValString();
-			
-			mdCmdCurrentVal = mdCmdLastVal;
 			mdCmdCurrentValString = mdCmdLastValString;
 		}
 	}
 }
 
 
-void mdCommand::set(const int &currentVal, const string &currentValString) {
+void mdCommand::set(const string &currentValString) {
 
-
+	//TODO: if string is number, get value and check against BYTE/WORD range
 	if (mdCmdGlobalConst) throw (string("Global constant redefined in block "));
 	
 	mdCmdIsSetNow = true;
 	
 	if (mdCmdAuto) {
 		
-		mdCmdCurrentVal = mdCmdAutoVal;
 		mdCmdCurrentValString = mdCmdAutoValString;
 		return;
 	}
 	
+	int paramType = getType(currentValString);
 	
-	if (mdCmdForceInt && currentVal == -1) throw (string("String argument supplied for integer command "));
+	if (mdCmdForceInt && (paramType != DEC && paramType != HEX))
+		throw (string("String argument supplied for integer command "));
+	//TODO: does not check for bool
+	if (mdCmdForceString && isNumber(currentValString)) throw (string("Integer argument supplied for string command "));
 	
-	if (mdCmdForceString) {
-		
-		if (currentValString == "") throw (string("Integer argument supplied for string command "));
-		
-		mdCmdCurrentValString = currentValString;
-		mdCmdLastValString = currentValString;
+	if (limitRange && isNumber(currentValString)) {
+	
+		if (strToNum(currentValString) < lowerRangeLimit || strToNum(currentValString) > upperRangeLimit) 
+			throw (string("Argument out of range for command "));
 	}
-	else {
 	
-		mdCmdCurrentValString = currentValString;
-		mdCmdCurrentVal = currentVal;
-		
-		
-		if (mdCmdForceSubstitution && mdCmdCurrentVal == -1) {
-		
-			//cout << "force substitution, cvalstr = " << currentValString << endl;		//DEBUG ok
+	mdCmdCurrentValString = currentValString;
 
-			bool foundSubst = false;
-			
-			for (int i = 0; i < mdCmdSubstitutionListLength && foundSubst == false; i++) {
-			
-				if (currentValString == mdCmdSubstitutionNames[i]) {
-			
-					foundSubst = true;
-					mdCmdCurrentVal = mdCmdSubstitutionValues[i];
-					mdCmdCurrentValString = "";
-					
-					//cout << "mdCmdCurrentVal: " << mdCmdCurrentVal << endl;	//DEBUG ok
-				}
-			}
-			
-			if (!foundSubst) throw ("\"" + currentValString + "\" is not a valid parameter for command ");
-		}
-		
-		mdCmdLastValString = mdCmdCurrentValString;
-		mdCmdLastVal = mdCmdCurrentVal;
+	if (mdCmdForceSubstitution) {
+
+		if (substitutionList.count(currentValString)) mdCmdCurrentValString = substitutionList[currentValString];
+		//TODO paramType == STRING is unreliable, will pass bool but fail non-quote-enclosed strings
+		else if (paramType == STRING) throw ("\"" + currentValString + "\" is not a valid parameter for command ");
 	}
 	
-	if (limitRange && mdCmdCurrentVal != -1) {
-	
-		if (mdCmdCurrentVal < lowerRangeLimit || mdCmdCurrentVal > upperRangeLimit) throw (string("Argument out of range for command "));
-	
-	}
+	mdCmdLastValString = mdCmdCurrentValString;
 }
-
-
-int mdCommand::getValue() {
-
-	if (mdCmdIsSetNow) return mdCmdCurrentVal;
-	if (mdCmdUseLastSet && mdCmdLastVal != -1) return mdCmdLastVal;
-	return getDefaultVal();
-}
-
 
 
 string mdCommand::getValueString() {
@@ -369,12 +287,6 @@ string mdCommand::getValueString() {
 	if (mdCmdIsSetNow) return mdCmdCurrentValString;
 	if (mdCmdUseLastSet && mdCmdLastValString != "") return mdCmdLastValString;
 	return getDefaultValString();
-}
-
-
-int mdCommand::getDefaultVal() {
-
-	return (defaultSubstitute == nullptr) ? mdCmdDefaultVal : defaultSubstitute->mdCmdDefaultVal;
 }
 
 
@@ -386,22 +298,22 @@ string mdCommand::getDefaultValString() {
 
 void mdCommand::setDefault(const string &param) {
 
+	//TODO is substitution on this completed?
 	if (param.find("SUBSTITUTE_FROM") != string::npos) return;
+	
+	int paramType = getType(param);
 
-	if (getType(param) == INVALID) throw ("\"" + param + "\" is not a valid argument ");
+	if (paramType == INVALID) throw ("\"" + param + "\" is not a valid argument ");
+	if (paramType == BOOL && mdCmdType != BOOL) throw (string("Non-Boolean default parameter specified for BOOL command"));
 	
-	if (getType(param) == BOOL) {
+	mdCmdDefaultValString = trimChars(param, "\"");
 	
-		if (mdCmdType != BOOL) throw (string("Default value does not match command type "));
-		
-		if (param == "true") mdCmdDefaultVal = 1;
-		else mdCmdDefaultVal = 0;
-	}
-	else if (getType(param) == STRING) mdCmdDefaultValString = trimChars(param, "\"");
-	else if (getType(param) == DEC) mdCmdDefaultVal = static_cast<int>(stoul(trimChars(param, " "), nullptr, 10));
-	else mdCmdDefaultVal = static_cast<int>(stoul(trimChars(param, " $"), nullptr, 16));
+	int paramVal = -1;
+	
+	if (paramType == DEC) paramVal = static_cast<int>(stoul(trimChars(param, " "), nullptr, 10));
+	else if (paramType == HEX) paramVal = static_cast<int>(stoul(trimChars(param, " $"), nullptr, 16));
 
 	
-	if ((mdCmdType == WORD && mdCmdDefaultVal > 0xffff) || (mdCmdType == BYTE && mdCmdDefaultVal > 0xff))
+	if ((mdCmdType == WORD && paramVal > 0xffff) || (mdCmdType == BYTE && paramVal > 0xff))
 		throw (string("Default value out of range "));
 }

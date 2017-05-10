@@ -550,17 +550,18 @@ bool mdConfig::isCompatible(const mdCommand &cmd1, const mdCommand &cmd2) {
 	if (cmd1.isBlkReference != cmd2.isBlkReference) return false;
 	if (cmd1.referenceBlkID != cmd2.referenceBlkID) return false;
 	if (cmd1.defaultSubstitute != cmd2.defaultSubstitute) return false;
-	if (cmd1.mdCmdAutoVal != cmd2.mdCmdAutoVal) return false;
+//	if (cmd1.mdCmdAutoVal != cmd2.mdCmdAutoVal) return false;
 	if (cmd1.mdCmdAutoValString != cmd2.mdCmdAutoValString) return false;
 	if (cmd1.mdCmdForceString != cmd2.mdCmdForceString) return false;
 	if (cmd1.mdCmdForceInt != cmd2.mdCmdForceInt) return false;
 	if (cmd1.mdCmdForceSubstitution != cmd2.mdCmdForceSubstitution) return false;
 	else {
-		if (cmd1.mdCmdSubstitutionListLength != cmd2.mdCmdSubstitutionListLength) return false;
-		for (int i = 0; i < cmd1.mdCmdSubstitutionListLength; i++) {
-			if (cmd1.mdCmdSubstitutionNames[i] != cmd2.mdCmdSubstitutionNames[i]) return false;
-			if (cmd1.mdCmdSubstitutionValues[i] != cmd2.mdCmdSubstitutionValues[i]) return false;
-		}
+// 		if (cmd1.mdCmdSubstitutionListLength != cmd2.mdCmdSubstitutionListLength) return false;
+// 		for (int i = 0; i < cmd1.mdCmdSubstitutionListLength; i++) {
+// 			if (cmd1.mdCmdSubstitutionNames[i] != cmd2.mdCmdSubstitutionNames[i]) return false;
+// 			if (cmd1.mdCmdSubstitutionValues[i] != cmd2.mdCmdSubstitutionValues[i]) return false;
+// 		}
+		if (cmd1.substitutionList != cmd2.substitutionList) return false;
 	}
 	if (cmd1.mdCmdForceRepeat != cmd2.mdCmdForceRepeat) return false;
 //	if (cmd1.mdCmdUseLastSet != cmd2.mdCmdUseLastSet) return false;

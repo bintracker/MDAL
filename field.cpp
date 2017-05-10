@@ -8,12 +8,12 @@
 using namespace std;
 
 
-mdField::mdField(): currentValueString("") {
+mdField::mdField() {
 
 	isWord = false;
 	isRequiredNow = false;
-	currentIsString = false;
-	currentValue = -1;			//TODO this and currentValueString probably does not need to be a class member
+// 	currentIsString = false;
+// 	currentValue = -1;			//TODO this and currentValueString probably does not need to be a class member
 
 	requiredSeqBegin = false;
 	requiredBlkBegin = false;
@@ -447,16 +447,16 @@ void mdField::getRequests(bool *requestList, const mdConfig &config, const int &
 	
 	if ((requiredSeqBegin && seqBegin && row == 0) || (requiredBlkBegin && row == 0) || requiredAlways
  		|| checkCondition(requiredBy, requiredWhenSet, requiredByAny, config)) isRequiredNow = true;
-	if (setBy != -1 && (config.mdCmdList[setBy].mdCmdCurrentValString != "" || config.mdCmdList[setBy].mdCmdCurrentVal != -1))
+	if (setBy != -1 && (config.mdCmdList[setBy].mdCmdCurrentValString != ""))
 		isRequiredNow = true;
-	if (setHiBy != -1 && (config.mdCmdList[setHiBy].mdCmdCurrentValString != "" || config.mdCmdList[setHiBy].mdCmdCurrentVal != -1))
+	if (setHiBy != -1 && (config.mdCmdList[setHiBy].mdCmdCurrentValString != ""))
 		isRequiredNow = true;
-	if (setLoBy != -1 && (config.mdCmdList[setLoBy].mdCmdCurrentValString != "" || config.mdCmdList[setLoBy].mdCmdCurrentVal != -1))
+	if (setLoBy != -1 && (config.mdCmdList[setLoBy].mdCmdCurrentValString != ""))
 		isRequiredNow = true;
 		
  	for (int i = 0; i < config.mdCmdCount; i++) {
 	
-		if (setBitsCount && setBitsBy[i] && config.mdCmdList[i].mdCmdCurrentVal > -1) {
+		if (setBitsCount && setBitsBy[i] && config.mdCmdList[i].mdCmdCurrentValString != "") {
  		
 			isRequiredNow = true;
 			requestList[i] = true;
@@ -474,63 +474,60 @@ void mdField::getRequests(bool *requestList, const mdConfig &config, const int &
 
 string mdField::getFieldString(bool *requestList, const mdConfig &config) {
 
-	string fstr = "";
+	if (!isRequiredNow) return string("");
+	
+	stringstream fstr;
+	string argstr1 = "";
+	long arg2 = 0;
+//	bool hiWasSet = false;
 
-	currentIsString = false;
-	currentValue = -1;
-	currentValueString = "";
-	
-	if (!isRequiredNow) return fstr;
-	
-	bool hiWasSet = false;
-	bool hiWasSetStr = false;
-	
 	if (setBy != -1) {
 	
-		currentValueString = config.mdCmdList[setBy].getValueString();
-
-		if (config.mdCmdList[setBy].isBlkReference && currentValueString != "") {
-			
+		argstr1 = config.mdCmdList[setBy].getValueString();
+		
+		if (isNumber(argstr1)) {
+			arg2 = strToNum(argstr1);
+			argstr1 = "";
+		}
+		
+		if (config.mdCmdList[setBy].isBlkReference && argstr1 != "") {
+		
 			string prefix;
 			
-			for (auto&& it : config.blockTypes) {
+			for (auto&& it: config.blockTypes) {
 			
-				if (config.mdCmdList[setBy].referenceBlkID == it.blockConfigID) prefix = it.blkLabelPrefix;	
+				if (config.mdCmdList[setBy].referenceBlkID == it.blockConfigID) {
+				
+					prefix = it.blkLabelPrefix;
+					break;
+				}
 			}
 			
-			currentValueString = prefix + currentValueString;
+			argstr1 = prefix + argstr1;
 		}
-
-		currentValue = config.mdCmdList[setBy].getValue();
-	
 	}
 	
 	if (setHiBy != -1) {
 	
-		currentValueString = config.mdCmdList[setHiBy].getValueString();
-		if (currentValueString != "") {
-			currentValueString += "*256+";
-			hiWasSetStr = true;
-		}
-		else {
-			currentValue = config.mdCmdList[setHiBy].getValue() * 256;
-			hiWasSet = true;
-		}
+		//TODO check type and use arg2 whenever possible
+		string arg = config.mdCmdList[setHiBy].getValueString();
+		if (isNumber(arg)) arg2 = strToNum(arg) * 256;
+		else argstr1 = arg + "*256";
+//		hiWasSet = true;
 	}
 	
 	if (setLoBy != -1) {
 	
-		currentValueString += config.mdCmdList[setLoBy].getValueString();
+		//TODO check type and use arg2 whenever possible
+		string arg = config.mdCmdList[setLoBy].getValueString();
 		
-		if (config.mdCmdList[setLoBy].getValueString() == "") {
-		
-			if (hiWasSet) currentValue |= config.mdCmdList[setLoBy].getValue();
-			else if (hiWasSetStr) {
-				stringstream val;
-				val << hex << config.mdCmdList[setLoBy].getValue();
-				currentValueString += config.hexPrefix + val.str();
-			}
-			else currentValue = config.mdCmdList[setLoBy].getValue();
+		if (isNumber(arg)) {
+			
+			arg2 |= strToNum(arg);
+		}
+		else {
+			if (argstr1 != "") argstr1 += "+";
+			argstr1 += arg;
 		}
 	}
 	
@@ -543,24 +540,27 @@ string mdField::getFieldString(bool *requestList, const mdConfig &config) {
 	
 		if (setBitsBy[i]) {
 	
-			if (config.mdCmdList[i].getValue() > 0) {
+			//TODO check type and use arg2 whenever possible
+			if (config.mdCmdList[i].getValueString() == "true") {
 			
-				if (currentValue == -1 || setBitsClear[i] == CLEAR_ALL) {
-					currentValue = 0;
+				if (setBitsClear[i] == CLEAR_ALL) {
+
+					argstr1 = "";
+					arg2 = 0;
 					clearedBySetBits = true;
-//					cout << "Clear All by SET_BITS" << endl;
 				}
 				else if (setBitsClear[i] == CLEAR_HI) {
-					currentValue &= 0xff;
+
+					arg2 &= 0xff;
 					clearedHiBySetBits = true;
 				}
 				else if (setBitsClear[i] == CLEAR_LO) {
-					currentValue &= 0xff00;
-					clearedLoBySetBits = false;
+
+					arg2 &= 0xff00;
+					clearedLoBySetBits = true;
 				}
-			
-				//TODO: support STRING cmds -> same with setIf
-				currentValue |= setBitsMask[i];
+				
+				arg2 |= setBitsMask[i];
 			}	
 		}	
 	}
@@ -570,29 +570,36 @@ string mdField::getFieldString(bool *requestList, const mdConfig &config) {
 	
 	for (int i = 0; i < setIfCount && !clearedBySetBits; i++) {
 	
-	
 		//TODO: this needs a new function because we should check against requestList!!!
+		//TODO check type and use arg2 whenever possible
 		if (checkSetifCondition(setIfBy[i], setIfWhenSet[i], setIfByAny[i], config, requestList) || setIfAlways[i]) {
 		
-			if (currentValue == -1 || setIfClear[i] == CLEAR_ALL) currentValue = 0;
-			else if (setIfClear[i] == CLEAR_HI) currentValue &= 0xff;
-			else if (setIfClear[i] == CLEAR_LO) currentValue &= 0xff00;
+			if (setIfClear[i] == CLEAR_ALL) {
+				arg2 = 0;
+				argstr1 = "";
+			}
+			else if (setIfClear[i] == CLEAR_HI) arg2 &= 0xff;
+			else if (setIfClear[i] == CLEAR_LO) arg2 &= 0xff00;
 			
-			if (clearedLoBySetBits) currentValue |= (setIfMask[i] & 0xff00);
-			else if (clearedHiBySetBits) currentValue |= (setIfMask[i] & 0xff);
-			else currentValue |= setIfMask[i];
+			if (clearedLoBySetBits) arg2 |= (setIfMask[i] & 0xff00);
+			else if (clearedHiBySetBits) arg2 |= (setIfMask[i] & 0xff);
+			else arg2 |= setIfMask[i];
 		}
 	}	
-	
-	if (currentValueString != "") fstr = currentValueString;
-	else {
+		
 
-		stringstream val;
-		val << hex << currentValue;
-		fstr = config.hexPrefix + val.str();
-	}	
+	if (arg2 && argstr1 != "") {
 
-	return fstr;
+		if (isNumber(argstr1)) {
+			arg2 |= strToNum(argstr1);
+			argstr1 = "";
+		}
+		else argstr1 = "(" + argstr1 + ")|";
+	}
+	fstr << argstr1;
+	if (arg2) fstr << hex << config.hexPrefix << arg2;
+
+	return (fstr.str() == "") ? string("0") : fstr.str();
 }
 
 

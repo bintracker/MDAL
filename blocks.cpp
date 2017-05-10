@@ -127,22 +127,8 @@ void mdBlock::read(const string *rawData, const int blockLength, const mdConfig 
 					rowStr = "";
 				}
 				
-				
-				
-				if (!config.mdCmdList[cmdNr].mdCmdAuto) {
-				
-					if (getType(temp) == BOOL) {
-						if (temp == "false") lineCmdVals[row][cmdNr] = 0;
-						else  lineCmdVals[row][cmdNr] = 1;
-					}
-					else if (getType(temp) == DEC) lineCmdVals[row][cmdNr] = stoi(temp, nullptr, 10);
-					else if (getType(temp) == HEX) lineCmdVals[row][cmdNr] = stoi(trimChars(temp, "$"), nullptr, 16);
-					else {
-						if (temp.find_first_of("0123456789") < temp.find_first_not_of("0123456789"))
-							throw ("Invalid argument \"" + temp + "\" in " + rawData[i]);
-						lineCmdStrVals[row][cmdNr] = temp;
-					}
-				}
+							
+				if (!config.mdCmdList[cmdNr].mdCmdAuto) lineCmdStrVals[row][cmdNr] = temp;
 			}	
 		}
 		
@@ -160,7 +146,6 @@ void mdBlock::read(const string *rawData, const int blockLength, const mdConfig 
 			else config.mdCmdList[cmd].reset();			//TODO reset all LastVals to default at beginning of pattern
 			
 			
-			
 			if (lineCommands[row][cmd]) {
 			
 				if (config.mdCmdList[cmd].isBlkReference) {	//if cmd is reference
@@ -170,8 +155,8 @@ void mdBlock::read(const string *rawData, const int blockLength, const mdConfig 
 						if (it.blockTypeID == config.mdCmdList[cmd].referenceBlkID) it.addReference(lineCmdStrVals[row][cmd], false);						
 					}				
 				}
-			
-				config.mdCmdList[cmd].set(lineCmdVals[row][cmd], lineCmdStrVals[row][cmd]);	
+				
+				config.mdCmdList[cmd].set(lineCmdStrVals[row][cmd]);
 			}
 		}
 		

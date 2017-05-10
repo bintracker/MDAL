@@ -5,12 +5,15 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
+#include <unordered_map>
 #include <set>
 
 #define MDALVERSION 0
 
 
 std::string trimChars(const std::string& inputString, const char* chars);
+bool isNumber(const std::string &str);
+long strToNum(std::string str);
 int getType(const std::string& parameter);
 std::string getArgument(std::string token, const std::vector<std::string> &moduleLines);
 
@@ -33,10 +36,6 @@ public:
 	bool isWord;		//false: is byte
 	bool isRequiredNow;
 	
-	bool currentIsString;		//false: is int
-	int currentValue;
-	std::string currentValueString;
-
 	bool requiredSeqBegin;
 	bool requiredBlkBegin;
 	
@@ -66,7 +65,6 @@ public:
 	bool* useCmd;
 
 	
-
 	mdField();
 	~mdField();
 	void init(mdCommand *mdCmdList, const int &mdCmdCount, const std::string &fieldString);
@@ -204,55 +202,40 @@ public:
 	bool allowModifiers;
 	
 	bool mdCmdIsSetNow;		//in the current pattern row | !force-repeat
-	int mdCmdCurrentVal;
-	std::string mdCmdCurrentValString;
 	
 	bool limitRange;
 	int lowerRangeLimit;
 	int upperRangeLimit;
 	
-	std::string mdCmdDefaultValString;
-	
 	bool isBlkReference;
 	std::string referenceBlkID;
-	
 	mdCommand *defaultSubstitute;
-	
-	int mdCmdDefaultVal;
-	
-	int mdCmdAutoVal;
-	std::string mdCmdAutoValString;
 	
 	bool mdCmdForceString;
 	bool mdCmdForceInt;
 	bool mdCmdForceSubstitution;
-	
-	int mdCmdSubstitutionListLength;
+	std::unordered_map<std::string, std::string> substitutionList;
+
 	bool mdCmdForceRepeat;
 	bool mdCmdUseLastSet;
 	bool mdCmdGlobalConst;
 	
-	int mdCmdLastVal;
+	std::string mdCmdDefaultValString;
+	std::string mdCmdAutoValString;
+	std::string mdCmdCurrentValString;
 	std::string mdCmdLastValString;
 	
-	std::string* mdCmdSubstitutionNames;
-	int* mdCmdSubstitutionValues;
-
-
 	mdCommand();
 	~mdCommand();
 	mdCommand(const mdCommand &cmd) = delete;
 	void init(const std::string &commandString, bool &verbose);
 	void reset();
 	void resetToDefault();
-	void set(const int &currentVal, const std::string &currentValString);
+	void set(const std::string &currentValString);
 	void setDefault(const std::string &param);
-	
-	int getValue();
 	std::string getValueString();
 	
 private:
-	int getDefaultVal();
 	std::string getDefaultValString();	
 };
 
