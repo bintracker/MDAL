@@ -1,12 +1,12 @@
 #include <iostream>
 #include <string>
 #include <fstream>
+#include <sstream>
 #include <algorithm>
-
+#include "pugixml.hpp"
 #include "mdalc.h"
 
 using namespace std;
-
 
 
 mdConfig::mdConfig(): targetPlatform("generic"), seqLabel(";sequence") {
@@ -56,368 +56,640 @@ void mdConfig::reset() {
 }
 
 void mdConfig::init(const string &configname, bool &verbose) {
+
+	pugi::xml_document xml;
+	pugi::xml_parse_result result = xml.load_file(configname.data(), pugi::parse_trim_pcdata|pugi::parse_wnorm_attribute);
 	
-
-	ifstream CFGFILE(configname.data());
-	if (!CFGFILE.is_open()) throw ("Unknown configuration \"" + configname + "\".");
-
-
+	if (!result) {
+		stringstream errormsg;
+		errormsg << "XML parsing failed: " << result.description() << " @" << result.offset << ".";
+		throw (errormsg.str());
+	}
+	
 	try {
 	
 		if (verbose) cout << "configuration:\t\t" << configname << endl;
-	
-		string tempstr;
-	
-		for (linecount = 0; getline(CFGFILE,tempstr); linecount++);
-		int configEnd = linecount - 1;
-	
-		CFGFILE.clear();						//reset file pointer
-		CFGFILE.seekg(0, ios::beg);
-	
-		cfgLines = new string[linecount];
-	
-		for (int i = 0; i < linecount; i++) getline(CFGFILE,cfgLines[i]);
-	
-		if (locateToken(string("MDAL_VERSION"), 0, configEnd) == configEnd) throw (string("MDAL_VERSION not specified."));
-		string mdVersion = trimChars(getArgumentString(string("MDAL_VERSION"), 0, linecount-1), "()");
-		if (getType(mdVersion) != DEC) throw (string("MDAL_VERSION argument is not a decimal number."));
-		if (stoi(mdVersion, nullptr, 10) > MDALVERSION) throw ("MDAL VERSION " + mdVersion + " not supported in this version of mdalc.");
-		if (verbose) cout << "MDAL version: \t\t" << stoi(mdVersion, nullptr, 10) << endl;
 		
-		if (locateToken(string("TARGET_PLATFORM"), 0, configEnd) != configEnd)
-			targetPlatform = trimChars(getArgumentString(string("TARGET_PLATFORM"), 0, linecount-1), "()\"");
+		pugi::xml_node mdalconfig = xml.child("mdalconfig");
+		if (mdalconfig == nullptr) throw (string("Not a valid MDAL configuration."));
+	
+		string tempstr = mdalconfig.attribute("version").value();
+		if (tempstr == "") throw (string("MDAL_VERSION not specified."));
+		if (getType(tempstr) != DEC) throw (string("MDAL_VERSION argument is not a decimal number."));
+		if (stoi(tempstr, nullptr, 10) != MDALVERSION) throw ("Unsupported MDAL version " + tempstr + ".");
+		if (verbose) cout << "MDAL version: \t\t" << stoi(tempstr, nullptr, 10) << endl;
+		
+		pugi::xml_node tempnode = mdalconfig.child("global");
+		
+		tempstr = tempnode.attribute("target").value();
+		if (tempstr != "") targetPlatform = tempstr;
 		if (verbose) cout << "target platform:\t" << targetPlatform << endl;
-	
-		wordDirective = trimChars(getArgumentString(string("WORD_DIRECTIVE"), 0, configEnd), "()\"");
-		if (wordDirective == "") wordDirective = "dw";
+		
+		tempstr = tempnode.attribute("word_directive").value();
+		wordDirective = (tempstr == "") ? "dw" : tempstr;
 		if (verbose) cout << "word directive:\t\t" << wordDirective << endl;
-	
-		byteDirective = trimChars(getArgumentString(string("BYTE_DIRECTIVE"), 0, configEnd), "()\"");
-		if (byteDirective == "") byteDirective = "db";
+		
+		tempstr = tempnode.attribute("byte_directive").value();
+		byteDirective = (tempstr == "") ? "db" : tempstr;
 		if (verbose) cout << "byte directive:\t\t" << byteDirective << endl;
-	
-		hexPrefix = trimChars(getArgumentString(string("HEX_PREFIX"), 0, configEnd), "()\"");
-		if (hexPrefix == "") hexPrefix = "$";
+		
+		tempstr = tempnode.attribute("hex_prefix").value();
+		hexPrefix = (tempstr == "") ? "$" : tempstr;
 		if (verbose) cout << "hex prefix:\t\t" << hexPrefix << endl;
-	
-
+		
 		if (verbose) cout << "\nSEQUENCE CONFIGURATION\n======================" << endl;
-
-		int blockStart = locateToken(string("CFG_SEQUENCE"), 0, configEnd);
-	
-		if (blockStart == configEnd) throw (string("No CFG_SEQUENCE block found."));
-	
-		else {
 		
-			int blockEnd = getBlockEnd(blockStart);
-			int tokenpos = locateToken(string("USE_LABEL"), blockStart, blockEnd);
+		tempnode = mdalconfig.child("sequence");
 		
-			if (tokenpos != blockEnd) {
+		tempstr = tempnode.attribute("label").value();
+		if (tempstr != "") seqLabel = tempstr;
+		if (verbose) cout << "Sequence label:\t\t" << seqLabel << endl;
 		
-				seqLabel = trimChars(getArgument(cfgLines[tokenpos], 1), "\"");
-				if (seqLabel == "") throw (string("CFG_SEQUENCE: Missing argument in USE_LABEL() declaration."));
-			}
-		
-			if (verbose) cout << "Sequence label:\t\t" << seqLabel << endl;
-		
-		
-			tokenpos = locateToken(string("USE_END"), blockStart, blockEnd);
-		
-			if (tokenpos != blockEnd) {
-		
-				useSeqEnd = true;
-				seqEndString = trimChars(getArgument(cfgLines[tokenpos], 1), "\"");
-				if (seqEndString == "") throw (string("CFG_SEQUENCE: Missing argument in USE_END() declaration."));
-				if (verbose) cout << "Sequence end:\t\t" << seqEndString << endl;
-			}
-		
-		
-			tokenpos = locateToken(string("USE_LOOP"), blockStart, blockEnd);
-		
-			if (tokenpos != blockEnd) {
-		
-				useSeqLoop = true;
-			
-				int argCount = count(cfgLines[tokenpos].begin(), cfgLines[tokenpos].end(), ',') + 1;
-			
-				if (argCount < 2) throw (string("CFG_SEQUENCE: Incomplete loop configuration."));
-			
-				string arg = getArgument(cfgLines[tokenpos], 1);
-			
-				if (arg != "LABEL" && arg != "POINTER") throw ("CFG_SEQUENCE: Invalid loop type \"" + arg + "\".");
-				else if (arg == "POINTER") useSeqLoopPointer = true;
-			
-				seqLoopLabel = trimChars(getArgument(cfgLines[tokenpos], 2), "\"");
-			
-				if (verbose) cout << "Loop type:\t\t" << arg << "\nLoop label:\t\t" << seqLoopLabel << endl;
-			}
-		
-		
-			tokenpos = locateToken(string("MAX_LENGTH"), blockStart, blockEnd);
-	
-			if (tokenpos != blockEnd) {
-	
-				string maxLengthStr = trimChars(getArgument(cfgLines[tokenpos], 1), "\"");
-				if (maxLengthStr == "") throw (string("CFG_SEQUENCE: Missing argument in MAX_LENGTH() declaration."));
-				if (getType(maxLengthStr) == DEC) seqMaxLength = stoi(maxLengthStr, nullptr, 10);
-				else if (getType(maxLengthStr) == HEX) seqMaxLength = stoi(trimChars(maxLengthStr, "$"), nullptr, 16);
-				else throw (string("CFG_SEQUENCE: MAX_LENGTH() does not specify an integer."));
-				if (verbose) cout << "Max. sequence length:\t" << seqMaxLength << endl;
-			}
+		tempstr = tempnode.attribute("end").value();
+		if (tempstr != "") {
+			useSeqEnd = true;
+			seqEndString = tempstr;
+			if (verbose) cout << "Sequence end:\t\t" << seqEndString << endl;
 		}
-	
+		
+		tempstr = tempnode.attribute("loop_type").value();
+		if (tempstr != "") {
+			useSeqLoop = true;
+			if (tempstr != "label" && tempstr != "pointer") throw ("<sequence>: Invalid loop_type \"" + tempstr + "\".");
+			if (tempstr == "pointer") useSeqLoopPointer = true;	
+			if (verbose) cout << "Loop type:\t\t" << tempstr << endl;
+			tempstr = tempnode.attribute("loop_label").value();
+			if (tempstr == "") throw (string("<sequence>: Using loop, but no loop_label specified."));
+			seqLoopLabel = tempstr;
+			if (verbose) cout << "Loop label:\t\t" << tempstr << endl;
+		}
+		
+		tempstr = tempnode.attribute("max_length").value();
+		if (tempstr != "") {
+		
+			if (!isNumber(tempstr)) throw (string("<sequence>: max_length does not specify an integer value."));
+			seqMaxLength = strToNum(tempstr);
+			if (verbose) cout << "Max. sequence length:\t" << seqMaxLength << endl;
+		}
+		
+		
+		pugi::xml_node commands = mdalconfig.child("commands");
+		if (commands == nullptr) throw (string("No <commands> block found."));
+		
 		if (verbose) cout << endl << "USER COMMANDS\n=============" << endl;
-	
-		blockStart = locateToken(string("CFG_COMMANDS"), 0, configEnd);
-		
-		if (blockStart == linecount - 1) throw (string("No CFG_COMMANDS block found."));
-		
-		int blockEnd = getBlockEnd(blockStart);
-		blockStart++;
 
-		mdCmdCount = countBlockLines(blockStart, blockEnd);
-		if (!mdCmdCount) throw (string("CFG_COMMANDS: No commands specified."));
-		mdCmdCount += DEFAULT_COMMAND_COUNT;
-	
+		for (tempnode = commands.child("command"); tempnode; tempnode = tempnode.next_sibling("command")) mdCmdCount++;
+		if (!mdCmdCount) throw (string("<commands>: No commands specified."));
+		
+//		mdCmdCount += DEFAULT_COMMAND_COUNT;
 		mdCmdList = new mdCommand[mdCmdCount];
 		
 		//add two default commands, AUTHOR and TITLE
-		mdCmdList[0].init("BYTE(\"AUTHOR\",\"unknown\",FORCE_STRING|GLOBAL_CONST);", verbose);
-		mdCmdList[1].init("BYTE(\"TITLE\",\"untitled\",FORCE_STRING|GLOBAL_CONST);", verbose);
+		//TODO remove mdCommand.init()
+// 		mdCmdList[0].init("BYTE(\"AUTHOR\",\"unknown\",FORCE_STRING|GLOBAL_CONST);", verbose);
+// 		mdCmdList[1].init("BYTE(\"TITLE\",\"untitled\",FORCE_STRING|GLOBAL_CONST);", verbose);
 
-		int cmdNr = DEFAULT_COMMAND_COUNT;
-	
-		for (int i = blockStart; i < blockEnd; i++) {
-	
-			string cmdStr = cfgLines[i];
-			cmdStr = trimChars(cmdStr, " \t");	//TODO: this trims all whitespace, don't trim whitespace within cmd string params!
-			size_t pos = cmdStr.find_first_of('/');
-			if (pos != string::npos) cmdStr.erase(pos);
-			if (cmdStr != "") {
-			
-				if (cmdStr.find("SUBSTITUTE_FROM(") != string::npos) {
-				
-					string tmp = cmdStr.substr(cmdStr.find("SUBSTITUTE_FROM(") + 16);
-					tmp.erase(tmp.find_first_of(")"));
-					
-					for (int j = 0; j < mdCmdCount; j++) {
-					
-						if (tmp == mdCmdList[j].mdCmdName) mdCmdList[cmdNr].defaultSubstitute = &mdCmdList[j];
-					}
-					
-					if (mdCmdList[cmdNr].defaultSubstitute == nullptr) 
-						throw ("In line " + cmdStr + ": Substitution command \"" + tmp + "\" is undefined."); 
-				}
+//		int cmdNr = DEFAULT_COMMAND_COUNT;
+		int cmdNr = 0;
+		for (tempnode = commands.child("command"); tempnode; tempnode = tempnode.next_sibling("command")) {
 		
-				mdCmdList[cmdNr].init(cmdStr, verbose);
-				cmdNr++;
+			tempstr = tempnode.attribute("id").value();
+			if (tempstr == "") throw (string("<command>: missing command id."));
+			if (tempstr == "NONE" || tempstr == "ANY" || tempstr == "ALL" || tempstr == "CONFIG") 
+				throw ("<command>: Reserved keyword \"" + tempstr + "\" used as command name.");
+			mdCmdList[cmdNr].mdCmdName = tempstr;
+			
+			tempstr = tempnode.attribute("size").value();
+			if (tempstr == "") throw (string("<command>: size not specified."));
+			if (tempstr == "bool") mdCmdList[cmdNr].mdCmdType = BOOL;
+			else if (tempstr == "byte") mdCmdList[cmdNr].mdCmdType = BYTE;
+			else if (tempstr == "word") mdCmdList[cmdNr].mdCmdType = WORD;
+			else throw ("<command>: unknown command type \"" + tempstr + "\".");
+			
+			tempstr = tempnode.attribute("default").value();
+			if (tempstr == "") tempstr = "0";
+			//TODO: strings will fail because they aren't quot-enclosed, change setDefault
+			mdCmdList[cmdNr].setDefault(tempstr);
+			
+			//TODO could be attr of main command declaration
+			pugi::xml_node param = tempnode.child("auto");
+			if (param != nullptr) {
+				tempstr = param.attribute("value").value();
+				if (tempstr == "") throw (string("<command>: missing auto value specification."));
+				if (mdCmdList[cmdNr].mdCmdType == BOOL && getType(tempstr) != BOOL)
+					throw (string("<command>: non-boolean value specified as auto value for bool command."));
+				mdCmdList[cmdNr].mdCmdAutoValString = tempstr;
+				mdCmdList[cmdNr].mdCmdAuto = true;
 			}
-		}
-	
-		if (verbose) cout << endl;
-
-
-
-		for (int line = 0; line < configEnd; line++) {
-		
-			if (cfgLines[line].find("CFG_BLOCK") != string::npos) blockTypeCount++;
-		}
-
-
-		if (!blockTypeCount) throw (string("No block configurations found."));	
-		
-		if (verbose) cout << "BLOCK CONFIGURATIONS\n====================\nBlock types: \t\t" << blockTypeCount << endl;
-
-
-		blockTypes.reserve(blockTypeCount);
-		
-		int bline = 0;
-		
-		for (size_t i = 0; i < blockTypeCount; i++) {
-		
-			blockStart = locateToken(string("CFG_BLOCK"), bline, configEnd);
-			blockEnd = getBlockEnd(blockStart);
-			bline = blockEnd + 1;
 			
-			int tokenpos = locateToken(string("ID"), blockStart, blockEnd);
+			param = tempnode.child("use_note_names");
+			if (param != nullptr) mdCmdList[cmdNr].useNoteNames = true;
+			param = tempnode.child("allow_modifiers");
+			if (param != nullptr) mdCmdList[cmdNr].allowModifiers = true;
+			param = tempnode.child("force_string");
+			if (param != nullptr) mdCmdList[cmdNr].mdCmdForceString = true;
+			param = tempnode.child("force_int");
+			if (param != nullptr) mdCmdList[cmdNr].mdCmdForceInt = true;
+			param = tempnode.child("force_repeat");
+			if (param != nullptr) mdCmdList[cmdNr].mdCmdForceRepeat = true;
+			param = tempnode.child("use_last_set");
+			if (param != nullptr) mdCmdList[cmdNr].mdCmdUseLastSet = true;
+			param = tempnode.child("global_const");
+			if (param != nullptr) mdCmdList[cmdNr].mdCmdGlobalConst = true;
 			
-			if (tokenpos >= blockEnd) throw (string("CFG_BLOCK: Missing block ID in block"));
+			if (mdCmdList[cmdNr].mdCmdForceString && mdCmdList[cmdNr].mdCmdForceInt)
+				throw (string("<command>: force_int and force_string are mutually exclusive."));
 			
-			string id = trimChars(getArgument(cfgLines[tokenpos], 1), "\"");
+			param = tempnode.child("reference");
+			if (param != nullptr) {
+				tempstr = param.attribute("to").value();
+				if (tempstr == "") throw (string("<command>: reference used, but no block id given."));
+				//TODO: check validity of referenceBlkID once blocktypes have been parsed
+				mdCmdList[cmdNr].isBlkReference = true;
+				mdCmdList[cmdNr].referenceBlkID = tempstr;
+			}
 			
-			if (id == "") throw (string("Invalid ID in block"));
-
-			blockTypes.emplace_back(id);
+			param = tempnode.child("range");
+			if (param != nullptr && mdCmdList[cmdNr].mdCmdType != BOOL) {
+				mdCmdList[cmdNr].limitRange = true;
+				tempstr = param.attribute("lower_limit").value();
+				if (tempstr == "") throw (string("<command>: range used, but no lower limit specified."));
+				if (!isNumber(tempstr)) throw (string("<command>: lower limit of range is not an integer."));
+				mdCmdList[cmdNr].lowerRangeLimit = strToNum(tempstr);
+				tempstr = param.attribute("upper_limit").value();
+				if (tempstr == "") throw (string("<command>: range used, but no upper limit specified."));
+				if (!isNumber(tempstr)) throw (string("<command>: upper limit of range is not an integer."));
+				mdCmdList[cmdNr].upperRangeLimit = strToNum(tempstr);
+			}
 			
-			tokenpos = locateToken(string("TYPE"), blockStart, blockEnd)	;
+			param = tempnode.child("substitute");
+			if (param != nullptr) {
+				mdCmdList[cmdNr].mdCmdForceSubstitution = true;
 			
-			if (tokenpos >= blockEnd) blockTypes.back().baseType = GENERIC;
-			else {
+				for (; param; param = param.next_sibling("substitute")) {
+				
+					string key = param.attribute("key").value();
+					if (key == "") throw (string("<command>: missing substitution key."));
+					tempstr = param.attribute("value").value();
+					if (tempstr == "") throw (string("<command>: missing substitution value."));
+					mdCmdList[cmdNr].substitutionList.insert(make_pair(key, tempstr));
+				}
+			}
 			
-				string type = getArgument(cfgLines[tokenpos], 1);
-				if (type == "PATTERN") blockTypes.back().baseType = PATTERN;
-				else if (type == "TABLE") blockTypes.back().baseType = TABLE;
-				else if (type == "GENERIC") blockTypes.back().baseType = GENERIC;
-				else throw ("CFG_BLOCK " + blockTypes.back().blockConfigID + ": Unknown block base type " + type);
-			
+			param = tempnode.child("default_substitute");
+			if (param != nullptr) {
+				tempstr = param.attribute("from").value();
+				if (tempstr == "") throw (string("<command>: default substitute used, but no source given."));
+				
+				for (int j = 0; j < mdCmdCount; j++) {
+					if (tempstr == mdCmdList[j].mdCmdName) {
+						mdCmdList[cmdNr].defaultSubstitute = &mdCmdList[j];
+						break;
+					}
+				}
+				
+				if (mdCmdList[cmdNr].defaultSubstitute == nullptr) 
+					throw ("<command>: default substitution command \"" + tempstr + "\" is undefined.");
 			}
 			
 			if (verbose) {
+				cout << mdCmdList[cmdNr].mdCmdName << ":\t Type is ";
+
+				if (mdCmdList[cmdNr].mdCmdType == BYTE) cout << "BYTE";
+				else if (mdCmdList[cmdNr].mdCmdType == BOOL) cout << "BOOL";
+				else cout << "WORD";
+
+				cout << ", default is ";
+				if (mdCmdList[cmdNr].defaultSubstitute == nullptr) cout << mdCmdList[cmdNr].mdCmdDefaultValString;
+				else cout << "substituted by " << mdCmdList[cmdNr].defaultSubstitute->mdCmdName;
+				if (mdCmdList[cmdNr].useNoteNames) cout << ", USE_NOTE_NAMES";
+				if (mdCmdList[cmdNr].allowModifiers) cout << ", ALLOW_MODIFIERS";
+				if (mdCmdList[cmdNr].mdCmdForceString) cout << ", FORCE_STRING";
+				else if (mdCmdList[cmdNr].mdCmdForceInt) cout << ", FORCE_INT";
+				if (mdCmdList[cmdNr].mdCmdForceRepeat) cout << ", FORCE_REPEAT";
+				if (mdCmdList[cmdNr].mdCmdUseLastSet) cout << ", USE_LAST_SET";
+				if (mdCmdList[cmdNr].mdCmdGlobalConst) cout << ", GLOBAL_CONST";
+				if (mdCmdList[cmdNr].mdCmdAuto) cout << ", AUTO";
+				if (mdCmdList[cmdNr].limitRange) cout << ", RANGE: " << mdCmdList[cmdNr].lowerRangeLimit << ".." 
+					<< mdCmdList[cmdNr].upperRangeLimit;
+				if (mdCmdList[cmdNr].isBlkReference) cout << ", REFERENCE to " << mdCmdList[cmdNr].referenceBlkID;
+				if (mdCmdList[cmdNr].mdCmdForceSubstitution) {
+		
+					cout << ", FORCE_SUBSTITUTION: " << endl;
+					for (auto&& it: mdCmdList[cmdNr].substitutionList) cout << "\t" << it.first << " ==> " << it.second << endl;
+				}
+				else cout << endl;
+			}		
 			
-				cout << "\nBLOCK TYPE " << blockTypes.back().blockConfigID << "\nBase type: \t\t"; 
-				if (blockTypes.back().baseType == GENERIC) cout << "GENERIC";
-				else if (blockTypes.back().baseType == PATTERN) cout << "PATTERN";
-				else cout << "TABLE";
-				cout << endl;
-				
+			cmdNr++;
+		}
+		
+		if (verbose) cout << endl;
+		
+		//TODO merge counting into main parsing loop
+		for (tempnode = mdalconfig.child("blocktype"); tempnode; tempnode = tempnode.next_sibling("blocktype")) blockTypeCount++;
+		if (!blockTypeCount) throw (string("No blocktype configurations found."));
+		if (verbose) cout << "BLOCKTYPE CONFIGURATIONS\n========================\nBlock types: \t\t" << blockTypeCount << endl;
+		blockTypes.reserve(blockTypeCount);
+		
+		for (tempnode = mdalconfig.child("blocktype"); tempnode; tempnode = tempnode.next_sibling("blocktype")) {
+			
+			tempstr = tempnode.attribute("id").value();
+			if (tempstr == "") throw (string("<blocktype>: missing block id."));
+			blockTypes.emplace_back(tempstr);
+			
+			tempstr = tempnode.attribute("type").value();
+			if (tempstr == "") blockTypes.back().baseType = GENERIC;
+			else {
+				if (tempstr == "pattern") blockTypes.back().baseType = PATTERN;
+				else if (tempstr == "table") blockTypes.back().baseType = TABLE;
+				else if (tempstr == "generic") blockTypes.back().baseType = GENERIC;
+				else throw ("<blocktype>: " + blockTypes.back().blockConfigID + ": Unknown block base type " + tempstr);
 			}
 			
+			if (verbose) {
+				cout << "\nBLOCK TYPE " << blockTypes.back().blockConfigID << "\nBase type: \t\t"; 
+				if (blockTypes.back().baseType == GENERIC) cout << "generic";
+				else if (blockTypes.back().baseType == PATTERN) cout << "pattern";
+				else cout << "table";
+				cout << endl;
+			}
 			
-			tokenpos = locateToken(string("USE_END"), blockStart, blockEnd);
-		
-			if (tokenpos != blockEnd) {
-		
+			tempstr = tempnode.attribute("end").value();
+			if (tempstr != "") {
 				blockTypes.back().useBlkEnd = true;
-				blockTypes.back().blkEndString = trimChars(getArgument(cfgLines[tokenpos], 1), "\"");
-				if (blockTypes.back().blkEndString == "") 
-					throw("CFG_BLOCK " + blockTypes.back().blockConfigID + ": Missing argument in USE_END() declaration.");
+				blockTypes.back().blkEndString = tempstr;
 				if (verbose) cout << "Block end:\t\t" << blockTypes.back().blkEndString << endl;
 			}
 			
-			
-			tokenpos = locateToken(string("MAX_LENGTH"), blockStart, blockEnd);
-		
-			if (tokenpos != blockEnd) {
-		
-				string maxLengthStr = trimChars(getArgument(cfgLines[tokenpos], 1), "\"");
-				if (maxLengthStr == "") 
-					throw ("CFG_BLOCK " + blockTypes.back().blockConfigID + ": Missing argument in MAX_LENGTH() declaration.");
-				if (getType(maxLengthStr) == DEC) blockTypes.back().blkMaxLength = stoi(maxLengthStr, nullptr, 10);
-				else if (getType(maxLengthStr) == HEX) blockTypes.back().blkMaxLength = stoi(trimChars(maxLengthStr, "$"), nullptr, 16);
-				else throw("CFG_BLOCK " + blockTypes.back().blockConfigID + ": MAX_LENGTH() does not specify an integer.");
+			tempstr = tempnode.attribute("max_length").value();
+			if (tempstr != "") {
+				if (!isNumber(tempstr)) throw (string("<blocktype>: argument for max_length is not a number."));
+				blockTypes.back().blkMaxLength = strToNum(tempstr);
 				if (verbose) cout << "Max. block length:\t" << blockTypes.back().blkMaxLength << endl;
 			}
 			
-			
-			tokenpos = locateToken(string("LABEL_PREFIX"), blockStart, blockEnd);
-		
-			if (tokenpos != blockEnd) {
-
-				blockTypes.back().blkLabelPrefix = trimChars(getArgument(cfgLines[tokenpos], 1), "\"");
-				if (blockTypes.back().blkLabelPrefix == "") 
-					throw ("CFG_BLOCK " + blockTypes.back().blockConfigID + ": Missing argument in LABEL_PREFIX() declaration.");
+			tempstr = tempnode.attribute("label_prefix").value();
+			if (tempstr != "") {
+				if (isNumber(tempstr)) throw (string("<blocktype>: argument for label_prefix is not a string."));
+				blockTypes.back().blkLabelPrefix = tempstr;
 			}
-		
 			if (verbose) cout << "Pattern label prefix:\t" << blockTypes.back().blkLabelPrefix << endl;
-		
-		
-			tokenpos = locateToken(string("INIT_DEFAULTS"), blockStart, blockEnd);
-		
-			if (tokenpos != blockEnd) {
-		
+			
+			pugi::xml_node argnode = tempnode.child("init_defaults");
+			if (argnode != nullptr) {
 				blockTypes.back().initBlkDefaults = true;
 				if (verbose) cout << "Initialize commands with default values at each block start" << endl;
 			}
 			
-			
-			blockTypes.back().blkFieldCount = countFields(blockStart, blockEnd);
-			if (!blockTypes.back().blkFieldCount) throw ("CFG_BLOCK " + blockTypes.back().blockConfigID + ": No output fields specified.");
-		
+			for (argnode = tempnode.child("field"); argnode; argnode = argnode.next_sibling("field")) blockTypes.back().blkFieldCount++;
+			if (!blockTypes.back().blkFieldCount) throw (string("<blocktype>: no output fields specified."));
 			blockTypes.back().blkFieldList = new mdField[blockTypes.back().blkFieldCount];
-		
 			int fieldNr = 0;
-			string requireBlkBeginStr = "";
-			string requireSeqBeginStr = "";
-		
-			for (int line = blockStart; line < blockEnd; line++) {
-	
-				string fieldStr = cfgLines[line];
-				fieldStr = trimChars(fieldStr, " \t");	//TODO: this trims all whitespace, don't trim whitespace within cmd string params!
-				size_t pos = fieldStr.find_first_of('/');
-				if (pos != string::npos) fieldStr.erase(pos);
-				if (fieldStr != "" && (fieldStr.find("WORD") != string::npos || fieldStr.find("BYTE") != string::npos)) {
-		
-					blockTypes.back().blkFieldList[fieldNr].init(mdCmdList, mdCmdCount, fieldStr);
 			
-					if (verbose) {
-			
-						cout << "Field " << fieldNr;
-						if (blockTypes.back().blkFieldList[fieldNr].requiredAlways) cout << " always required";
-						else {
-							cout << " required if ";
-							for (int j = 0; j < mdCmdCount; j++) {
+			for (argnode = tempnode.child("field"); argnode; argnode = argnode.next_sibling("field")) {
 				
-								if (blockTypes.back().blkFieldList[fieldNr].requiredBy[j]) {
-							
-									bool lastentry = true;
-									for (int k = j + 1; k < mdCmdCount; k++) 
-										if (blockTypes.back().blkFieldList[fieldNr].requiredBy[k]) lastentry = false;
-					
-									cout << mdCmdList[j].mdCmdName;
-									if (blockTypes.back().blkFieldList[fieldNr].requiredWhenSet[j]) cout << " is set ";
-									else cout << " is not set ";
+				pugi::xml_node param;
+				tempstr = argnode.attribute("size").value();
+				if (tempstr == "") throw (string("<blocktype><field>: no field size specified."));
+				if (tempstr == "word") blockTypes.back().blkFieldList[fieldNr].isWord = true;
+				else if (tempstr != "byte") throw ("<blocktype><field>: invalid field size argument \"" + tempstr + "\".");
+				else {
+					param = argnode.child("set_hi");
+					if (param != nullptr) throw (string("<blocktype><field>: set_hi not allowed on byte-sized fields."));
+				}
+				
+				//TODO inefficient
+				param = argnode.child("set_hi");
+				if (param == nullptr) {
+					param = argnode.child("set_lo");
+					if (param == nullptr) {
+						param = argnode.child("set");
+						if (param == nullptr) {
+							param = argnode.child("set_if");
+							if (param == nullptr) {
+								param = argnode.child("set_bits");
+								if (param == nullptr) 
+									throw (string("<blocktype><field>: field not set by any command."));
+							}
+						}	
+					}
+				}
+				
+				blockTypes.back().blkFieldList[fieldNr].requiredBy = new bool[mdCmdCount];
+				blockTypes.back().blkFieldList[fieldNr].requiredWhenSet = new bool[mdCmdCount];
+				for (int i = 0; i < mdCmdCount; i++) {
+					blockTypes.back().blkFieldList[fieldNr].requiredBy[i] = false;
+					blockTypes.back().blkFieldList[fieldNr].requiredWhenSet[i] = true;
+				}
+				
+				param = argnode.child("required_seq_begin");
+				if (param != nullptr) blockTypes.back().blkFieldList[fieldNr].requiredSeqBegin = true;
+				
+				param = argnode.child("required_blk_begin");
+				if (param != nullptr) blockTypes.back().blkFieldList[fieldNr].requiredBlkBegin = true;
+				
+				param = argnode.child("required");
+				if (param != nullptr) {
+				
+					tempstr = param.attribute("if").value();
+					if (tempstr == "") blockTypes.back().blkFieldList[fieldNr].requiredAlways = true;
+					else {
+						if (tempstr.find_first_not_of("()ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!&|") != string::npos) 
+							throw ("<blocktype><field>: Invalid argument in <required if=\"" + tempstr + "\"");
+						if (tempstr.find('&') != string::npos) {
+							blockTypes.back().blkFieldList[fieldNr].requiredByAny = false;
+							if (tempstr.find('|') != string::npos) 
+								throw ("<blocktype><field>: Use of both & and | in <required if=\"" + tempstr + "\"");
+						}
+						//handle global NOT
+						if (tempstr.size() > 1 && tempstr.substr(0,2) == "!(") {
 						
-									if (blockTypes.back().blkFieldList[fieldNr].requiredByAny && !lastentry) cout << "or ";
-									else if (!blockTypes.back().blkFieldList[fieldNr].requiredByAny && !lastentry) cout << "and ";
-								}
+							for (int i = 0; i < mdCmdCount; i++) 
+								blockTypes.back().blkFieldList[fieldNr].requiredWhenSet[i] = false;
+							tempstr.erase(0,2);
+							tempstr = trimChars(tempstr, ")");
+						}
+		
+						if (tempstr.find('(') != string::npos) 
+							throw ("<blocktype><field>: Expression too complex in <required if=\"" + tempstr + "\"");
+		
+						if (tempstr == "NONE") {
+		
+							for (int j = 0; j < mdCmdCount; j++) {
+			
+								blockTypes.back().blkFieldList[fieldNr].requiredWhenSet[j] = false;
+								blockTypes.back().blkFieldList[fieldNr].requiredBy[j] = true;
 							}
 						}
+						else if (tempstr == "ALL") {
+		
+							blockTypes.back().blkFieldList[fieldNr].requiredByAny = false;
+							for (int j = 0; j < mdCmdCount; j++) 
+								blockTypes.back().blkFieldList[fieldNr].requiredBy[j] = true;
+						}
+						else if (tempstr == "ANY") {
+		
+							for (int j = 0; j < mdCmdCount; j++) 
+								blockTypes.back().blkFieldList[fieldNr].requiredBy[j] = true;
+						}
+						else {
+		
+							while (tempstr != "") {
+		
+								bool setNot = false;
+								string cmdString = "";
+			
+								if (tempstr.substr(0,1) == "!") {
+									setNot = true;
+									tempstr.erase(0,1);
+								}
+			
+								cmdString = tempstr.substr(0, tempstr.find_first_of("&|"));
+
+								int cmdNr = getCmdNr(cmdString);
+								if (cmdNr == -1) 
+									throw ("<blocktype><field>: Unknown command \"" + cmdString 
+										+ "\" found in required expression");
+			
+								blockTypes.back().blkFieldList[fieldNr].requiredBy[cmdNr] = true;
+								if (setNot) blockTypes.back().blkFieldList[fieldNr].requiredWhenSet[cmdNr] = false;
+			
+								if (tempstr != cmdString) tempstr.erase(0, tempstr.find_first_of("&|") + 1);	//or npos
+								else tempstr = "";
+							}
+						}
+					}
+				}
 				
-						cout << endl;
+				blockTypes.back().blkFieldList[fieldNr].useCmd = new bool[mdCmdCount];
+				fill_n(blockTypes.back().blkFieldList[fieldNr].useCmd, mdCmdCount, false);
+				
+				param = argnode.child("set_hi");
+				if (param != nullptr) {
+					tempstr = param.attribute("from").value();
+					if (tempstr == "") throw (string("<blocktype><field><set_hi>: missing from= argument"));
+					int cmdNr = getCmdNr(tempstr);
+					if (cmdNr == -1) throw ("<blocktype><field><set_hi>: Unknown command \"" + tempstr + "\" in from= argument");
+					if (mdCmdList[cmdNr].mdCmdType != BYTE) 
+						throw ("<blocktype><field><set_hi>: Command \"" + tempstr + "\" is not byte-sized");
+					blockTypes.back().blkFieldList[fieldNr].requiredBy[cmdNr] = true;
+					blockTypes.back().blkFieldList[fieldNr].setHiBy = cmdNr;
+					blockTypes.back().blkFieldList[fieldNr].useCmd[cmdNr] = true;
+				}
+				
+				param = argnode.child("set_lo");
+				if (param != nullptr) {
+					tempstr = param.attribute("from").value();
+					if (tempstr == "") throw (string("<blocktype><field><set_lo>: missing from= argument"));
+					int cmdNr = getCmdNr(tempstr);
+					if (cmdNr == -1) throw ("<blocktype><field><set_lo>: Unknown command \"" + tempstr + "\" in from= argument");
+					if (mdCmdList[cmdNr].mdCmdType != BYTE) 
+						throw ("<blocktype><field><set_lo>: Command \"" + tempstr + "\" is not byte-sized");
+					blockTypes.back().blkFieldList[fieldNr].requiredBy[cmdNr] = true;
+					blockTypes.back().blkFieldList[fieldNr].setLoBy = cmdNr;
+					blockTypes.back().blkFieldList[fieldNr].useCmd[cmdNr] = true;
+				}
+				
+				param = argnode.child("set");
+				if (param != nullptr) {
+					tempstr = param.attribute("from").value();
+					if (tempstr == "") throw (string("<blocktype><field><set>: missing from= argument"));
+					int cmdNr = getCmdNr(tempstr);
+					if (cmdNr == -1) throw ("<blocktype><field><set>: Unknown command \"" + tempstr + "\" in from= argument");
+					if (mdCmdList[cmdNr].mdCmdType == BOOL) 
+						throw ("<blocktype><field><set>: Command \"" + tempstr + "\" is boolean");
+					blockTypes.back().blkFieldList[fieldNr].requiredBy[cmdNr] = true;
+					blockTypes.back().blkFieldList[fieldNr].setBy = cmdNr;
+					blockTypes.back().blkFieldList[fieldNr].useCmd[cmdNr] = true;
+				}
+				
+				for (param = argnode.child("set_bits"); param; param = param.next_sibling("set_bits"))
+					blockTypes.back().blkFieldList[fieldNr].setBitsCount++;
+				if (blockTypes.back().blkFieldList[fieldNr].setBitsCount) {
+					blockTypes.back().blkFieldList[fieldNr].setBitsBy = new bool[mdCmdCount];
+					fill_n(blockTypes.back().blkFieldList[fieldNr].setBitsBy, mdCmdCount, false);
+					blockTypes.back().blkFieldList[fieldNr].setBitsMask = new int[mdCmdCount];
+					fill_n(blockTypes.back().blkFieldList[fieldNr].setBitsMask, mdCmdCount, 0);
+					blockTypes.back().blkFieldList[fieldNr].setBitsClear = new int[mdCmdCount];
+					fill_n(blockTypes.back().blkFieldList[fieldNr].setBitsClear, mdCmdCount, 0);
+				}
+
+				for (param = argnode.child("set_bits"); param; param = param.next_sibling("set_bits")) {
+				
+					string from = param.attribute("from").value();
+					if (from == "") throw (string("<blocktype><field><set_bits>: missing from= argument"));
+					int cmdNr = getCmdNr(from);
+					if (cmdNr == -1) throw ("<blocktype><field><set_bits>: unknown source command \"" + from);
+					if (mdCmdList[cmdNr].mdCmdType != BOOL) 
+						throw ("<blocktype><field><set_bits>: \"" + from + "\" is not boolean command");
+					
+					string mask = param.attribute("value").value();
+					if (mask == "") throw (string("<blocktype><field><set_bits>: missing value= argument"));
+					if (!isNumber(mask)) throw (string("<blocktype><field><set_bits>: value argument is not a number"));
+					
+					blockTypes.back().blkFieldList[fieldNr].setBitsMask[cmdNr] = strToNum(mask);
+					blockTypes.back().blkFieldList[fieldNr].requiredBy[cmdNr] = true;
+					blockTypes.back().blkFieldList[fieldNr].setBitsBy[cmdNr] = true;
+					blockTypes.back().blkFieldList[fieldNr].useCmd[cmdNr] = true;
+					
+					tempstr = param.attribute("clear").value();
+					if (tempstr != "") {
+						if (tempstr == "all") blockTypes.back().blkFieldList[fieldNr].setBitsClear[cmdNr] = CLEAR_ALL;
+						else if (tempstr == "hi") blockTypes.back().blkFieldList[fieldNr].setBitsClear[cmdNr] = CLEAR_HI;
+						else if (tempstr == "lo") blockTypes.back().blkFieldList[fieldNr].setBitsClear[cmdNr] = CLEAR_LO;
+						else throw (string("<blocktype><field><set_bits>: Invalid argument for clear="));
+					}
+				}
+				
+				for (param = argnode.child("set_if"); param; param = param.next_sibling("set_if"))
+					blockTypes.back().blkFieldList[fieldNr].setIfCount++;
+				if (blockTypes.back().blkFieldList[fieldNr].setIfCount) {
+					blockTypes.back().blkFieldList[fieldNr].setIfBy = new bool*[blockTypes.back().blkFieldList[fieldNr].setIfCount];
+					blockTypes.back().blkFieldList[fieldNr].setIfWhenSet = new bool*[blockTypes.back().blkFieldList[fieldNr].setIfCount];
+					blockTypes.back().blkFieldList[fieldNr].setIfByAny = new bool[blockTypes.back().blkFieldList[fieldNr].setIfCount];
+					fill_n(blockTypes.back().blkFieldList[fieldNr].setIfByAny, blockTypes.back().blkFieldList[fieldNr].setIfCount, true);
+					blockTypes.back().blkFieldList[fieldNr].setIfMask = new int[blockTypes.back().blkFieldList[fieldNr].setIfCount];
+					fill_n(blockTypes.back().blkFieldList[fieldNr].setIfMask, blockTypes.back().blkFieldList[fieldNr].setIfCount, 0);
+					blockTypes.back().blkFieldList[fieldNr].setIfClear = new int[blockTypes.back().blkFieldList[fieldNr].setIfCount];
+					fill_n(blockTypes.back().blkFieldList[fieldNr].setIfClear, blockTypes.back().blkFieldList[fieldNr].setIfCount, 0);
+					blockTypes.back().blkFieldList[fieldNr].setIfAlways = new bool[blockTypes.back().blkFieldList[fieldNr].setIfCount];
+					fill_n(blockTypes.back().blkFieldList[fieldNr].setIfAlways, blockTypes.back().blkFieldList[fieldNr].setIfCount, false);
+					for (int i = 0; i < blockTypes.back().blkFieldList[fieldNr].setIfCount; i++) {
+						blockTypes.back().blkFieldList[fieldNr].setIfBy[i] = new bool[mdCmdCount];
+						fill_n(blockTypes.back().blkFieldList[fieldNr].setIfBy[i], mdCmdCount, false);
+						blockTypes.back().blkFieldList[fieldNr].setIfWhenSet[i] = new bool[mdCmdCount];
+						fill_n(blockTypes.back().blkFieldList[fieldNr].setIfWhenSet[i], mdCmdCount, true);
+					}
+				}
+				int count = 0;
+				for (param = argnode.child("set_if"); param; param = param.next_sibling("set_if")) {
+				
+					string cond = param.attribute("if").value();
+					if (cond.find_first_not_of("()ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!&|$") != string::npos) 
+						throw (string("<blocktype><field><set_if>: Invalid condition argument"));
+					
+					string mask = param.attribute("value").value();
+					if (mask == "") throw (string("<blocktype><field><set_if>: missing value= argument"));
+					if (!isNumber(mask)) throw (string("<blocktype><field><set_if>: value argument is not a number"));
+					blockTypes.back().blkFieldList[fieldNr].setIfMask[count] = strToNum(mask);
+					
+					tempstr = param.attribute("clear").value();
+					if (tempstr != "") {
+						if (tempstr == "all") blockTypes.back().blkFieldList[fieldNr].setIfClear[count] = CLEAR_ALL;
+						else if (tempstr == "hi") blockTypes.back().blkFieldList[fieldNr].setIfClear[count] = CLEAR_HI;
+						else if (tempstr == "lo") blockTypes.back().blkFieldList[fieldNr].setIfClear[count] = CLEAR_LO;
+						else throw (string("<blocktype><field><set_if>: Invalid argument for clear="));
 					}
 			
-					fieldNr++;
-				}
+					if (cond.find('&') != string::npos) {
+						blockTypes.back().blkFieldList[fieldNr].setIfByAny[count] = false;
+						if (cond.find('|') != string::npos) 
+							throw (string("<blocktype><field><set_if>: Use of both & and | in condition"));
+					}
 		
-				if (fieldStr.find("REQUIRE_SEQ_BEGIN") != string::npos) requireSeqBeginStr = fieldStr;
-				if (fieldStr.find("REQUIRE_BLK_BEGIN") != string::npos) requireBlkBeginStr = fieldStr;
-			}
+					if (cond == "") blockTypes.back().blkFieldList[fieldNr].setIfAlways[count] = true;			
+					else {
+						//handle global NOT
+						if (cond.size() > 1 && cond.substr(0,2) == "!(") {
+							for (int j = 0; j < mdCmdCount; j++) 
+								blockTypes.back().blkFieldList[fieldNr].setIfWhenSet[count][j] = false;
+							cond.erase(0,2);
+							cond = trimChars(cond, ")");
+						}
 			
-			//TODO implementation incomplete
-			if (requireSeqBeginStr != "") {
-	
-				for (int j = 0; j < blockTypes.back().blkFieldCount; j++) blockTypes.back().blkFieldList[j].requiredSeqBegin = true;
-			}
-	
-			if (requireBlkBeginStr != "") {
-	
-				for (int j = 0; j < blockTypes.back().blkFieldCount; j++) blockTypes.back().blkFieldList[j].requiredBlkBegin = true;	
+						if (cond.find('(') != string::npos) 
+							throw (string("<blocktype><field><set_if>: expression too complex"));
+			
+						if (cond == "none") {
+							for (int j = 0; j < mdCmdCount; j++) {
+								blockTypes.back().blkFieldList[fieldNr].setIfWhenSet[count][j] = false;
+								blockTypes.back().blkFieldList[fieldNr].setIfBy[count][j] = true;
+								blockTypes.back().blkFieldList[fieldNr].setIfByAny[count] = false;
+							}
+						}
+						else if (cond == "all") {
+			
+							blockTypes.back().blkFieldList[fieldNr].setIfByAny[count] = false;
+							for (int j = 0; j < mdCmdCount; j++) 
+								blockTypes.back().blkFieldList[fieldNr].setIfBy[count][j] = true;
+						}
+						else if (cond == "any") {
+							for (int j = 0; j < mdCmdCount; j++) 
+								blockTypes.back().blkFieldList[fieldNr].setIfBy[count][j] = true;
+						}
+						else {
+							while (cond != "") {
+								bool setNot = false;
+								string cmdString = "";
+				
+								if (cond.substr(0,1) == "!") {
+									setNot = true;
+									cond.erase(0,1);
+								}
+				
+								cmdString = cond.substr(0, cond.find_first_of("&|"));
 
+								int cmdNr = getCmdNr(cmdString);
+								if (cmdNr == -1) 
+									throw ("<blocktype><field><set_if>: Unknown command \"" + cmdString + "\" in condition");
+					
+								blockTypes.back().blkFieldList[fieldNr].useCmd[cmdNr] = true;
+								blockTypes.back().blkFieldList[fieldNr].setIfBy[count][cmdNr] = true;
+								if (setNot) blockTypes.back().blkFieldList[fieldNr].setIfWhenSet[count][cmdNr] = false;
+				
+								if (cond != cmdString) cond.erase(0, cond.find_first_of("&|") + 1);	//or npos
+								else cond = "";
+							}
+						}
+					}
+					count++;
+				}
+				
+				if (verbose) {
+					cout << "Field " << fieldNr;
+					if (blockTypes.back().blkFieldList[fieldNr].requiredAlways) cout << " always required";
+					else {
+						cout << " required if ";
+						for (int j = 0; j < mdCmdCount; j++) {
+							if (blockTypes.back().blkFieldList[fieldNr].requiredBy[j]) {
+								bool lastentry = true;
+								for (int k = j + 1; k < mdCmdCount; k++) 
+									if (blockTypes.back().blkFieldList[fieldNr].requiredBy[k]) lastentry = false;
+								cout << mdCmdList[j].mdCmdName;
+								if (blockTypes.back().blkFieldList[fieldNr].requiredWhenSet[j]) cout << " is set ";
+								else cout << " is not set ";
+								if (blockTypes.back().blkFieldList[fieldNr].requiredByAny && !lastentry) cout << "or ";
+								else if (!blockTypes.back().blkFieldList[fieldNr].requiredByAny && !lastentry) cout << "and ";
+							}
+						}
+					}
+					cout << endl;
+				}
+				fieldNr++;
 			}
-		
 		}
-		
 		
 		bool ptnBlockPresent = false;
-		
-
 		for (auto&& it : blockTypes) {
-		
 			if (it.baseType == PATTERN) ptnBlockPresent = true;
 		}
-		
 		if (!ptnBlockPresent) throw(string("Must declare at least one block type as base type PATTERN"));
 		
-		
 		for (int i = 0; i < mdCmdCount; i++) {
-		
 			if (mdCmdList[i].isBlkReference) {
-			
 				bool validRef = false;
 				for (auto&& it : blockTypes) if (it.blockConfigID == mdCmdList[i].referenceBlkID) validRef = true;
-				
 				if (!validRef) throw("Block type referenced by command " + mdCmdList[i].mdCmdName + " does not exist.");
 			}
 		}
-		
-		//TODO: check reference command validity
 
-	
-		if (locateToken(string("USE_SAMPLES"), 0, configEnd) != configEnd) {
-	
-			useSamples = true;
-			if (verbose) cout << "using SAMPLES - this feature is not supported yet." << endl;
-		}
+		//TODO legacy code
+// 		if (locateToken(string("USE_SAMPLES"), 0, configEnd) != configEnd) {
+// 	
+// 			useSamples = true;
+// 			if (verbose) cout << "using SAMPLES - this feature is not supported yet." << endl;
+// 		}
 	
 	
 		return;
@@ -428,112 +700,10 @@ void mdConfig::init(const string &configname, bool &verbose) {
 }
 
 
-int mdConfig::countFields(const int &blockStart, const int &blockEnd) {
+int mdConfig::getCmdNr(const string &cmdString) {
 
-	int fieldCount = 0;
-	
-	for (int line = blockStart; line < blockEnd; line++) {
-	
-		string temp = cfgLines[line];
-		if (temp.find_first_of('/') != string::npos) temp.erase(temp.find_first_of('/'));
-		if (temp.find("WORD") != string::npos || temp.find("BYTE") != string::npos) fieldCount++;
-	}
-	
-	return fieldCount;
-}
-
-
-//count lines in a definition block, omitting comments and empty lines
-int mdConfig::countBlockLines(const int &blockStart, const int &blockEnd) {
-
-	int cmdlines = 0;
-	
-	for (int line = blockStart; line < blockEnd; line++) {
-	
-		if (trimChars(cfgLines[line], " \t") != "") cmdlines++;
-	}
-	
-	return cmdlines;
-}
-
-
-int mdConfig::getBlockEnd(const int &blockStart) {
-
-	int line;
-	size_t pos = string::npos;
-	
-	for (line = blockStart; line < linecount && pos == string::npos; line++) pos = cfgLines[line].find("}");
-	
-	return line - 1;
-}
-
-
-int mdConfig::locateToken(const string &token, const int &blockStart, const int &blockEnd) {
-
-	size_t tokensize = token.size();
-	string tempstr2;
-	
-	for (int line = blockStart; line <= blockEnd; line++) {
-	
-		tempstr2 = trimChars(cfgLines[line], " \t");
-		if (tempstr2.compare(0, tokensize, token) == 0) return line;
-	}
-
-	return blockEnd;
-}
-
-
-string mdConfig::getArgument(const string &argString, int argNumber) {
-
-	string arg = argString;
-	size_t pos = arg.find("(");
-	
-	arg.erase(0, pos + 1);
-	
-	arg.erase(0, arg.find_first_not_of(' '));
-	
-	
-	for (int removeCnt = 0; removeCnt < argNumber - 1; removeCnt++) {
-		pos = arg.find(",");
-		arg.erase(0, pos + 1);
-		arg.erase(0, arg.find_first_not_of(' '));
-	}
-
-	pos = arg.find(",");
-	if (pos != string::npos) arg.erase(pos);
-	
-	pos = arg.find(")");
-	if (pos != string::npos) arg.erase(pos);
-	
-	arg.erase(arg.find_last_not_of(' ')+1); 
-	
-	return arg;
-}
-
-//TODO: do not delete any chars enclosed in quotation marks
-//not needed for now, can use getArgument() which does not trim whitespace
-string mdConfig::getArgumentString(string token, const int &blockStart, const int &blockEnd) {
-
-	string tempstr = "";
-	int line;
-	size_t pos;
-	int quotcnt;
-
-	for (line = blockStart; line <= blockEnd && tempstr == ""; line++) {
-	
-		pos = cfgLines[line].find(token.data());
-		if (pos != string::npos) {
-		
-			quotcnt = count(cfgLines[line].begin(), cfgLines[line].end(), '"');
-			if ((quotcnt & 1) == 1) throw ("Expecting another \" in line " + to_string(line+1));
-			tempstr = trimChars(cfgLines[line].substr(pos + token.size()), " ");
-		}
-	}
-	
-	pos = tempstr.find(";");					//strip ";" and comment
-	if (pos != string::npos) tempstr.erase(pos);
-	
-	return tempstr;
+	for (int i = 0; i < mdCmdCount; i++) if (cmdString == mdCmdList[i].mdCmdName) return i;	
+	return -1;
 }
 
 
@@ -550,19 +720,11 @@ bool mdConfig::isCompatible(const mdCommand &cmd1, const mdCommand &cmd2) {
 	if (cmd1.isBlkReference != cmd2.isBlkReference) return false;
 	if (cmd1.referenceBlkID != cmd2.referenceBlkID) return false;
 	if (cmd1.defaultSubstitute != cmd2.defaultSubstitute) return false;
-//	if (cmd1.mdCmdAutoVal != cmd2.mdCmdAutoVal) return false;
 	if (cmd1.mdCmdAutoValString != cmd2.mdCmdAutoValString) return false;
 	if (cmd1.mdCmdForceString != cmd2.mdCmdForceString) return false;
 	if (cmd1.mdCmdForceInt != cmd2.mdCmdForceInt) return false;
 	if (cmd1.mdCmdForceSubstitution != cmd2.mdCmdForceSubstitution) return false;
-	else {
-// 		if (cmd1.mdCmdSubstitutionListLength != cmd2.mdCmdSubstitutionListLength) return false;
-// 		for (int i = 0; i < cmd1.mdCmdSubstitutionListLength; i++) {
-// 			if (cmd1.mdCmdSubstitutionNames[i] != cmd2.mdCmdSubstitutionNames[i]) return false;
-// 			if (cmd1.mdCmdSubstitutionValues[i] != cmd2.mdCmdSubstitutionValues[i]) return false;
-// 		}
-		if (cmd1.substitutionList != cmd2.substitutionList) return false;
-	}
+	else if (cmd1.substitutionList != cmd2.substitutionList) return false;
 	if (cmd1.mdCmdForceRepeat != cmd2.mdCmdForceRepeat) return false;
 //	if (cmd1.mdCmdUseLastSet != cmd2.mdCmdUseLastSet) return false;
 	if (cmd1.mdCmdGlobalConst != cmd2.mdCmdGlobalConst) return false;

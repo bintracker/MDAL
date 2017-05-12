@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<mdalconfig version="1">
+	<global target="zxspectrum48" word_directive="dw" byte_directive="db" />
+	<sequence tracks="1" end="dw 0" label="mdseq" loop_type="label" loop_label="loop" />
+	<commands>
+		<command id="AUTHOR" size="byte" default="unknown">
+			<force_string />
+			<global_const />
+		</command>
+		<command id="TITLE" size="byte" default="untitled">
+			<force_string />
+			<global_const />
+		</command>
+		<command id="GSPD" size="byte" default="$10">
+			<global_const />
+		</command>
+		<command id="SPD" size="byte">
+			<default_substitute from="GSPD" />
+			<force_repeat />
+		</command>
+		<command id="FX" size="word" default="fx0">
+			<force_string />
+			<reference to="FxTables" />
+		</command>
+		<command id="A" size="word">
+			<use_last_set />
+			<use_note_names />
+			<allow_modifiers />
+		</command>
+		<command id="B" size="word">
+			<use_last_set />
+			<use_note_names />
+			<allow_modifiers />
+		</command>
+		<command id="DA" size="byte" default="$40">
+			<use_last_set />
+		</command>
+		<command id="DB" size="byte" default="$40">
+			<use_last_set />
+		</command>
+		<command id="SIDA" size="byte" default="$c6">
+			<use_last_set />
+			<substitute key="off" value="$c6" />
+			<substitute key="on" value="$ce" />
+		</command>
+		<command id="SIDB" size="byte" default="$c6">
+			<use_last_set />
+			<substitute key="off" value="$c6" />
+			<substitute key="on" value="$ce" />
+		</command>
+		<command id="ESA" size="byte">
+			<use_last_set />
+		</command>
+		<command id="ESB" size="byte">
+			<use_last_set />
+		</command>
+		<command id="PAB" size="word">
+			<use_last_set />
+		</command>
+		<command id="C" size="word">
+			<use_last_set />
+			<use_note_names />
+			<allow_modifiers />
+		</command>
+		<command id="D" size="word">
+			<use_last_set />
+			<use_note_names />
+			<allow_modifiers />
+		</command>
+		<command id="DC" size="byte" default="$40">
+			<use_last_set />
+		</command>
+		<command id="DD" size="byte" default="$40">
+			<use_last_set />
+		</command>
+		<command id="NC" size="bool">
+			<use_last_set />
+			<substitute key="off" value="false" />
+			<substitute key="on" value="true" />
+		</command>
+		<command id="PCD" size="word">
+			<use_last_set />
+		</command>
+		<command id="DRUM" size="byte">
+			<substitute key="kick" value="$40" />
+			<substitute key="hhat" value="$80" />
+		</command>
+		<command id="GMIX" size="byte" default="$b0">
+			<force_repeat />
+			<substitute key="or" value="$b0" />
+			<substitute key="xor" value="$a8" />
+			<substitute key="and" value="$a0" />
+		</command>
+		<command id="MIXAB" size="byte" default="$b0">
+			<use_last_set />
+			<substitute key="or" value="$b0" />
+			<substitute key="xor" value="$a8" />
+			<substitute key="and" value="$a0" />
+		</command>
+		<command id="MIXCD" size="byte" default="$b0">
+			<use_last_set />
+			<substitute key="or" value="$b0" />
+			<substitute key="xor" value="$a8" />
+			<substitute key="and" value="$a0" />
+		</command>
+		<command id="FXJUMP" size="word" default="fx0">
+			<force_string />
+			<reference to="FxTables" />
+		</command>
+		<command id="FXSTOP" size="bool">
+			<auto value="true" />
+		</command>
+	</commands>
+	<blocktype id="Patterns" type="pattern" end="db $40">
+		<field size="word">
+			<required_seq_begin />
+			<required />
+			<set_if if="!(A&B&DA&DB&SIDA&SIDB&ESA&ESB&PAB&C&D&DC&DD&NC&PCD&MIXAB&MIXCD)" value="4" />
+			<set_if if="!FX" value="1" />
+			<set_if if="!(A&B&DA&DB&SIDA&SIDB&ESA&ESB&PAB&MIXAB)" value="$80" />
+			<set_hi from="GMIX" />
+		</field>
+		<field size="word">
+			<required_seq_begin />
+			<set from="FX" />
+		</field>
+		<field size="word">
+			<required_seq_begin />
+			<required if="A|B|DA|DB|SIDA|SIDB|ESA|ESB|PAB|MIXAB" />
+			<set_if if="!(A&B)" value="1" />
+			<set_if if="!(SIDA&SIDB&ESA&ESB)" value="4" />
+			<set_if if="!(DA&DB)" value="$40" />
+			<set_if if="!PAB" value="$80" />
+			<set_hi from="MIXAB" />
+		</field>
+		<field size="word">
+			<required_seq_begin />
+			<required if="B" />
+			<set from="A" />
+		</field>
+		<field size="word">
+			<required_seq_begin />
+			<required if="A" />
+			<set from="B" />
+		</field>
+		<field size="word">
+			<required_seq_begin />
+			<set_hi from="DA" />
+			<set_lo from="DB" />
+		</field>
+		<field size="word">
+			<required_seq_begin />
+			<required if="SIDB|ESB" />
+			<set_hi from="ESA" />
+			<set_lo from="SIDA" />
+		</field>
+		<field size="word">
+			<required_seq_begin />
+			<required if="SIDA|ESA" />
+			<set_hi from="ESB" />
+			<set_lo from="SIDB" />
+		</field>
+		<field size="word">
+			<required_seq_begin />
+			<set from="PAB" />
+		</field>
+		<field size="word">
+			<required_seq_begin />
+			<required if="A|B|DA|DB|SIDA|SIDB|ESA|ESB|PAB|MIXAB|C|D|DC|DD|NC|PCD|MIXCD" />
+			<set_if if="!(C&D)" value="1" />
+			<set_if if="!(DC&DD)" value="$40" />
+			<set_if if="!PCD" value="$80" />
+			<set_hi from="MIXCD" />
+			<set_bits from="NC" value="4" />
+		</field>
+		<field size="word">
+			<required_seq_begin />
+			<required if="D" />
+			<set from="C" />
+		</field>
+		<field size="word">
+			<required_seq_begin />
+			<required if="C" />
+			<set from="D" />
+		</field>
+		<field size="word">
+			<required_seq_begin />
+			<set_hi from="DC" />
+			<set_lo from="DD" />
+		</field>
+		<field size="word">
+			<required_seq_begin />
+			<set from="PCD" />
+		</field>
+		<field size="word">
+			<required_seq_begin />
+			<required />
+			<set_hi from="SPD" />
+			<set_lo from="DRUM" />
+		</field>
+	</blocktype>
+	<blocktype id="FxTables" type="table">
+		<field size="word">
+			<required />
+			<set_if if="!(A&B&DA&DB&SIDA&SIDB&ESA&ESB&PAB&C&D&DC&DD&NC&PCD&MIXAB&MIXCD)" value="4" />
+			<set_if if="!(A&B&DA&DB&SIDA&SIDB&ESA&ESB&PAB&MIXAB)" value="$80" />
+			<set_hi from="GMIX" />
+			<set_if if="FXJUMP" value="1" clear="all" />
+			<set_bits from="FXSTOP" value="$40" clear="all" />	
+		</field>
+		<field size="word">
+			<set from="FXJUMP" />
+		</field>
+		<field size="word">
+			<required if="A|B|DA|DB|SIDA|SIDB|ESA|ESB|PAB|MIXAB" />
+			<set_if if="!(A&B)" value="1" />
+			<set_if if="!(SIDA&SIDB&ESA&ESB)" value="4" />
+			<set_if if="!(DA&DB)" value="$40" />
+			<set_if if="!PAB" value="$80" />
+			<set_hi from="MIXAB" />
+		</field>
+		<field size="word">
+			<required if="B" />
+			<set from="A" />
+		</field>
+		<field size="word">
+			<required if="A" />
+			<set from="B" />
+		</field>
+		<field size="word">
+			<set_hi from="DA" />
+			<set_lo from="DB" />
+		</field>
+		<field size="word">
+			<set_hi from="ESA" />
+			<set_lo from="SIDA" />
+		</field>
+		<field size="word">
+			<set_hi from="ESB" />
+			<set_lo from="SIDB" />
+		</field>
+		<field size="word">
+			<set from="PAB" />
+		</field>
+		<field size="word">
+			<required if="A|B|DA|DB|SIDA|SIDB|ESA|ESB|PAB|MIXAB|C|D|DC|DD|NC|PCD|MIXCD" />
+			<set_if if="!(C&D)" value="1" />
+			<set_if if="!(DC&DD)" value="$40" />
+			<set_if if="!PCD" value="$80" />
+			<set_hi from="MIXCD" />
+			<set_bits from="NC" value="4" />
+		</field>
+		<field size="word">
+			<required if="D" />
+			<set from="C" />
+		</field>
+		<field size="word">
+			<required if="C" />
+			<set from="D" />
+		</field>
+		<field size="word">
+			<set_hi from="DC" />
+			<set_lo from="DD" />
+		</field>
+		<field size="word">
+			<set from="PCD" />
+		</field>
+	</blocktype>
+</mdalconfig>

@@ -70,7 +70,7 @@ int main(int argc, char *argv[]){
 			moduleLines.push_back(tempstr);
 		}
 		
-		string configname = "config/" + getArgument(string("CONFIG"), moduleLines) + ".cfg";
+		string configname = "config/" + getArgument(string("CONFIG"), moduleLines) + ".mdconf";
 		mdConfig config;
 		config.init(configname, verbose);
 	 

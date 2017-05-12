@@ -120,7 +120,7 @@ GSPD=$6
 	.
 
 :ptn2
-	A=a1, MIXA=xor, PHA=$800, PSCA1=down, C=c4, PSCC=down, SLSPD=$30, SPD=3, B=e4, MIXB=or, PHB=$00, DMOD2=$10, PSCB1=up
+	A=a1, MIXA=xor, PHA=$800, PSCA1=down, C=c4, PSCC=down, SLSPD=$30, SPD=3, B=e4, MIXB=or, PHB=$00, DMODB=$10, PSCB1=up
 	B=e3
 	A=a2, C=rest, SLSPD=0, B=e4
 	B=e3

@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<mdalconfig version="1">
+	<global target="zxspectrum48" word_directive="dw" byte_directive="db" />
+	<sequence tracks="1" end="dw 0" loop_type="label" loop_label="mloop" />
+	<commands>
+		<command id="AUTHOR" size="byte" default="unknown">
+			<force_string />
+			<global_const />
+		</command>
+		<command id="TITLE" size="byte" default="untitled">
+			<force_string />
+			<global_const />
+		</command>
+		<command id="GSPD" size="byte" default="$10">
+			<global_const />
+		</command>
+		<command id="SPD" size="byte">
+			<default_substitute from="GSPD" />
+			<force_repeat />
+		</command>
+		<command id="A" size="word">
+			<use_last_set />
+			<use_note_names />
+			<allow_modifiers />
+		</command>
+		<command id="PHA" size="word">
+			<use_last_set />
+		</command>
+		<command id="DMODA" size="bool">
+			<use_last_set />
+			<substitute key="off" value="false" />
+			<substitute key="on" value="true" />
+		</command>
+		<command id="PSCA1" size="byte">
+			<use_last_set />
+			<substitute key="down" value="$0f" />
+			<substitute key="up" value="$07" />
+			<substitute key="none" value="0" />
+		</command>
+		<command id="PSCA2" size="byte">
+			<use_last_set />
+			<substitute key="down" value="$0f" />
+			<substitute key="up" value="$07" />
+			<substitute key="none" value="0" />
+		</command>
+		<command id="NOISE" size="bool">
+			<use_last_set />
+			<substitute key="off" value="false" />
+			<substitute key="on" value="true" />
+		</command>
+		<command id="MIXA" size="byte" default="$ac">
+			<use_last_set />
+			<substitute key="xor" value="$ac" />
+			<substitute key="and" value="$a4" />
+			<substitute key="or" value="$b4" />
+			<substitute key="none" value="$b7" />
+		</command>
+		<command id="B" size="word">
+			<use_last_set />
+			<use_note_names />
+			<allow_modifiers />
+		</command>
+		<command id="PHB" size="word">
+			<use_last_set />
+		</command>
+		<command id="DMODB" size="byte">
+			<use_last_set />
+		</command>
+		<command id="PSCB1" size="byte">
+			<use_last_set />
+			<substitute key="down" value="$0f" />
+			<substitute key="up" value="$07" />
+			<substitute key="none" value="0" />
+		</command>
+		<command id="PSCB2" size="byte">
+			<use_last_set />
+			<substitute key="down" value="$0f" />
+			<substitute key="up" value="$07" />
+			<substitute key="none" value="0" />
+		</command>
+		<command id="MIXB" size="byte" default="$ac">
+			<use_last_set />
+			<substitute key="xor" value="$ac" />
+			<substitute key="and" value="$a4" />
+			<substitute key="or" value="$b4" />
+			<substitute key="none" value="$b7" />
+		</command>
+		<command id="C" size="word">
+			<use_last_set />
+			<use_note_names />
+			<allow_modifiers />
+		</command>
+		<command id="PSCC" size="byte">
+			<use_last_set />
+			<substitute key="down" value="$0f" />
+			<substitute key="up" value="$07" />
+			<substitute key="none" value="0" />
+		</command>
+		<command id="SLDIR" size="bool">
+			<use_last_set />
+			<substitute key="down" value="false" />
+			<substitute key="up" value="true" />
+		</command>
+		<command id="SLSPD" size="byte">
+			<use_last_set />
+		</command>		
+	</commands>	
+	<blocktype id="Patterns" type="pattern" end="db $40">
+		<init_defaults />
+		<field size="word">
+			<required_seq_begin />
+			<required />
+			<set_hi from="SPD" />
+			<set_if if="!(A&PHA&DMODA&PSCA1&PSCA2&MIXA&NOISE)" value="1" />
+			<set_if if="!(B&PHB&MIXB&PSCB1&PSCB2&DMODB)" value="4" />
+			<set_if if="!(C&SLDIR&SLSPD&PSCC)" value="$80" />
+		</field>
+		<field size="word">
+			<required_seq_begin />
+			<required if="A|PHA|DMODA|PSCA1|PSCA2|MIXA|NOISE" />
+			<set_hi from="PSCA1" />
+			<set_if if="PHA" value="1" />
+			<set_bits from="DMODA" value="$40" />
+			<set_bits from="NOISE" value="$cb00" />
+		</field>
+		<field size="word">
+			<required_seq_begin />
+			<set from="PHA" />
+		</field>
+		<field size="word">
+			<required_seq_begin />
+			<required if="A|PHA|DMODA|PSCA1" />
+			<set_hi from="MIXA" />
+			<set_lo from="PSCA2" />
+			<set_bits from="NOISE" value="2" />
+		</field>
+		<field size="word">
+			<required_seq_begin />
+			<required if="PHA|DMODA|PSCA1|PSCA2|MIXA|NOISE" />
+			<set from="A" />
+		</field>
+		<field size="word">
+			<required_seq_begin />
+			<required if="B|PHB|PSCB1|PSCB2|DMODB" />
+			<set_hi from="MIXB" />
+			<set_if if="PHB" value="1" />
+			<set_if if="DMODB" value="$40" />
+		</field>
+		<field size="word">
+			<required_seq_begin />
+			<set from="PHB" />
+		</field>
+		<field size="word">
+			<required_seq_begin />
+			<set_hi from="DMODB" />
+		</field>
+		<field size="word">
+			<required_seq_begin />
+			<required if="B|PHB|MIXB|DMODB" />
+			<set_lo from="PSCB1" />
+			<set_hi from="PSCB2" />
+		</field>
+		<field size="word">
+			<required_seq_begin />
+			<required if="PHB|PSCB1|PSCB2|MIXB|DMODB" />
+			<set from="B" />
+		</field>
+		<field size="word">
+			<required_seq_begin />
+			<required if="C" />
+			<set_hi from="PSCC" />
+			<set_lo from="SLSPD" />
+		</field>
+		<field size="word">
+			<required_seq_begin />
+			<required if="PSCC|SLSPD" />
+			<set from="C" />
+			<set_bits from="SLDIR" value="$8000" />
+		</field>
+	</blocktype>	
+</mdalconfig>

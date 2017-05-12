@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<mdalconfig version="1">
+	<global target="zxspectrum48" word_directive="dw" byte_directive="db" />
+	<sequence tracks="1" end="dw 0" loop_type="label" loop_label="loop" />
+	<commands>
+		<command id="AUTHOR" size="byte" default="unknown">
+			<force_string />
+			<global_const />
+		</command>
+		<command id="TITLE" size="byte" default="untitled">
+			<force_string />
+			<global_const />
+		</command>
+		<command id="GSPD" size="byte" default="$10">
+			<global_const />
+		</command>
+		<command id="SPD" size="byte">
+			<default_substitute from="GSPD" />
+			<force_repeat />
+		</command>
+		<command id="DRUM" size="byte">
+			<substitute key="kick" value="1" />
+			<substitute key="hhat" value="$80" />
+		</command>
+		<command id="A" size="word">
+			<use_last_set />
+			<use_note_names />
+			<allow_modifiers />
+		</command>
+		<command id="SIDA" size="bool">
+			<use_last_set />
+			<substitute key="off" value="false" />
+			<substitute key="on" value="true" />
+		</command>
+		<command id="NOISE" size="bool">
+			<use_last_set />
+			<substitute key="off" value="false" />
+			<substitute key="on" value="true" />
+		</command>
+		<command id="DMODA" size="byte">
+			<use_last_set />
+		</command>
+		<command id="DUTYA" size="byte" default="$80">
+			<use_last_set />
+		</command>
+		<command id="B1" size="word">
+			<use_last_set />
+			<use_note_names />
+			<allow_modifiers />
+		</command>
+		<command id="B2" size="word">
+			<use_last_set />
+			<use_note_names />
+			<allow_modifiers />
+		</command>
+		<command id="PHB" size="word">
+			<use_last_set />
+		</command>
+		<command id="MIXB" size="byte" default="$ac">
+			<use_last_set />
+			<substitute key="xor" value="$ac" />
+			<substitute key="and" value="$a4" />
+			<substitute key="or" value="$b4" />
+			<substitute key="none" value="0" />
+		</command>
+		<command id="DMODB1" size="byte">
+			<use_last_set />
+		</command>
+		<command id="DUTYB1" size="byte" default="$80">
+			<use_last_set />
+		</command>
+		<command id="DMODB2" size="byte">
+			<use_last_set />
+		</command>
+		<command id="DUTYB2" size="byte" default="$80">
+			<use_last_set />
+		</command>
+	</commands>
+	<blocktype id="Patterns" type="pattern" end="db $40">
+		<init_defaults />
+		<field size="word">
+			<required_seq_begin />
+			<required />
+			<set_hi from="SPD" />
+			<set_lo from="DRUM" />
+		</field>
+		<field size="word">
+			<required_seq_begin />
+			<required />
+			<set_if if="!(A&DMODA&DUTYA&NOISE)" value="1" />
+			<set_if if="!(B1&B2&PHB&DMODB1&DMODB2&DUTYB1&DUTYB2)" value="$40" />
+			<set_hi from="MIXB" />
+			<set_bits from="SIDA" value="4" />
+			<set_bits from="NOISE" value="$80" />
+		</field>
+		<field size="word">
+			<required_seq_begin />
+			<required if="A" />
+			<set_hi from="DMODA" />
+			<set_lo from="DUTYA" />
+		</field>
+		<field size="word">
+			<required_seq_begin />
+			<required if="DMODA|DUTYA" />
+			<set from="A" />
+		</field>
+		<field size="word">
+			<required_seq_begin />
+			<required_blk_begin />
+			<required if="B1|B2|DUTYB1|DUTYB2|PHB" />
+			<set_hi from="DMODB1" />
+			<set_lo from="DMODB2" />
+		</field>
+		<field size="word">
+			<required_seq_begin />
+			<required_blk_begin />
+			<required if="B1|B2|DMODB1|DMODB2|PHB" />
+			<set_hi from="DUTYB1" />
+			<set_lo from="DUTYB2" />
+		</field>
+		<field size="word">
+			<required_seq_begin />
+			<required_blk_begin />
+			<required if="DUTYB1|DUTYB2|DMODB1|DMODB2|PHB|B2" />
+			<set from="B1" />
+		</field>
+		<field size="word">
+			<required_seq_begin />
+			<required_blk_begin />
+			<required if="DUTYB1|DUTYB2|DMODB1|DMODB2|PHB|B1" />
+			<set from="B2" />
+		</field>
+		<field size="word">
+			<required_seq_begin />
+			<required_blk_begin />
+			<required if="DUTYB1|DUTYB2|DMODB1|DMODB2|B1|B2" />
+			<set from="PHB" />
+		</field>
+	</blocktype>
+</mdalconfig>

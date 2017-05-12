@@ -8,7 +8,7 @@
 #include <unordered_map>
 #include <set>
 
-#define MDALVERSION 0
+#define MDALVERSION 1
 
 
 std::string trimChars(const std::string& inputString, const char* chars);
@@ -67,14 +67,13 @@ public:
 	
 	mdField();
 	~mdField();
-	void init(mdCommand *mdCmdList, const int &mdCmdCount, const std::string &fieldString);
+
 	void getRequests(bool *requestList, const mdConfig &config, const int &row, bool seqBegin);
 	std::string getFieldString(bool *requestList, const mdConfig &config);
 	bool checkCondition(const bool *by, const bool *whenSet, bool &byAny, const mdConfig &config);
 	bool checkSetifCondition(const bool *by, const bool *whenSet, bool &byAny, const mdConfig &config, bool *requestList);
 
 private:
-	int getCmdNr(mdCommand *mdCmdList, const int &mdCmdCount, const std::string &cmdString);
 
 };
 
@@ -118,12 +117,7 @@ public:
 private:
 	int linecount;
 	
-	int locateToken(const std::string &token, const int &blockStart, const int &blockEnd);
-	std::string getArgumentString(std::string token, const int &blockStart, const int &blockEnd);
-	std::string getArgument(const std::string &argString, int argNumber);
-	int getBlockEnd(const int &blockStart);
-	int countBlockLines(const int &blockStart, const int &blockEnd);
-	int countFields(const int &blockStart, const int &blockEnd);
+	int getCmdNr(const std::string &cmdString);
 };
 
 
@@ -228,7 +222,7 @@ public:
 	mdCommand();
 	~mdCommand();
 	mdCommand(const mdCommand &cmd) = delete;
-	void init(const std::string &commandString, bool &verbose);
+
 	void reset();
 	void resetToDefault();
 	void set(const std::string &currentValString);
