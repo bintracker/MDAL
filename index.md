@@ -8,7 +8,7 @@ While traditional low-level music description languages such as ABC or the Music
 - Time flow is represented vertically.
 - The concept of measures and note values has no direct representation in MDAL, instead note length is measured in steps and ticks.
 
-MDAL is a language without a pre-defined nomenclature. Aside from a rudimentary set of structural conventions, there a no fixtures - the entire instruction set is customizable. Customization is provided through standardized configuration files, which are parsed and interpreted by an MDAL compiler at runtime. This enables programmers to adapt both user input and data output to the specific needs of their sound drivers/player routines.
+MDAL is a language without a pre-defined nomenclature. Aside from a rudimentary set of structural conventions, there are no fixtures - the entire instruction set is customizable. Customization is provided through standardized configuration files, which are parsed and interpreted by an MDAL compiler at runtime. This enables programmers to adapt both user input and data output to the specific needs of their sound drivers/player routines.
 
 Both the language and the reference compiler are currently at a very early stage, and the language specification has not been finalized yet. Nevertheless, basic functionality of the reference compiler is already in place, and a first example configuration has been [tested successfully](http://randomflux.info/1bit/viewtopic.php?pid=1002#p1002).
 
