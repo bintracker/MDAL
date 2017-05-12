@@ -80,22 +80,23 @@ void mdConfig::init(const string &configname, bool &verbose) {
 		if (verbose) cout << "MDAL version: \t\t" << stoi(tempstr, nullptr, 10) << endl;
 		
 		pugi::xml_node tempnode = mdalconfig.child("global");
+			if (tempnode != nullptr) {
+			tempstr = tempnode.attribute("target").value();
+			if (tempstr != "") targetPlatform = tempstr;
+			if (verbose) cout << "target platform:\t" << targetPlatform << endl;
 		
-		tempstr = tempnode.attribute("target").value();
-		if (tempstr != "") targetPlatform = tempstr;
-		if (verbose) cout << "target platform:\t" << targetPlatform << endl;
+			tempstr = tempnode.attribute("word_directive").value();
+			wordDirective = (tempstr == "") ? "dw" : tempstr;
+			if (verbose) cout << "word directive:\t\t" << wordDirective << endl;
 		
-		tempstr = tempnode.attribute("word_directive").value();
-		wordDirective = (tempstr == "") ? "dw" : tempstr;
-		if (verbose) cout << "word directive:\t\t" << wordDirective << endl;
+			tempstr = tempnode.attribute("byte_directive").value();
+			byteDirective = (tempstr == "") ? "db" : tempstr;
+			if (verbose) cout << "byte directive:\t\t" << byteDirective << endl;
 		
-		tempstr = tempnode.attribute("byte_directive").value();
-		byteDirective = (tempstr == "") ? "db" : tempstr;
-		if (verbose) cout << "byte directive:\t\t" << byteDirective << endl;
-		
-		tempstr = tempnode.attribute("hex_prefix").value();
-		hexPrefix = (tempstr == "") ? "$" : tempstr;
-		if (verbose) cout << "hex prefix:\t\t" << hexPrefix << endl;
+			tempstr = tempnode.attribute("hex_prefix").value();
+			hexPrefix = (tempstr == "") ? "$" : tempstr;
+			if (verbose) cout << "hex prefix:\t\t" << hexPrefix << endl;
+		}
 		
 		if (verbose) cout << "\nSEQUENCE CONFIGURATION\n======================" << endl;
 		
