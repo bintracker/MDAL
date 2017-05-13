@@ -80,27 +80,26 @@ void mdConfig::init(const string &configname, bool &verbose) {
 		if (verbose) cout << "MDAL version: \t\t" << stoi(tempstr, nullptr, 10) << endl;
 		
 		pugi::xml_node tempnode = mdalconfig.child("global");
-			if (tempnode != nullptr) {
-			tempstr = tempnode.attribute("target").value();
-			if (tempstr != "") targetPlatform = tempstr;
-			if (verbose) cout << "target platform:\t" << targetPlatform << endl;
+		tempstr = tempnode.attribute("target").value();
+		if (tempstr != "") targetPlatform = tempstr;
+		if (verbose) cout << "target platform:\t" << targetPlatform << endl;
 		
-			tempstr = tempnode.attribute("word_directive").value();
-			wordDirective = (tempstr == "") ? "dw" : tempstr;
-			if (verbose) cout << "word directive:\t\t" << wordDirective << endl;
+		tempstr = tempnode.attribute("word_directive").value();
+		wordDirective = (tempstr == "") ? "dw" : tempstr;
+		if (verbose) cout << "word directive:\t\t" << wordDirective << endl;
 		
-			tempstr = tempnode.attribute("byte_directive").value();
-			byteDirective = (tempstr == "") ? "db" : tempstr;
-			if (verbose) cout << "byte directive:\t\t" << byteDirective << endl;
+		tempstr = tempnode.attribute("byte_directive").value();
+		byteDirective = (tempstr == "") ? "db" : tempstr;
+		if (verbose) cout << "byte directive:\t\t" << byteDirective << endl;
 		
-			tempstr = tempnode.attribute("hex_prefix").value();
-			hexPrefix = (tempstr == "") ? "$" : tempstr;
-			if (verbose) cout << "hex prefix:\t\t" << hexPrefix << endl;
-		}
+		tempstr = tempnode.attribute("hex_prefix").value();
+		hexPrefix = (tempstr == "") ? "$" : tempstr;
+		if (verbose) cout << "hex prefix:\t\t" << hexPrefix << endl;
 		
 		if (verbose) cout << "\nSEQUENCE CONFIGURATION\n======================" << endl;
 		
 		tempnode = mdalconfig.child("sequence");
+		if (tempnode == nullptr) throw (string("Missing sequence configuration"));
 		
 		tempstr = tempnode.attribute("label").value();
 		if (tempstr != "") seqLabel = tempstr;
@@ -113,24 +112,26 @@ void mdConfig::init(const string &configname, bool &verbose) {
 			if (verbose) cout << "Sequence end:\t\t" << seqEndString << endl;
 		}
 		
-		tempstr = tempnode.attribute("loop_type").value();
-		if (tempstr != "") {
-			useSeqLoop = true;
-			if (tempstr != "label" && tempstr != "pointer") throw ("<sequence>: Invalid loop_type \"" + tempstr + "\".");
-			if (tempstr == "pointer") useSeqLoopPointer = true;	
-			if (verbose) cout << "Loop type:\t\t" << tempstr << endl;
-			tempstr = tempnode.attribute("loop_label").value();
-			if (tempstr == "") throw (string("<sequence>: Using loop, but no loop_label specified."));
-			seqLoopLabel = tempstr;
-			if (verbose) cout << "Loop label:\t\t" << tempstr << endl;
-		}
-		
 		tempstr = tempnode.attribute("max_length").value();
 		if (tempstr != "") {
 		
 			if (!isNumber(tempstr)) throw (string("<sequence>: max_length does not specify an integer value."));
 			seqMaxLength = strToNum(tempstr);
 			if (verbose) cout << "Max. sequence length:\t" << seqMaxLength << endl;
+		}
+		
+		tempnode = mdalconfig.child("sequence").child("loop");
+		if (tempnode != nullptr) {
+			tempstr = tempnode.attribute("type").value();
+			if (tempstr == "") throw (string("<sequence><loop>: No loop type specified."));
+			if (tempstr != "label" && tempstr != "pointer") throw ("<sequence><loop>: Invalid type \"" + tempstr + "\".");
+			useSeqLoop = true;
+			if (tempstr == "pointer") useSeqLoopPointer = true;	
+			if (verbose) cout << "Loop type:\t\t" << tempstr << endl;
+			tempstr = tempnode.attribute("label").value();
+			if (tempstr == "") throw (string("<sequence><loop>: No loop label specified."));
+			seqLoopLabel = tempstr;
+			if (verbose) cout << "Loop label:\t\t" << tempstr << endl;
 		}
 		
 		
@@ -156,6 +157,7 @@ void mdConfig::init(const string &configname, bool &verbose) {
 		
 			tempstr = tempnode.attribute("id").value();
 			if (tempstr == "") throw (string("<command>: missing command id."));
+			//TODO: update list of reserved keywords -> make a const vector and iterate over it
 			if (tempstr == "NONE" || tempstr == "ANY" || tempstr == "ALL" || tempstr == "CONFIG") 
 				throw ("<command>: Reserved keyword \"" + tempstr + "\" used as command name.");
 			mdCmdList[cmdNr].mdCmdName = tempstr;
@@ -309,7 +311,7 @@ void mdConfig::init(const string &configname, bool &verbose) {
 			}
 			
 			if (verbose) {
-				cout << "\nBLOCK TYPE " << blockTypes.back().blockConfigID << "\nBase type: \t\t"; 
+				cout << "\nBLOCKTYPE " << blockTypes.back().blockConfigID << "\nBase type: \t\t"; 
 				if (blockTypes.back().baseType == GENERIC) cout << "generic";
 				else if (blockTypes.back().baseType == PATTERN) cout << "pattern";
 				else cout << "table";
@@ -396,12 +398,12 @@ void mdConfig::init(const string &configname, bool &verbose) {
 					tempstr = param.attribute("if").value();
 					if (tempstr == "") blockTypes.back().blkFieldList[fieldNr].requiredAlways = true;
 					else {
-						if (tempstr.find_first_not_of("()ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!&|") != string::npos) 
+						if (tempstr.find_first_not_of("()ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!+|") != string::npos) 
 							throw ("<blocktype><field>: Invalid argument in <required if=\"" + tempstr + "\"");
-						if (tempstr.find('&') != string::npos) {
+						if (tempstr.find('+') != string::npos) {
 							blockTypes.back().blkFieldList[fieldNr].requiredByAny = false;
 							if (tempstr.find('|') != string::npos) 
-								throw ("<blocktype><field>: Use of both & and | in <required if=\"" + tempstr + "\"");
+								throw ("<blocktype><field>: Use of both + and | in <required if=\"" + tempstr + "\"");
 						}
 						//handle global NOT
 						if (tempstr.size() > 1 && tempstr.substr(0,2) == "!(") {
@@ -415,7 +417,7 @@ void mdConfig::init(const string &configname, bool &verbose) {
 						if (tempstr.find('(') != string::npos) 
 							throw ("<blocktype><field>: Expression too complex in <required if=\"" + tempstr + "\"");
 		
-						if (tempstr == "NONE") {
+						if (tempstr == "none") {
 		
 							for (int j = 0; j < mdCmdCount; j++) {
 			
@@ -423,13 +425,13 @@ void mdConfig::init(const string &configname, bool &verbose) {
 								blockTypes.back().blkFieldList[fieldNr].requiredBy[j] = true;
 							}
 						}
-						else if (tempstr == "ALL") {
+						else if (tempstr == "all") {
 		
 							blockTypes.back().blkFieldList[fieldNr].requiredByAny = false;
 							for (int j = 0; j < mdCmdCount; j++) 
 								blockTypes.back().blkFieldList[fieldNr].requiredBy[j] = true;
 						}
-						else if (tempstr == "ANY") {
+						else if (tempstr == "any") {
 		
 							for (int j = 0; j < mdCmdCount; j++) 
 								blockTypes.back().blkFieldList[fieldNr].requiredBy[j] = true;
@@ -446,7 +448,7 @@ void mdConfig::init(const string &configname, bool &verbose) {
 									tempstr.erase(0,1);
 								}
 			
-								cmdString = tempstr.substr(0, tempstr.find_first_of("&|"));
+								cmdString = tempstr.substr(0, tempstr.find_first_of("+|"));
 
 								int cmdNr = getCmdNr(cmdString);
 								if (cmdNr == -1) 
@@ -456,7 +458,7 @@ void mdConfig::init(const string &configname, bool &verbose) {
 								blockTypes.back().blkFieldList[fieldNr].requiredBy[cmdNr] = true;
 								if (setNot) blockTypes.back().blkFieldList[fieldNr].requiredWhenSet[cmdNr] = false;
 			
-								if (tempstr != cmdString) tempstr.erase(0, tempstr.find_first_of("&|") + 1);	//or npos
+								if (tempstr != cmdString) tempstr.erase(0, tempstr.find_first_of("+|") + 1);	//or npos
 								else tempstr = "";
 							}
 						}
@@ -567,7 +569,7 @@ void mdConfig::init(const string &configname, bool &verbose) {
 				for (param = argnode.child("set_if"); param; param = param.next_sibling("set_if")) {
 				
 					string cond = param.attribute("if").value();
-					if (cond.find_first_not_of("()ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!&|$") != string::npos) 
+					if (cond.find_first_not_of("()ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!+|$") != string::npos) 
 						throw (string("<blocktype><field><set_if>: Invalid condition argument"));
 					
 					string mask = param.attribute("value").value();
@@ -583,10 +585,10 @@ void mdConfig::init(const string &configname, bool &verbose) {
 						else throw (string("<blocktype><field><set_if>: Invalid argument for clear="));
 					}
 			
-					if (cond.find('&') != string::npos) {
+					if (cond.find('+') != string::npos) {
 						blockTypes.back().blkFieldList[fieldNr].setIfByAny[count] = false;
 						if (cond.find('|') != string::npos) 
-							throw (string("<blocktype><field><set_if>: Use of both & and | in condition"));
+							throw (string("<blocktype><field><set_if>: Use of both + and | in condition"));
 					}
 		
 					if (cond == "") blockTypes.back().blkFieldList[fieldNr].setIfAlways[count] = true;			
@@ -629,7 +631,7 @@ void mdConfig::init(const string &configname, bool &verbose) {
 									cond.erase(0,1);
 								}
 				
-								cmdString = cond.substr(0, cond.find_first_of("&|"));
+								cmdString = cond.substr(0, cond.find_first_of("+|"));
 
 								int cmdNr = getCmdNr(cmdString);
 								if (cmdNr == -1) 
@@ -639,7 +641,7 @@ void mdConfig::init(const string &configname, bool &verbose) {
 								blockTypes.back().blkFieldList[fieldNr].setIfBy[count][cmdNr] = true;
 								if (setNot) blockTypes.back().blkFieldList[fieldNr].setIfWhenSet[count][cmdNr] = false;
 				
-								if (cond != cmdString) cond.erase(0, cond.find_first_of("&|") + 1);	//or npos
+								if (cond != cmdString) cond.erase(0, cond.find_first_of("+|") + 1);	//or npos
 								else cond = "";
 							}
 						}

@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <mdalconfig version="1">
 	<global target="zxspectrum48" word_directive="dw" byte_directive="db" />
-	<sequence tracks="1" end="dw 0" label="mdseq" loop_type="label" loop_label="loop" />
+	<sequence tracks="1" end="dw 0" label="mdseq">
+		<loop type="label" label="loop" />
+	</sequence>
 	<commands>
 		<command id="AUTHOR" size="byte" default="unknown">
 			<force_string />
@@ -115,9 +117,9 @@
 		<field size="word">
 			<required_seq_begin />
 			<required />
-			<set_if if="!(A&B&DA&DB&SIDA&SIDB&ESA&ESB&PAB&C&D&DC&DD&NC&PCD&MIXAB&MIXCD)" value="4" />
+			<set_if if="!(A+B+DA+DB+SIDA+SIDB+ESA+ESB+PAB+C+D+DC+DD+NC+PCD+MIXAB+MIXCD)" value="4" />
 			<set_if if="!FX" value="1" />
-			<set_if if="!(A&B&DA&DB&SIDA&SIDB&ESA&ESB&PAB&MIXAB)" value="$80" />
+			<set_if if="!(A+B+DA+DB+SIDA+SIDB+ESA+ESB+PAB+MIXAB)" value="$80" />
 			<set_hi from="GMIX" />
 		</field>
 		<field size="word">
@@ -127,9 +129,9 @@
 		<field size="word">
 			<required_seq_begin />
 			<required if="A|B|DA|DB|SIDA|SIDB|ESA|ESB|PAB|MIXAB" />
-			<set_if if="!(A&B)" value="1" />
-			<set_if if="!(SIDA&SIDB&ESA&ESB)" value="4" />
-			<set_if if="!(DA&DB)" value="$40" />
+			<set_if if="!(A+B)" value="1" />
+			<set_if if="!(SIDA+SIDB+ESA+ESB)" value="4" />
+			<set_if if="!(DA+DB)" value="$40" />
 			<set_if if="!PAB" value="$80" />
 			<set_hi from="MIXAB" />
 		</field>
@@ -167,8 +169,8 @@
 		<field size="word">
 			<required_seq_begin />
 			<required if="A|B|DA|DB|SIDA|SIDB|ESA|ESB|PAB|MIXAB|C|D|DC|DD|NC|PCD|MIXCD" />
-			<set_if if="!(C&D)" value="1" />
-			<set_if if="!(DC&DD)" value="$40" />
+			<set_if if="!(C+D)" value="1" />
+			<set_if if="!(DC+DD)" value="$40" />
 			<set_if if="!PCD" value="$80" />
 			<set_hi from="MIXCD" />
 			<set_bits from="NC" value="4" />
@@ -202,8 +204,8 @@
 	<blocktype id="FxTables" type="table">
 		<field size="word">
 			<required />
-			<set_if if="!(A&B&DA&DB&SIDA&SIDB&ESA&ESB&PAB&C&D&DC&DD&NC&PCD&MIXAB&MIXCD)" value="4" />
-			<set_if if="!(A&B&DA&DB&SIDA&SIDB&ESA&ESB&PAB&MIXAB)" value="$80" />
+			<set_if if="!(A+B+DA+DB+SIDA+SIDB+ESA+ESB+PAB+C+D+DC+DD+NC+PCD+MIXAB+MIXCD)" value="4" />
+			<set_if if="!(A+B+DA+DB+SIDA+SIDB+ESA+ESB+PAB+MIXAB)" value="$80" />
 			<set_hi from="GMIX" />
 			<set_if if="FXJUMP" value="1" clear="all" />
 			<set_bits from="FXSTOP" value="$40" clear="all" />	
@@ -213,9 +215,9 @@
 		</field>
 		<field size="word">
 			<required if="A|B|DA|DB|SIDA|SIDB|ESA|ESB|PAB|MIXAB" />
-			<set_if if="!(A&B)" value="1" />
-			<set_if if="!(SIDA&SIDB&ESA&ESB)" value="4" />
-			<set_if if="!(DA&DB)" value="$40" />
+			<set_if if="!(A+B)" value="1" />
+			<set_if if="!(SIDA+SIDB+ESA+ESB)" value="4" />
+			<set_if if="!(DA+DB)" value="$40" />
 			<set_if if="!PAB" value="$80" />
 			<set_hi from="MIXAB" />
 		</field>
@@ -244,8 +246,8 @@
 		</field>
 		<field size="word">
 			<required if="A|B|DA|DB|SIDA|SIDB|ESA|ESB|PAB|MIXAB|C|D|DC|DD|NC|PCD|MIXCD" />
-			<set_if if="!(C&D)" value="1" />
-			<set_if if="!(DC&DD)" value="$40" />
+			<set_if if="!(C+D)" value="1" />
+			<set_if if="!(DC+DD)" value="$40" />
 			<set_if if="!PCD" value="$80" />
 			<set_hi from="MIXCD" />
 			<set_bits from="NC" value="4" />

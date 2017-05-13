@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <mdalconfig version="1">
 	<global target="zxspectrum48" word_directive="dw" byte_directive="db" />
-	<sequence tracks="1" end="dw 0" loop_type="label" loop_label="loop" />
+	<sequence tracks="1" end="dw 0">
+		<loop type="label" label="mloop" />
+	</sequence>
 	<commands>
 		<command id="AUTHOR" size="byte" default="unknown">
 			<force_string />
@@ -87,8 +89,8 @@
 		<field size="word">
 			<required_seq_begin />
 			<required />
-			<set_if if="!(A&DMODA&DUTYA&NOISE)" value="1" />
-			<set_if if="!(B1&B2&PHB&DMODB1&DMODB2&DUTYB1&DUTYB2)" value="$40" />
+			<set_if if="!(A+DMODA+DUTYA+NOISE)" value="1" />
+			<set_if if="!(B1+B2+PHB+DMODB1+DMODB2+DUTYB1+DUTYB2)" value="$40" />
 			<set_hi from="MIXB" />
 			<set_bits from="SIDA" value="4" />
 			<set_bits from="NOISE" value="$80" />
