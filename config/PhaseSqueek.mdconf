@@ -20,6 +20,13 @@
 			<default_substitute from="GSPD" />
 			<force_repeat />
 		</command>
+		<command id="STOP" size="bool">
+			<auto value="true" />
+		</command>
+		<command id="JUMP" size="word" default="fx0">
+			<force_string />
+			<reference to="FxTables" />
+		</command>
 		<command id="FX" size="word" default="fx0">
 			<force_string />
 			<reference to="FxTables" />
@@ -104,13 +111,6 @@
 			<substitute key="or" value="$b0" />
 			<substitute key="xor" value="$a8" />
 			<substitute key="and" value="$a0" />
-		</command>
-		<command id="FXJUMP" size="word" default="fx0">
-			<force_string />
-			<reference to="FxTables" />
-		</command>
-		<command id="FXSTOP" size="bool">
-			<auto value="true" />
 		</command>
 	</commands>
 	<blocktype id="Patterns" type="pattern" end="db $40">
@@ -207,11 +207,11 @@
 			<set_if if="!(A+B+DA+DB+SIDA+SIDB+ESA+ESB+PAB+C+D+DC+DD+NC+PCD+MIXAB+MIXCD)" value="4" />
 			<set_if if="!(A+B+DA+DB+SIDA+SIDB+ESA+ESB+PAB+MIXAB)" value="$80" />
 			<set_hi from="GMIX" />
-			<set_if if="FXJUMP" value="1" clear="all" />
-			<set_bits from="FXSTOP" value="$40" clear="all" />	
+			<set_if if="JUMP" value="1" clear="all" />
+			<set_bits from="STOP" value="$40" clear="all" />	
 		</field>
 		<field size="word">
-			<set from="FXJUMP" />
+			<set from="JUMP" />
 		</field>
 		<field size="word">
 			<required if="A|B|DA|DB|SIDA|SIDB|ESA|ESB|PAB|MIXAB" />

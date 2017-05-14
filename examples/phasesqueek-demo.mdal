@@ -152,7 +152,7 @@ CONFIG=PhaseSqueek
 	
 	
 :fx0
-	FXSTOP
+	STOP
 
 :snare1
 	DC=$40, DD=$10, NC=on
@@ -171,7 +171,7 @@ CONFIG=PhaseSqueek
 	.
 	DC=$8
 	DC=$4
-	FXSTOP
+	STOP
 	
 :arp1
 	D=c3
@@ -180,7 +180,7 @@ CONFIG=PhaseSqueek
 	D=dis3
 	D=g3
 	D=g3
-	FXJUMP=arp1
+	JUMP=arp1
 	
 :arp2
 	D=c3
@@ -189,4 +189,4 @@ CONFIG=PhaseSqueek
 	D=dis3
 	D=f3
 	D=f3
-	FXJUMP=arp2
+	JUMP=arp2
