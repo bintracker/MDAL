@@ -1,5 +1,5 @@
-#ifndef XMKIT__H__
-#define XMKIT__H__
+#ifndef LIBMDAL_MAIN__H__
+#define LIBMDAL_MAIN__H__
 
 #include <string>
 #include <fstream>
@@ -22,7 +22,6 @@ enum Type {BOOL, BYTE, WORD, DEC, HEX, STRING, INVALID};
 enum BlockType {GENERIC, PATTERN, TABLE};
 enum ConditionType {REQUIRED, SET_IF};
 enum ClearFlags {CLEAR_HI = 1, CLEAR_LO, CLEAR_ALL};
-enum DefaultCommandCount {DEFAULT_COMMAND_COUNT = 2};
 
 class mdConfig;
 class mdBlock;

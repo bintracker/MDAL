@@ -1,8 +1,9 @@
 CC		= g++
-#CXXFLAGS	= -Wall -O2 -s -std=c++11
+#CXXFLAGS	= -Wall -O2 -s -std=c++11 -no-pie
 CXXFLAGS	= -Wall -pedantic -g -pg -std=c++11 -no-pie
-DEPS		= mdalc.h pugixml.hpp
-OBJ		= mdalc.o module.o config.o sequence.o blocks.o field.o command.o pugixml.o
+DEPS		= libmdal/mdal.h libmdal/pugixml.hpp
+OBJ		= mdalc.o libmdal/module.o libmdal/config.o libmdal/sequence.o libmdal/blocks.o\
+		 libmdal/field.o libmdal/command.o libmdal/helper_functions.o libmdal/pugixml.o
 
 
 mdalc: $(OBJ)
@@ -13,4 +14,4 @@ mdalc: $(OBJ)
 
 .PHONY: clean
 clean:
-	rm *o
+	rm *.o libmdal/*.o

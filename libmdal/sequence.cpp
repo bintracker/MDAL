@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include "mdalc.h"
+#include "mdal.h"
 
 using namespace std;
 

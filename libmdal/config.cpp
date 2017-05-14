@@ -4,7 +4,7 @@
 #include <sstream>
 #include <algorithm>
 #include "pugixml.hpp"
-#include "mdalc.h"
+#include "mdal.h"
 
 using namespace std;
 
@@ -143,15 +143,7 @@ void mdConfig::init(const string &configname, bool &verbose) {
 		for (tempnode = commands.child("command"); tempnode; tempnode = tempnode.next_sibling("command")) mdCmdCount++;
 		if (!mdCmdCount) throw (string("<commands>: No commands specified."));
 		
-//		mdCmdCount += DEFAULT_COMMAND_COUNT;
 		mdCmdList = new mdCommand[mdCmdCount];
-		
-		//add two default commands, AUTHOR and TITLE
-		//TODO remove mdCommand.init()
-// 		mdCmdList[0].init("BYTE(\"AUTHOR\",\"unknown\",FORCE_STRING|GLOBAL_CONST);", verbose);
-// 		mdCmdList[1].init("BYTE(\"TITLE\",\"untitled\",FORCE_STRING|GLOBAL_CONST);", verbose);
-
-//		int cmdNr = DEFAULT_COMMAND_COUNT;
 		int cmdNr = 0;
 		for (tempnode = commands.child("command"); tempnode; tempnode = tempnode.next_sibling("command")) {
 		
@@ -171,7 +163,6 @@ void mdConfig::init(const string &configname, bool &verbose) {
 			
 			tempstr = tempnode.attribute("default").value();
 			if (tempstr == "") tempstr = "0";
-			//TODO: strings will fail because they aren't quot-enclosed, change setDefault
 			mdCmdList[cmdNr].setDefault(tempstr);
 			
 			//TODO could be attr of main command declaration
