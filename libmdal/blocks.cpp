@@ -53,7 +53,6 @@ void mdBlock::read(const string *rawData, const int blockLength, const mdConfig 
 	for (int i = 0; i < blockLength; i++) {
 	
 		string temp = trimChars(rawData[i], " ()\t");
-
 		if (temp != "") blkLength++;
 	}
 	
@@ -82,7 +81,23 @@ void mdBlock::read(const string *rawData, const int blockLength, const mdConfig 
 	
 	for (int i = 0; i < blockLength; i++) {
 	
-		string rowStr = trimChars(rawData[i], " ()\t");
+//		string rowStr = trimChars(rawData[i], " ()\t");
+		string tempstr = rawData[i];
+		string rowStr = "";
+		size_t quotes = count(tempstr.begin(), tempstr.end(), '\"');
+		if (!quotes) rowStr = trimChars(tempstr, "()\t ");
+		else {
+			if (quotes & 1) throw ("Invalid argument in " + tempstr);
+			for (unsigned i = 0; i < (quotes/2); i++) {
+				size_t pos = tempstr.find_first_of('\"');
+				rowStr += trimChars(tempstr.substr(0, pos + 1), "()\t ");
+				tempstr.erase(0, pos + 1);
+				pos = tempstr.find_first_of('\"');
+				rowStr += tempstr.substr(0, pos + 1);
+				tempstr.erase(0, pos + 1);
+			}
+			if (tempstr != "") rowStr += trimChars(tempstr, "()\t ");
+		}
 
 		bool validData = false;
 		
