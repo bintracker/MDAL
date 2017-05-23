@@ -122,7 +122,7 @@
 			<required if="A|PHA|DMODA|PSCA1|PSCA2|MIXA|NOISE" />
 			<set_hi from="PSCA1" />
 			<set_if if="PHA" value="1" />
-			<set_bits from="DMODA" value="$40" />
+			<set_bits from="DMODA" value="$5740" clear="hi" />
 			<set_bits from="NOISE" value="$cb00" />
 		</field>
 		<field size="word">
