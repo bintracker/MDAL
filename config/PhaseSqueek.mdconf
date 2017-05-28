@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <mdalconfig version="1">
 	<global target="zxspectrum48" word_directive="dw" byte_directive="db" />
-	<sequence tracks="1" end="dw 0" label="mdseq">
+	<sequence end="dw 0" label="mdseq">
+		<track from="Patterns" />
 		<loop type="label" label="loop" />
 	</sequence>
 	<commands>

@@ -61,12 +61,15 @@ mdModule::mdModule(const vector<string> &moduleLines, const mdConfig &config, bo
 		delete[] rawDataBlock;
 		rawDataBlock = nullptr;
 		
-		int seqStart = true;		//TODO: temporary solution which requires Pattern block type to be configured first, needs to be replaced
 		
-		for (int i = 0; i < seq.mdSequenceLength; i++) {
-			
-			moduleBlocks.at(0).addReference(seq.mdSequenceArray[i], seqStart);
-			seqStart = false;
+		//generate block references from sequence
+		for (unsigned i = 0; i < config.trackSources.size(); i++) {
+		
+			unsigned ts = 0;
+			for (; config.trackSources[i] != config.blockTypes[ts].blockConfigID; ts++) {};
+		
+			for (unsigned j = 0; j < seq.mdSequenceLength; j++)
+				moduleBlocks.at(ts).addReference(seq.sequenceData[i][j], (j) ? false : true);
 		}
 		
 	
@@ -81,8 +84,8 @@ mdModule::mdModule(const vector<string> &moduleLines, const mdConfig &config, bo
 			
 				for (auto&& it: moduleBlocks) {
 				
-					if (it.blockTypeID == config.mdCmdList[i].referenceBlkID) it.addReference(config.mdCmdList[i].mdCmdDefaultValString, false);
-					//TODO: temporary solution for flagging sequence start, see above
+					if (it.blockTypeID == config.mdCmdList[i].referenceBlkID) 
+						it.addReference(config.mdCmdList[i].mdCmdDefaultValString, false);
 				}
 			}	
 		}

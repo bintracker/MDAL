@@ -97,7 +97,8 @@ public:
 	std::string seqEndString;
 	std::string seqLoopLabel;
 	std::string seqLabel;
-	int seqMaxLength;
+	unsigned seqMaxLength;		//TODO must become unsigned
+	std::vector<std::string> trackSources;
 	
 	
 	size_t blockTypeCount;
@@ -123,10 +124,10 @@ private:
 class mdSequence {
 
 public:
-	int mdSequenceLength;
+	unsigned mdSequenceLength;
+	unsigned mdSequenceLoopPosition;
 	std::string sequenceString;
-	int mdSequenceLoopPosition;
-	std::string *mdSequenceArray;
+	std::vector<std::vector<std::string>> sequenceData;
 	
 	mdSequence();
 	~mdSequence();

@@ -120,6 +120,10 @@ void mdConfig::init(const string &configname, bool &verbose) {
 			if (verbose) cout << "Max. sequence length:\t" << seqMaxLength << endl;
 		}
 		
+		for (tempnode = mdalconfig.child("sequence").child("track"); tempnode; tempnode = tempnode.next_sibling("track"))
+			trackSources.push_back(string(tempnode.attribute("from").value()));
+		if (trackSources.size() == 0) throw (string("<sequence>: no <track>s specified."));
+		
 		tempnode = mdalconfig.child("sequence").child("loop");
 		if (tempnode != nullptr) {
 			tempstr = tempnode.attribute("type").value();
@@ -664,11 +668,12 @@ void mdConfig::init(const string &configname, bool &verbose) {
 			}
 		}
 		
-		bool ptnBlockPresent = false;
-		for (auto&& it : blockTypes) {
-			if (it.baseType == PATTERN) ptnBlockPresent = true;
-		}
-		if (!ptnBlockPresent) throw(string("Must declare at least one block type as base type PATTERN"));
+// 		//TODO restriction can be lifted with new sequence system
+// 		bool ptnBlockPresent = false;
+// 		for (auto&& it : blockTypes) {
+// 			if (it.baseType == PATTERN) ptnBlockPresent = true;
+// 		}
+// 		if (!ptnBlockPresent) throw(string("Must declare at least one block type as base type PATTERN"));
 		
 		for (int i = 0; i < mdCmdCount; i++) {
 			if (mdCmdList[i].isBlkReference) {
@@ -684,8 +689,19 @@ void mdConfig::init(const string &configname, bool &verbose) {
 // 			useSamples = true;
 // 			if (verbose) cout << "using SAMPLES - this feature is not supported yet." << endl;
 // 		}
-	
-	
+
+		//validate sequence track sources
+		for (auto&& it: trackSources) {
+		
+			bool sourceFound = false;
+			for (auto&& bt: blockTypes) {
+			
+				if (bt.blockConfigID == it) sourceFound = true;
+			}
+			
+			if (!sourceFound) throw ("<sequence>: Track source \"" + it + "\" does not name an existing block type.");
+		}
+		
 		return;
 	}
 	catch(string &e) {
