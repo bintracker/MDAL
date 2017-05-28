@@ -56,7 +56,7 @@ mdModule::mdModule(const vector<string> &moduleLines, const mdConfig &config, bo
 	
 		for (unsigned i = blockStart + 1; i <= blockEnd; i++) rawDataBlock[static_cast<int>(i - blockStart - 1)] = moduleLines[i];
 
-		seq.init(rawDataBlock, blockEnd - blockStart, config);
+		seq.read(rawDataBlock, blockEnd - blockStart, config);
 	
 		delete[] rawDataBlock;
 		rawDataBlock = nullptr;

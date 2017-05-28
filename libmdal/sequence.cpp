@@ -4,20 +4,19 @@
 
 using namespace std;
 
-mdSequence::mdSequence(): mdSequenceLength(0), uniquePtnCount(0), sequenceString(""), mdSequenceLoopPosition(0) {
+
+mdSequence::mdSequence(): mdSequenceLength(0), sequenceString(""), mdSequenceLoopPosition(0) {
 
 	mdSequenceArray = nullptr;
-	uniquePtnList = nullptr;
 }
 
 mdSequence::~mdSequence() {
 
 	delete[] mdSequenceArray;
-	delete[] uniquePtnList;
 }
 
 
-void mdSequence::init(string *sequenceBlock, const unsigned &sequenceBlockLength, const mdConfig &config) {
+void mdSequence::read(string *sequenceBlock, const unsigned &sequenceBlockLength, const mdConfig &config) {
 
 	
 	for (unsigned i = 0; i < sequenceBlockLength; i++) {
@@ -56,40 +55,7 @@ void mdSequence::init(string *sequenceBlock, const unsigned &sequenceBlockLength
 		cout << "Warning: [LOOP] position is invalid, falling back to default." << endl;
 		mdSequenceLoopPosition = 0;
 	}
-	
-	
-	for (int i = 0; i < mdSequenceLength; i++) {
-	
-		bool unique = true;
 		
-		for (int j = 0; j < i; j++) {
-		
-			if (mdSequenceArray[j] == mdSequenceArray[i]) unique = false;
-		}
-		
-		if (unique) uniquePtnCount++;
-	}
-	
-	uniquePtnList = new string[uniquePtnCount];
-	int iUnique = 0;
-	
-	for (int spos = 0; spos < mdSequenceLength; spos++) {
-	
-		bool unique = true;
-	
-		for (int i = 0; i < uniquePtnCount; i++) {
-			
-			if (uniquePtnList[i] == mdSequenceArray[spos]) unique = false;
-		}
-		
-		if (unique) {
-			
-			uniquePtnList[iUnique] = mdSequenceArray[spos];
-			iUnique++;
-		}
-	}
-	
-	
 	sequenceString = getSequenceString(config);
 	
 	return;

@@ -27,6 +27,16 @@
 			<force_string />
 			<reference to="FxTables" />
 		</command>
+		<command id="DRUM" size="byte">
+			<substitute key="kick" value="$40" />
+			<substitute key="hhat" value="$80" />
+		</command>
+		<command id="GMIX" size="byte" default="$b0">
+			<force_repeat />
+			<substitute key="or" value="$b0" />
+			<substitute key="xor" value="$a8" />
+			<substitute key="and" value="$a0" />
+		</command>
 		<command id="FX" size="word" default="fx0">
 			<force_string />
 			<reference to="FxTables" />
@@ -40,6 +50,12 @@
 			<use_last_set />
 			<use_note_names />
 			<allow_modifiers />
+		</command>
+		<command id="MIXAB" size="byte" default="$b0">
+			<use_last_set />
+			<substitute key="or" value="$b0" />
+			<substitute key="xor" value="$a8" />
+			<substitute key="and" value="$a0" />
 		</command>
 		<command id="DA" size="byte" default="$40">
 			<use_last_set />
@@ -76,6 +92,12 @@
 			<use_note_names />
 			<allow_modifiers />
 		</command>
+		<command id="MIXCD" size="byte" default="$b0">
+			<use_last_set />
+			<substitute key="or" value="$b0" />
+			<substitute key="xor" value="$a8" />
+			<substitute key="and" value="$a0" />
+		</command>
 		<command id="DC" size="byte" default="$40">
 			<use_last_set />
 		</command>
@@ -89,28 +111,6 @@
 		</command>
 		<command id="PCD" size="word">
 			<use_last_set />
-		</command>
-		<command id="DRUM" size="byte">
-			<substitute key="kick" value="$40" />
-			<substitute key="hhat" value="$80" />
-		</command>
-		<command id="GMIX" size="byte" default="$b0">
-			<force_repeat />
-			<substitute key="or" value="$b0" />
-			<substitute key="xor" value="$a8" />
-			<substitute key="and" value="$a0" />
-		</command>
-		<command id="MIXAB" size="byte" default="$b0">
-			<use_last_set />
-			<substitute key="or" value="$b0" />
-			<substitute key="xor" value="$a8" />
-			<substitute key="and" value="$a0" />
-		</command>
-		<command id="MIXCD" size="byte" default="$b0">
-			<use_last_set />
-			<substitute key="or" value="$b0" />
-			<substitute key="xor" value="$a8" />
-			<substitute key="and" value="$a0" />
 		</command>
 	</commands>
 	<blocktype id="Patterns" type="pattern" end="db $40">

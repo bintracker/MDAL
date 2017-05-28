@@ -124,17 +124,13 @@ class mdSequence {
 
 public:
 	int mdSequenceLength;
-	int uniquePtnCount;
 	std::string sequenceString;
 	int mdSequenceLoopPosition;
-	std::string *uniquePtnList;
 	std::string *mdSequenceArray;
 	
 	mdSequence();
 	~mdSequence();
-	void init(std::string* sequenceBlock, const unsigned &sequenceBlockLength, const mdConfig &config);
-	
-	
+	void read(std::string* sequenceBlock, const unsigned &sequenceBlockLength, const mdConfig &config);
 	friend std::ostream& operator<<(std::ostream& os, const mdSequence &seq);
 	
 private:
