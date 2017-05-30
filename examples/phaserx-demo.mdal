@@ -23,7 +23,7 @@ CONFIG=PhaserX
 	ptn5
 	ptn5
 	ptn5a
-	
+		
 :ptn1
 	B1=a1, B2=a1+1, MIXB=or, DUTYB1=$20, DUTYB2=$20, SPD=6
 	.

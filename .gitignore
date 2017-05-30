@@ -1,0 +1,7 @@
+/obj
+/tests
+mdalc
+mdalc.exe
+*.cbp
+*.depend
+*.layout

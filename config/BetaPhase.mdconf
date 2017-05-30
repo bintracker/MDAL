@@ -51,7 +51,7 @@
 			<substitute key="off" value="false" />
 			<substitute key="on" value="true" />
 		</command>
-		<command id="MIXA" size="byte" default="$ac">
+		<command id="MIXA" size="byte" default="$b4">
 			<use_last_set />
 			<substitute key="xor" value="$ac" />
 			<substitute key="and" value="$a4" />
@@ -81,7 +81,7 @@
 			<substitute key="up" value="$07" />
 			<substitute key="none" value="0" />
 		</command>
-		<command id="MIXB" size="byte" default="$ac">
+		<command id="MIXB" size="byte" default="$b4">
 			<use_last_set />
 			<substitute key="xor" value="$ac" />
 			<substitute key="and" value="$a4" />
