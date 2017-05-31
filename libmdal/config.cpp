@@ -9,20 +9,15 @@
 using namespace std;
 
 
-mdConfig::mdConfig(): targetPlatform("generic"), seqLabel(";sequence") {
+const vector<string> mdConfig::reservedKeywords({"ANY", "ALL", "NONE", "CONFIG"});
 
-	useSeqEnd = false;
-	useSeqLoop = false;
-	useSeqLoopPointer = false;
-	useSamples = false;
+
+mdConfig::mdConfig(): targetPlatform("generic"), seqLabel(";sequence") {
 
 	cfgLines = nullptr;
 	mdCmdList = nullptr;
 
-	seqMaxLength = 0;
-	blockTypeCount = 0;
-	linecount = 0;
-	mdCmdCount = 0;
+	reset();
 }
 
 mdConfig::~mdConfig() {
@@ -48,6 +43,7 @@ void mdConfig::reset() {
 	mdCmdList = nullptr;
 
 	blockTypes.clear();
+	trackSources.clear();
 
 	seqMaxLength = 0;
 	blockTypeCount = 0;
@@ -56,6 +52,8 @@ void mdConfig::reset() {
 }
 
 void mdConfig::init(const string &configname, bool &verbose) {
+
+    reset();
 
 	pugi::xml_document xml;
 	pugi::xml_parse_result result = xml.load_file(configname.data(), pugi::parse_trim_pcdata|pugi::parse_wnorm_attribute);
@@ -153,9 +151,9 @@ void mdConfig::init(const string &configname, bool &verbose) {
 
 			tempstr = tempnode.attribute("id").value();
 			if (tempstr == "") throw (string("<command>: missing command id."));
-			//TODO: update list of reserved keywords -> make a const vector and iterate over it
-			if (tempstr == "NONE" || tempstr == "ANY" || tempstr == "ALL" || tempstr == "CONFIG")
-				throw ("<command>: Reserved keyword \"" + tempstr + "\" used as command name.");
+            for (auto&& it: reservedKeywords) {
+                if (tempstr == it) throw ("<command>: Reserved keyword \"" + tempstr + "\" used as command name.");
+            }
 			mdCmdList[cmdNr].mdCmdName = tempstr;
 
 			tempstr = tempnode.attribute("size").value();
@@ -202,7 +200,6 @@ void mdConfig::init(const string &configname, bool &verbose) {
 			if (param != nullptr) {
 				tempstr = param.attribute("to").value();
 				if (tempstr == "") throw (string("<command>: reference used, but no block id given."));
-				//TODO: check validity of referenceBlkID once blocktypes have been parsed
 				mdCmdList[cmdNr].isBlkReference = true;
 				mdCmdList[cmdNr].referenceBlkID = tempstr;
 			}
@@ -668,12 +665,6 @@ void mdConfig::init(const string &configname, bool &verbose) {
 			}
 		}
 
-// 		//TODO restriction can be lifted with new sequence system
-// 		bool ptnBlockPresent = false;
-// 		for (auto&& it : blockTypes) {
-// 			if (it.baseType == PATTERN) ptnBlockPresent = true;
-// 		}
-// 		if (!ptnBlockPresent) throw(string("Must declare at least one block type as base type PATTERN"));
 
 		for (int i = 0; i < mdCmdCount; i++) {
 			if (mdCmdList[i].isBlkReference) {
@@ -683,12 +674,6 @@ void mdConfig::init(const string &configname, bool &verbose) {
 			}
 		}
 
-		//TODO legacy code
-// 		if (locateToken(string("USE_SAMPLES"), 0, configEnd) != configEnd) {
-//
-// 			useSamples = true;
-// 			if (verbose) cout << "using SAMPLES - this feature is not supported yet." << endl;
-// 		}
 
 		//validate sequence track sources
 		for (auto&& it: trackSources) {

@@ -158,7 +158,7 @@ void mdBlock::read(const string *rawData, const int blockLength, const mdConfig 
 
 			//TODO: this is probably not intended behaviour, but left in for now so mdalc produces same results as before
 			if (row == 0 && (blkConfig.initBlkDefaults || blkConfig.baseType != PATTERN)) config.mdCmdList[cmd].resetToDefault();
-			else config.mdCmdList[cmd].reset();			//TODO reset all LastVals to default at beginning of pattern
+			else config.mdCmdList[cmd].reset();
 
 
 			if (lineCommands[row][cmd]) {

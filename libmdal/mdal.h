@@ -114,6 +114,8 @@ public:
 	static bool isCompatible(const mdCommand &cmd1, const mdCommand &cmd2);
 
 	std::string* cfgLines;
+
+	static const std::vector<std::string> reservedKeywords;
 private:
 	int linecount;
 
