@@ -79,6 +79,7 @@ class mdField {
 class mdConfig {
 
   public:
+    std::string description;
     //global config parameters
     bool useSamples;
     std::string wordDirective;
@@ -187,6 +188,7 @@ class mdCommand {
 
   public:
     std::string mdCmdName;
+    std::string description;
     int mdCmdType;		//BOOL|BYTE|WORD
     bool mdCmdAuto;
 

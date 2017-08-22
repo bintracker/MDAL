@@ -12,7 +12,7 @@ using namespace std;
 const vector<string> mdConfig::reservedKeywords({"ANY", "ALL", "NONE", "CONFIG"});
 
 
-mdConfig::mdConfig(): targetPlatform("generic"), seqLabel(";sequence") {
+mdConfig::mdConfig(): description(""), targetPlatform("generic"), seqLabel(";sequence") {
 
     cfgLines = nullptr;
     mdCmdList = nullptr;
@@ -29,6 +29,7 @@ mdConfig::~mdConfig() {
 
 void mdConfig::reset() {
 
+    description = "";
     targetPlatform = "generic";
     seqLabel = ";sequence";
 
@@ -77,7 +78,12 @@ void mdConfig::init(const string &configname, bool &verbose) {
         if (stoi(tempstr, nullptr, 10) != MDALVERSION) throw ("Unsupported MDAL version " + tempstr + ".");
         if (verbose) cout << "MDAL version: \t\t" << stoi(tempstr, nullptr, 10) << endl;
 
-        pugi::xml_node tempnode = mdalconfig.child("global");
+        pugi::xml_node tempnode = mdalconfig.child("description");
+        tempstr = tempnode.child_value();
+        if (!tempstr.empty()) description = tempstr;
+        if (verbose) cout << description << endl;
+
+        tempnode = mdalconfig.child("global");
         tempstr = tempnode.attribute("target").value();
         if (tempstr != "") targetPlatform = tempstr;
         if (verbose) cout << "target platform:\t" << targetPlatform << endl;
@@ -178,6 +184,8 @@ void mdConfig::init(const string &configname, bool &verbose) {
                 mdCmdList[cmdNr].mdCmdAuto = true;
             }
 
+            param = tempnode.child("description");
+            if (param != nullptr) mdCmdList[cmdNr].description = param.child_value();
             param = tempnode.child("use_note_names");
             if (param != nullptr) mdCmdList[cmdNr].useNoteNames = true;
             param = tempnode.child("allow_modifiers");
@@ -248,7 +256,8 @@ void mdConfig::init(const string &configname, bool &verbose) {
             }
 
             if (verbose) {
-                cout << mdCmdList[cmdNr].mdCmdName << ":\t Type is ";
+                cout << mdCmdList[cmdNr].mdCmdName << ": " << mdCmdList[cmdNr].description << "\n";
+                cout << "Type is ";
 
                 if (mdCmdList[cmdNr].mdCmdType == BYTE) cout << "BYTE";
                 else if (mdCmdList[cmdNr].mdCmdType == BOOL) cout << "BOOL";

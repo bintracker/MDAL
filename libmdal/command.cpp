@@ -6,7 +6,8 @@
 
 using namespace std;
 
-mdCommand::mdCommand(): referenceBlkID(""), mdCmdDefaultValString(""), mdCmdAutoValString(""), mdCmdCurrentValString(""), mdCmdLastValString("") {
+mdCommand::mdCommand(): description(""), referenceBlkID(""), mdCmdDefaultValString(""), mdCmdAutoValString(""),
+    mdCmdCurrentValString(""), mdCmdLastValString("") {
 
     mdCmdType = BOOL;
     mdCmdGlobalConst = false;
