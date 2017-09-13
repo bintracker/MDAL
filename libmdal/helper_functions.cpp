@@ -19,18 +19,18 @@ string trimChars(const string& inputString, const char* chars) {
 //TODO: flag strings that start with or contain only numbers as invalid
 int getType(const string& param) {
 
-    if (param == "true" || param == "false") return BOOL;
-    if (param.find('"') != string::npos) return STRING;
+    if (param == "true" || param == "false") return MD_BOOL;
+    if (param.find('"') != string::npos) return MD_STRING;
     if (param.find_first_of('$') != string::npos) {
 
-        if (param.find_first_of('$') != 0) return INVALID;
+        if (param.find_first_of('$') != 0) return MD_INVALID;
         string temp = trimChars(param, "$");
-        if (temp.find_first_not_of("0123456789abcdefABCDEF") != string::npos) return INVALID;
-        else return HEX;
+        if (temp.find_first_not_of("0123456789abcdefABCDEF") != string::npos) return MD_INVALID;
+        else return MD_HEX;
     }
-    if (param.find_first_not_of("0123456789") != string::npos) return INVALID;
+    if (param.find_first_not_of("0123456789") != string::npos) return MD_INVALID;
 
-    return DEC;
+    return MD_DEC;
 }
 
 string getArgument(string token, const vector<string> &moduleLines) {

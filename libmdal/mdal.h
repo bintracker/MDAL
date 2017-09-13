@@ -18,7 +18,7 @@ int getType(const std::string& parameter);
 std::string getArgument(std::string token, const std::vector<std::string> &moduleLines);
 
 
-enum Type {BOOL, BYTE, WORD, DEC, HEX, STRING, INVALID};
+enum Type {MD_BOOL, MD_BYTE, MD_WORD, MD_DEC, MD_HEX, MD_STRING, MD_INVALID};
 enum BlockType {GENERIC, PATTERN, TABLE};
 enum ConditionType {REQUIRED, SET_IF};
 enum ClearFlags {CLEAR_HI = 1, CLEAR_LO, CLEAR_ALL};
@@ -189,7 +189,7 @@ class mdCommand {
   public:
     std::string mdCmdName;
     std::string description;
-    int mdCmdType;		//BOOL|BYTE|WORD
+    int mdCmdType;		//MD_BOOL|MD_BYTE|MD_WORD
     bool mdCmdAuto;
 
     bool useNoteNames;
