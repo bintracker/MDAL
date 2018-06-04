@@ -9,7 +9,8 @@ This repository contains **libmdal**, a C++ library for parsing MDAL modules, an
 
 
 ## Project Status
-- **MDAL Core Language Standard:** [Version 0 draft published](https://github.com/utz82/MDAL/wiki/User-Reference).
-- **MDAL Configuration Standard:** [Version 1 draft published](https://github.com/utz82/MDAL/wiki/Creating-Configurations).
+- **MDAL Core Language (MDMOD) Standard Version 0:** [published](https://github.com/utz82/MDAL/wiki/User-Reference).
+- **NEW: MDAL Core Language (MDMOD) Standard Version 2:** [draft published](https://github.com/utz82/MDAL/wiki/MDMOD-Version-2-Specification-Draft)
+- **MDAL Configuration (MDCONF) Standard Version 1:** [published](https://github.com/utz82/MDAL/wiki/Creating-Configurations).
 - **libmdal:** Working, but not ready for production use because API is not finalized.
 - **mdalc:** Working.
